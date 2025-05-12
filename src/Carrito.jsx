@@ -28,52 +28,39 @@ export default function Carrito() {
       </aside>
 
       <main className="main-content">
-        <header className="header">
-          <img
-            src="/carrito.png"
-            alt="Carrito"
-            className="cart-img"
-            onClick={() => navigate('/carrito')}
-          />
-        </header>
-
-        <div className="carrito-section">
+        <section className="carrito-section">
           <table className="carrito-table">
             <thead>
               <tr>
-                <th>Nombre Producto</th>
+                <th>Producto</th>
+                <th>Nombre</th>
                 <th>Cantidad</th>
                 <th>Precio</th>
-                <th>Foto</th>
-                <th>Acciones</th>
+                <th>Total</th>
               </tr>
             </thead>
             <tbody>
-              {productos.map((p) => (
-                <tr key={p.id}>
-                  <td>{p.nombre}</td>
-                  <td>{p.cantidad}</td>
-                  <td>{p.precio} $</td>
+              {productos.map((prod) => (
+                <tr key={prod.id}>
                   <td>
-                    <img src={p.imagen} alt="Producto" className="product-img" />
+                    <img src={prod.imagen} alt={prod.nombre} className="product-img" />
                   </td>
-                  <td>
-                    <button className="btn delete">🗑</button>
-                    <button className="btn add">➕</button>
-                  </td>
+                  <td>{prod.nombre}</td>
+                  <td>{prod.cantidad}</td>
+                  <td>${prod.precio}</td>
+                  <td>${prod.precio * prod.cantidad}</td>
                 </tr>
               ))}
             </tbody>
           </table>
 
           <div className="detalle-compra">
-            <h4 className="detalle-title">Detalle Compra</h4>
-            <h2>Total</h2>
-            <p className="total">{total} $</p>
+            <h3 className="detalle-title">Resumen</h3>
+            <p className="total">Total: ${total}</p>
             <button className="confirmar-btn">Confirmar Compra</button>
-            <p className="vuelva">Vuelva pronto</p>
+            <p className="vuelva">Gracias por tu visita</p>
           </div>
-        </div>
+        </section>
       </main>
 
       <style jsx>{`
@@ -86,7 +73,7 @@ export default function Carrito() {
 
         .sidebar {
           width: 250px;
-          background-color: #2a2829;
+          background-color: #24487f;
           color: white;
           padding: 20px;
         }
@@ -121,34 +108,23 @@ export default function Carrito() {
           flex-direction: column;
         }
 
-        .header {
-          display: flex;
-          justify-content: flex-end;
-          padding: 20px;
-          background-color: #2b2b2b;
-        }
-
-        .cart-img {
-          width: 30px;
-          height: 30px;
-          cursor: pointer;
-        }
-
         .carrito-section {
           display: flex;
           padding: 20px;
           gap: 30px;
+          background-color: #ffffff;
+          color: black;
         }
 
         .carrito-table {
           flex: 3;
           width: 100%;
           border-collapse: collapse;
-          background-color:#b2b2b3
+          background-color: #f5f5f5;
         }
 
         .carrito-table thead {
-          background-color:#1f1f1f;
+          background-color: #24487f;
           color: white;
         }
 
@@ -165,32 +141,17 @@ export default function Carrito() {
           border-radius: 10px;
         }
 
-        .btn {
-          background-color: #d9534f;
-          color: white;
-          border: none;
-          padding: 6px 10px;
-          margin: 0 2px;
-          border-radius: 5px;
-          cursor: pointer;
-          font-size: 16px;
-        }
-
-        .btn:hover {
-          background-color: #c9302c;
-        }
-
         .detalle-compra {
           flex: 1;
           border: 1px solid #ddd;
           padding: 20px;
-          background-color:#b2b2b3;
+          background-color: #f5f5f5;
           border-radius: 8px;
           text-align: center;
         }
 
         .detalle-title {
-          color: #d9534f;
+          color: #24487f;
           margin-bottom: 10px;
         }
 
@@ -200,7 +161,7 @@ export default function Carrito() {
         }
 
         .confirmar-btn {
-          background-color: #d9534f;
+          background-color: #24487f;
           color: white;
           border: none;
           padding: 10px 20px;
@@ -210,12 +171,12 @@ export default function Carrito() {
         }
 
         .confirmar-btn:hover {
-          background-color: #c9302c;
+          background-color: #1b355b;
         }
 
         .vuelva {
           margin-top: 20px;
-          color: #6c757d;
+          color: #666;
         }
       `}</style>
     </div>

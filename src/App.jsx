@@ -23,9 +23,7 @@ export default function App() {
           <button onClick={() => navigate('/login')} className="primary-btn">
             Iniciar Sesión
           </button>
-          <button onClick={() => navigate('/register')} className="secondary-btn">
-            Registrarse
-          </button>
+          
         </div>
       </div>
 

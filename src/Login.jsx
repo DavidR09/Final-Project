@@ -9,7 +9,7 @@ export default function Login() {
   const handleLogin = (e) => {
     e.preventDefault();
     console.log('Iniciando sesión con:', { email, password });
-    navigate('/inicio'); // Redirige a la página de inicio
+    navigate('/inicio'); 
   };
 
   return (
@@ -49,9 +49,7 @@ export default function Login() {
             <button type="submit" className="login-button">Iniciar Sesión</button>
           </form>
 
-          <p className="register-link">
-            ¿No tienes una cuenta? <a href="/register">Regístrate</a>
-          </p>
+
         </div>
       </div>
 
