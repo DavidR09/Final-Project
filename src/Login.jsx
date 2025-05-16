@@ -144,16 +144,16 @@ export default function Login() {
         .user-box input:focus ~ label,
         .user-box input:valid ~ label {
           top: -20px;
-          color: #03e9f4;
+          color: #24487f;
           font-size: 12px;
         }
 
         .login-button {
           width: 100%;
           padding: 12px;
-          color: #03e9f4;
+          color: #24487f;
           background: none;
-          border: 1px solid #03e9f4;
+          border: 1px solid #24487f;
           font-size: 16px;
           cursor: pointer;
           border-radius: 5px;
@@ -162,7 +162,7 @@ export default function Login() {
         }
 
         .login-button:hover {
-          background-color: #03e9f4;
+          background-color: #24487f;
           color: #fff;
         }
 
@@ -173,7 +173,7 @@ export default function Login() {
         }
 
         .register-link a {
-          color: #03e9f4;
+          color: #24487f;
           text-decoration: none;
           font-weight: bold;
         }

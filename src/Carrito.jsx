@@ -15,7 +15,13 @@ export default function Carrito() {
   return (
     <div className="main-container">
       <aside className="sidebar">
-        <h2>Menú</h2>
+        <div
+          className="logo-wrapper"
+          onClick={() => navigate('/inicio')}
+        >
+          <img src="/Logo.png" alt="Logo" />
+        </div>
+
         <ul>
           <li onClick={() => navigate('/inicio')}>Inicio</li>
           <li onClick={() => navigate('/perfil')}>Perfil</li>
@@ -23,7 +29,6 @@ export default function Carrito() {
             <img src="/carrito.png" alt="Carrito" className="icon-img" />
             Carrito
           </li>
-          <li onClick={() => navigate('/')}>Cerrar sesión</li>
         </ul>
       </aside>
 
@@ -76,6 +81,25 @@ export default function Carrito() {
           background-color: #24487f;
           color: white;
           padding: 20px;
+        }
+
+        .logo-wrapper {
+          width: 120px;
+          height: 120px;
+          background-color: white;
+          border-radius: 50%;
+          overflow: hidden;
+          margin: 0 auto 20px auto;
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          cursor: pointer;
+        }
+
+        .logo-wrapper img {
+          width: 90%;
+          height: 90%;
+          object-fit: contain;
         }
 
         .sidebar ul {

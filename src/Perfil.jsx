@@ -14,17 +14,39 @@ export default function Perfil() {
   return (
     <div className="inicio-container">
       <aside className="sidebar">
-        <h2>Menú</h2>
+        <div
+          className="logo-container"
+          onClick={() => navigate('/inicio')}
+        >
+          <div className="logo-circle">
+            <img src="/Logo.png" alt="Logo" />
+          </div>
+        </div>
+
         <ul>
-          <li><a onClick={() => navigate('/inicio')}>Inicio</a></li>
-          <li><a onClick={() => navigate('/carrito')}>Carrito</a></li>
-          <li><a onClick={() => navigate('/')}>Cerrar sesión</a></li>
+          <li onClick={() => navigate('/inicio')}>Inicio</li>
+          <li onClick={() => navigate('/carrito')}>
+            <img src="/carrito.png" alt="Carrito" className="icon-img" />
+            Carrito
+          </li>
+          <li onClick={() => navigate('/')}>Cerrar sesión</li>
         </ul>
       </aside>
 
       <main className="main-content">
         <header className="header">
-          <img src="/carrito.png" alt="Carrito" className="cart-img" />
+          <img
+            src="/carrito.png"
+            alt="Carrito"
+            className="cart-img"
+            onClick={() => navigate('/carrito')}
+          />
+          <img
+            src="/perfil.png"
+            alt="Perfil"
+            className="perfil-img"
+            onClick={() => navigate('/perfil')}
+          />
         </header>
 
         <section className="content">
@@ -56,7 +78,9 @@ export default function Perfil() {
               placeholder="Cuéntanos algo sobre ti"
             />
 
-            <button className="guardar-btn" onClick={handleGuardar}>Guardar Cambios</button>
+            <button className="guardar-btn" onClick={handleGuardar}>
+              Guardar Cambios
+            </button>
           </div>
         </section>
       </main>
@@ -76,8 +100,23 @@ export default function Perfil() {
           padding: 20px;
         }
 
-        .sidebar h2 {
+        .logo-container {
+          cursor: pointer;
+          text-align: center;
           margin-bottom: 20px;
+        }
+
+        .logo-circle {
+          background-color: white;
+          border-radius: 50%;
+          padding: 10px;
+          display: inline-block;
+        }
+
+        .logo-circle img {
+          width: 100px;
+          height: 100px;
+          object-fit: contain;
         }
 
         .sidebar ul {
@@ -86,13 +125,22 @@ export default function Perfil() {
         }
 
         .sidebar li {
-          margin-bottom: 10px;
+          margin-bottom: 15px;
+          cursor: pointer;
+          display: flex;
+          align-items: center;
+          gap: 10px;
+          padding: 8px;
+          border-radius: 5px;
         }
 
-        .sidebar a {
-          color: white;
-          text-decoration: none;
-          cursor: pointer;
+        .sidebar li:hover {
+          background-color: #333;
+        }
+
+        .icon-img {
+          width: 18px;
+          height: 18px;
         }
 
         .main-content {
@@ -104,17 +152,26 @@ export default function Perfil() {
         .header {
           display: flex;
           justify-content: flex-end;
+          align-items: center;
           padding: 20px;
           background-color: #24487f;
         }
 
-        .cart-img {
+        .cart-img,
+        .perfil-img {
           width: 30px;
           height: 30px;
           cursor: pointer;
         }
 
-        .cart-img:hover {
+        .perfil-img {
+          margin-left: 15px;
+          border-radius: 50%;
+          object-fit: cover;
+        }
+
+        .cart-img:hover,
+        .perfil-img:hover {
           filter: brightness(1.2);
         }
 

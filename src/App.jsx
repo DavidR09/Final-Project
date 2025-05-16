@@ -82,7 +82,7 @@ export default function App() {
         }
 
         .highlight {
-          color: #668284;
+          color: #24487f;
         }
 
         .intro-text {
@@ -109,7 +109,7 @@ export default function App() {
         }
 
         .primary-btn {
-          background-color: #668284;
+          background-color: #24487f;
           color: white;
         }
 

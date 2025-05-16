@@ -8,6 +8,11 @@ import Inicio from './Inicio.jsx';
 import Carrito from './Carrito.jsx'; 
 import './index.css';
 import Perfil from './Perfil.jsx';
+import Productos from './Productos.jsx';
+import Contacto from './Contacto.jsx';
+import Pedidos from './Pedidos.jsx';
+
+
 
 ReactDOM.createRoot(document.getElementById('root')).render(
   <React.StrictMode>
@@ -16,9 +21,15 @@ ReactDOM.createRoot(document.getElementById('root')).render(
         <Route path="/" element={<App />} />
         <Route path="/register" element={<Register />} />
         <Route path="/login" element={<Login />} />
-        <Route path="/inicio" element={<Inicio />} /> {/* Ruta para la página de inicio */}
-        <Route path="/carrito" element={<Carrito />} /> {/* Ruta para el carrito */}
-        <Route path="/perfil" element={<Perfil />} /> {/* Ruta para el perfil */}
+        <Route path="/inicio" element={<Inicio />} /> 
+        <Route path="/carrito" element={<Carrito />} /> 
+        <Route path="/perfil" element={<Perfil />} /> 
+        <Route path="/productos" element={<Productos />} /> 
+        <Route path="/contacto" element={<Contacto />} /> 
+        <Route path="/pedidos" element={<Pedidos />} />
+
+
+
 
       </Routes>
     </Router>

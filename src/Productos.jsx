@@ -1,29 +1,24 @@
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 
-export default function Inicio() {
+export default function Productos() {
   const navigate = useNavigate();
   const [busqueda, setBusqueda] = useState('');
 
-  const categorias = [
-    { nombre: 'Neumáticos', imagen: '/Neumatico.png', ruta: 'neumaticos' },
-    { nombre: 'Baterías De Carro', imagen: '/bateria.jpg', ruta: 'baterias' },
-    { nombre: 'Faroles y Pantallas', imagen: '/pantallasmicas.png', ruta: 'faroles' },
-    { nombre: 'Aros', imagen: '/aros.png', ruta: 'aros' },
-    { nombre: 'Gatos', imagen: '/gato.png', ruta: 'gatos' },
-    { nombre: 'Lubricantes', imagen: '/lubricante.png', ruta: 'lubricantes' },
-    { nombre: 'Carrocerías', imagen: '/carroceria.png', ruta: 'carrocerias' },
-    { nombre: 'Eléctricos', imagen: '/electricas.png', ruta: 'electricos' },
-    { nombre: 'Amortiguadores', imagen: '/amortiguadores.png', ruta: 'amortiguadores' },
-    { nombre: 'Filtros De aceite', imagen: '/filtros.png', ruta: 'filtros' },
+  const productos = [
+    { nombre: 'Aceite de motor', imagen: '/public/lubricante.png' },
+    { nombre: 'Filtro de aire', imagen: '/public/filtros.png' },
+    { nombre: 'Batería Bosch', imagen: '/bateria.jpg' },
+    { nombre: 'Neumático Goodyear', imagen: '/Neumatico.png' },
+    { nombre: 'Amortiguador trasero', imagen: '/amortiguadores.png' },
   ];
 
-  const categoriasFiltradas = categorias.filter(cat =>
-    cat.nombre.toLowerCase().includes(busqueda.toLowerCase())
+  const productosFiltrados = productos.filter((prod) =>
+    prod.nombre.toLowerCase().includes(busqueda.toLowerCase())
   );
 
   return (
-    <div className="inicio-container">
+    <div className="productos-container">
       <aside className="sidebar">
         <div className="logo-wrapper" onClick={() => navigate('/inicio')}>
           <img src="/Logo.png" alt="Logo" />
@@ -32,7 +27,6 @@ export default function Inicio() {
         <ul>
           <li onClick={() => navigate('/inicio')}>Inicio</li>
           <li onClick={() => navigate('/productos')}>Piezas</li>
-          <li onClick={() => navigate('/pedidos')}>Pedidos</li> {/* Aquí está la novedad */}
           <li onClick={() => navigate('/contacto')}>Sobre Nosotros</li>
         </ul>
       </aside>
@@ -41,7 +35,7 @@ export default function Inicio() {
         <header className="header">
           <input
             type="text"
-            placeholder="Buscar categoria..."
+            placeholder="Buscar pieza..."
             value={busqueda}
             onChange={(e) => setBusqueda(e.target.value)}
             className="buscador"
@@ -63,17 +57,14 @@ export default function Inicio() {
         </header>
 
         <section className="content">
-          <div className="repuestos-section">
-            <h2>Categoria</h2>
-            <div className="categorias-grid">
-              {categoriasFiltradas.map((cat) => (
-                <div
-                  key={cat.nombre}
-                  className="categoria-card"
-                  onClick={() => navigate(`/repuestos/${cat.ruta}`)}
-                >
-                  <img src={cat.imagen} alt={cat.nombre} />
-                  <p>{cat.nombre}</p>
+          <div className="productos-section">
+            <h2>Productos Disponibles</h2>
+            <div className="productos-grid">
+              {productosFiltrados.map((prod, index) => (
+                <div key={index} className="producto-card">
+                  <img src={prod.imagen} alt={prod.nombre} />
+                  <p>{prod.nombre}</p>
+                  <button className="btn-agregar">Agregar</button>
                 </div>
               ))}
             </div>
@@ -82,7 +73,7 @@ export default function Inicio() {
       </main>
 
       <style jsx>{`
-        .inicio-container {
+        .productos-container {
           display: flex;
           height: 100vh;
           font-family: 'Segoe UI', sans-serif;
@@ -195,18 +186,18 @@ export default function Inicio() {
           color: black;
         }
 
-        .repuestos-section {
+        .productos-section {
           text-align: center;
           width: 100%;
         }
 
-        .repuestos-section h2 {
+        .productos-section h2 {
           font-size: 28px;
           margin-bottom: 20px;
           color: #333333;
         }
 
-        .categorias-grid {
+        .productos-grid {
           display: grid;
           grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
           gap: 30px;
@@ -214,28 +205,44 @@ export default function Inicio() {
           margin: 0 auto;
         }
 
-        .categoria-card {
+        .producto-card {
           display: flex;
           flex-direction: column;
           align-items: center;
-          cursor: pointer;
+          padding: 15px;
+          border: 1px solid #eee;
+          border-radius: 10px;
           transition: transform 0.2s ease;
+          background-color: #f9f9f9;
         }
 
-        .categoria-card img {
+        .producto-card img {
           width: 100px;
           height: 100px;
           object-fit: contain;
         }
 
-        .categoria-card p {
+        .producto-card p {
           margin-top: 10px;
           font-weight: bold;
-          text-align: center;
           color: black;
         }
 
-        .categoria-card:hover {
+        .btn-agregar {
+          margin-top: 10px;
+          padding: 6px 12px;
+          border: none;
+          background-color: #24487f;
+          color: white;
+          border-radius: 5px;
+          cursor: pointer;
+        }
+
+        .btn-agregar:hover {
+          background-color: #1a3763;
+        }
+
+        .producto-card:hover {
           transform: scale(1.05);
         }
       `}</style>
