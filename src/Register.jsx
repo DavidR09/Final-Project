@@ -2,217 +2,252 @@ import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 
 export default function Register() {
-  const [name, setName] = useState('');
-  const [email, setEmail] = useState('');
-  const [password, setPassword] = useState('');
-  const [phone, setPhone] = useState('');
-  const [message, setMessage] = useState(null);
-  const [messageType, setMessageType] = useState('');
-
   const navigate = useNavigate();
+  const [nombre, setNombre] = useState('');
+  const [apellido, setApellido] = useState('');
+  const [correo, setCorreo] = useState('');
+  const [rol, setRol] = useState('');
+  const [contrasenia, setContrasenia] = useState('');
+  const [telefono, setTelefono] = useState('');
+  const [mensaje, setMensaje] = useState(null);
+  const [tipoMensaje, setTipoMensaje] = useState('');
 
   const handleRegister = (e) => {
     e.preventDefault();
+
     const users = JSON.parse(localStorage.getItem('users')) || [];
-    const userExists = users.some(
-      (user) => user.email.toLowerCase() === email.toLowerCase()
+    const existe = users.some(
+      (user) => user.correo_electronico_usuario.toLowerCase() === correo.toLowerCase()
     );
 
-    if (userExists) {
-      setMessageType('error');
-      setMessage('El correo ya está registrado.');
+    if (existe) {
+      setTipoMensaje('error');
+      setMensaje('El correo ya está registrado.');
       return;
     }
 
-    const newUser = { name, email, password, phone };
-    users.push(newUser);
+    const nuevoUsuario = {
+      nombre_usuario: nombre,
+      apellido_usuario: apellido,
+      correo_electronico_usuario: correo,
+      rol_usuario: rol,
+      contrasenia_usuario: contrasenia,
+      telefono_usuario: telefono,
+      fecha_registro_usuario: new Date().toISOString()
+    };
+
+    users.push(nuevoUsuario);
     localStorage.setItem('users', JSON.stringify(users));
-    setMessageType('success');
-    setMessage('Registro exitoso. Ahora puedes iniciar sesión.');
-    setName('');
-    setEmail('');
-    setPassword('');
-    setPhone('');
+
+    setTipoMensaje('success');
+    setMensaje('Registro exitoso.');
+
+    // Limpiar campos
+    setNombre('');
+    setApellido('');
+    setCorreo('');
+    setRol('');
+    setContrasenia('');
+    setTelefono('');
+    
   };
 
-  const fields = [
-    { label: 'Nombre', value: name, setter: setName, type: 'text' },
-    { label: 'Correo Electrónico', value: email, setter: setEmail, type: 'email' },
-    { label: 'Contraseña', value: password, setter: setPassword, type: 'password' },
-    { label: 'Teléfono', value: phone, setter: setPhone, type: 'tel' },
-  ];
-
   return (
-    <div className="welcome-container">
-      <div className="left-section">
-        <img src="/public/fotinicio.jpg" alt="Imagen ilustrativa" />
-      </div>
-      <div className="right-section">
-        <div
-          className="logo-container"
-          onClick={() => navigate('/')}
-          style={{ cursor: 'pointer' }}
-        >
-          <img src="/public/Logo.png" alt="Logo" />
+    <div className="inicio-container">
+      <aside className="sidebar">
+        <div className="logo-container" onClick={() => navigate('/inicio')}>
+          <div className="logo-circle">
+            <img src="/Logo.png" alt="Logo" />
+          </div>
         </div>
-        <div className="register-box">
-          <h2>Regístrate</h2>
-          <form onSubmit={handleRegister}>
-            {fields.map((field, index) => (
-              <div className="user-box" key={index}>
-                <input
-                  type={field.type}
-                  required
-                  value={field.value}
-                  onChange={(e) => field.setter(e.target.value)}
-                />
-                <label>{field.label}</label>
-              </div>
-            ))}
-            <button type="submit" className="register-button">Registrarse</button>
+        <ul>
+          <li onClick={() => navigate('/inicio')}>Inicio</li>
+          <li onClick={() => navigate('/carrito')}>
+            <img src="/carrito.png" alt="Carrito" className="icon-img" />
+            Carrito
+          </li>
+          <li onClick={() => navigate('/')}>Cerrar sesión</li>
+        </ul>
+      </aside>
+
+      <main className="main-content">
+        <header className="header">
+          <img src="/carrito.png" alt="Carrito" className="cart-img" onClick={() => navigate('/carrito')} />
+          <img src="/perfil.png" alt="Perfil" className="perfil-img" onClick={() => navigate('/perfil')} />
+        </header>
+
+        <section className="content">
+          <div className="welcome">
+            <h1>Registro de Usuario</h1>
+          </div>
+
+          <form className="perfil-form" onSubmit={handleRegister}>
+            <label>Nombre:</label>
+            <input type="text" value={nombre} onChange={(e) => setNombre(e.target.value)} required />
+
+            <label>Apellido:</label>
+            <input type="text" value={apellido} onChange={(e) => setApellido(e.target.value)} required />
+
+            <label>Correo Electrónico:</label>
+            <input type="email" value={correo} onChange={(e) => setCorreo(e.target.value)} required />
+
+            <label>Rol:</label>
+            <input type="text" value={rol} onChange={(e) => setRol(e.target.value)} required />
+
+            <label>Contraseña:</label>
+            <input type="password" value={contrasenia} onChange={(e) => setContrasenia(e.target.value)} required />
+
+            <label>Teléfono:</label>
+            <input type="tel" value={telefono} onChange={(e) => setTelefono(e.target.value)} required />
+
+            <button className="guardar-btn" type="submit">Registrarse</button>
+            {mensaje && (
+              <p style={{ color: tipoMensaje === 'error' ? 'red' : 'green', marginTop: '10px', textAlign: 'center' }}>
+                {mensaje}
+              </p>
+            )}
           </form>
-          {message && (
-            <p className="message" style={{
-              color: messageType === 'error' ? 'red' : '#03e9f4',
-            }}>
-              {message}
-            </p>
-          )}
-          <p className="redirect-text">
-            ¿Ya tienes una cuenta? <a href="/login">Inicia Sesión</a>
-          </p>
-        </div>
-      </div>
+        </section>
+      </main>
 
       <style jsx>{`
-        .welcome-container {
+        .inicio-container {
           display: flex;
           height: 100vh;
           font-family: 'Segoe UI', sans-serif;
+          background-color: #ffffff;
         }
 
-        .left-section {
-          flex: 1;
-          background-color: #2a2829;
-          display: flex;
-          align-items: center;
-          justify-content: center;
-          overflow: hidden;
-        }
-
-        .left-section img {
-          width: 100%;
-          height: 100%;
-          object-fit: cover;
-        }
-
-        .right-section {
-          flex: 1;
-          display: flex;
-          flex-direction: column;
-          align-items: center;
-          justify-content: center;
-          background-color: white;
+        .sidebar {
+          width: 250px;
+          background-color: #24487f;
+          color: white;
           padding: 20px;
         }
 
         .logo-container {
-          width: 100px;
-          height: 100px;
-          border-radius: 50%;
-          overflow: hidden;
+          cursor: pointer;
+          text-align: center;
           margin-bottom: 20px;
-          box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
         }
 
-        .logo-container img {
-          width: 100%;
-          height: 100%;
+        .logo-circle {
+          background-color: white;
+          border-radius: 50%;
+          padding: 10px;
+          display: inline-block;
+        }
+
+        .logo-circle img {
+          width: 100px;
+          height: 100px;
+          object-fit: contain;
+        }
+
+        .sidebar ul {
+          list-style: none;
+          padding: 0;
+        }
+
+        .sidebar li {
+          margin-bottom: 15px;
+          cursor: pointer;
+          display: flex;
+          align-items: center;
+          gap: 10px;
+          padding: 8px;
+          border-radius: 5px;
+        }
+
+        .sidebar li:hover {
+          background-color: #333;
+        }
+
+        .icon-img {
+          width: 18px;
+          height: 18px;
+        }
+
+        .main-content {
+          flex: 1;
+          display: flex;
+          flex-direction: column;
+        }
+
+        .header {
+          display: flex;
+          justify-content: flex-end;
+          align-items: center;
+          padding: 20px;
+          background-color: #24487f;
+        }
+
+        .cart-img,
+        .perfil-img {
+          width: 30px;
+          height: 30px;
+          cursor: pointer;
+        }
+
+        .perfil-img {
+          margin-left: 15px;
+          border-radius: 50%;
           object-fit: cover;
         }
 
-        .register-box {
-          width: 400px;
-          padding: 40px;
-          background: rgba(0, 0, 0, 0.6);
-          color: white;
-          border-radius: 10px;
-          box-shadow: 0 15px 25px rgba(0, 0, 0, 0.5);
-          text-align: center;
+        .cart-img:hover,
+        .perfil-img:hover {
+          filter: brightness(1.2);
         }
 
-        .register-box h2 {
+        .content {
+          padding: 20px 40px;
+          display: flex;
+          flex-direction: column;
+          align-items: center;
+          overflow-y: auto;
+          background-color: #ffffff;
+          color: black;
+        }
+
+        .welcome {
           margin-bottom: 30px;
-        }
-
-        .user-box {
-          position: relative;
-          margin-bottom: 30px;
-        }
-
-        .user-box input {
-          width: 100%;
-          padding: 10px 0;
-          font-size: 16px;
-          color: #fff;
-          border: none;
-          border-bottom: 1px solid #fff;
-          background: transparent;
-          outline: none;
-        }
-
-        .user-box label {
-          position: absolute;
-          top: 0;
-          left: 0;
-          padding: 10px 0;
-          font-size: 16px;
-          color: #fff;
-          pointer-events: none;
-          transition: 0.5s;
-        }
-
-        .user-box input:focus ~ label,
-        .user-box input:valid ~ label {
-          top: -20px;
-          color: #03e9f4;
-          font-size: 12px;
-        }
-
-        .register-button {
-          width: 100%;
-          padding: 12px;
-          color: #03e9f4;
-          background: none;
-          border: 1px solid #03e9f4;
-          font-size: 16px;
-          cursor: pointer;
-          border-radius: 5px;
-          transition: 0.5s;
-        }
-
-        .register-button:hover {
-          background-color: #03e9f4;
-          color: #fff;
-        }
-
-        .message {
-          margin-top: 20px;
           text-align: center;
-          font-size: 14px;
         }
 
-        .redirect-text {
-          margin-top: 20px;
-          text-align: center;
-          font-size: 14px;
-          color: #ccc;
+        .perfil-form {
+          width: 100%;
+          max-width: 500px;
+          display: flex;
+          flex-direction: column;
+          gap: 15px;
         }
 
-        .redirect-text a {
-          color: #03e9f4;
-          text-decoration: none;
+        .perfil-form label {
           font-weight: bold;
+          color: #333;
+        }
+
+        .perfil-form input {
+          padding: 10px;
+          border: 1px solid #ccc;
+          border-radius: 5px;
+          font-size: 16px;
+          width: 100%;
+        }
+
+        .guardar-btn {
+          background-color: #24487f;
+          color: white;
+          border: none;
+          padding: 10px;
+          font-size: 16px;
+          border-radius: 5px;
+          cursor: pointer;
+        }
+
+        .guardar-btn:hover {
+          background-color: #1b3560;
         }
       `}</style>
     </div>

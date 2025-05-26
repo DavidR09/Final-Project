@@ -59,6 +59,7 @@ export default function Login() {
           height: 100vh;
           font-family: 'Segoe UI', sans-serif;
         }
+          
 
         .left-section {
           flex: 1;
@@ -103,7 +104,7 @@ export default function Login() {
         .login-box {
           width: 400px;
           padding: 40px;
-          background: rgba(0, 0, 0, 0.6);
+          background: rgba(90, 86, 86, 0.36);
           color: white;
           border-radius: 10px;
           box-shadow: 0 15px 25px rgba(0, 0, 0, 0.5);

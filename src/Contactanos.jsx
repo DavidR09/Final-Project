@@ -1,31 +1,35 @@
 import React from 'react';
 import { useNavigate } from 'react-router-dom';
 
-export default function App() {
+export default function Contactanos() {
   const navigate = useNavigate();
 
   return (
     <div className="welcome-container">
       <div className="left-section">
-        <img src="/public/fotinicio.jpg" alt="Dashboard ilustración" />
+        <img src="/public/fotinicio.jpg" alt="Imagen de contacto" />
       </div>
       <div className="right-section">
         <div className="logo-container">
           <img src="/public/Logo.png" alt="Logo de Repuestos G.R.A" />
         </div>
-        <h1>Bienvenido a <span className="highlight">Repuestos G.R.A</span></h1>
+        <h1>Contáctanos en <span className="highlight">Repuestos G.R.A</span></h1>
         <p className="intro-text">
-          Somos una plataforma de comercio electrónico especializada en la venta de piezas automotrices 
-          para vehículos de cualquier marca, modelo o año. Nuestro principal objetivo es resolver la mayor 
-          necesidad del mercado: <strong>la demora en la obtención de piezas esenciales</strong>.
+          Si necesitas asistencia, información sobre nuestras piezas o tienes alguna consulta,
+          no dudes en comunicarte con nosotros. Estamos disponibles para ayudarte en todo momento.
         </p>
+        <p className="intro-text"><strong>Teléfono:</strong> +1 (809) 605-7725</p>
+        <p className="intro-text"><strong>Correo electrónico:</strong> contacto@repuestosgra.com</p>
+        <p className="intro-text"><strong>Dirección:</strong> Av. Principal #45, Santiago de los Caballeros, R.D.</p>
+        <p className="intro-text"><strong>Horario:</strong> Lunes a Viernes de 8:00 a.m. a 6:00 p.m.</p>
+
         <div className="button-group">
-          <button onClick={() => navigate('/login')} className="primary-btn">
-            Iniciar Sesión
+          <button onClick={() => navigate('/')} className="primary-btn">
+            Volver al Inicio
           </button>
-          <button onClick={() => navigate('/contactanos')} className="secondary-btn">
-            Contáctanos
-          </button>
+          <a href="https://wa.me/18096057725" target="_blank" rel="noopener noreferrer" className="secondary-btn">
+            WhatsApp
+          </a>
         </div>
       </div>
 
@@ -108,6 +112,7 @@ export default function App() {
           border: none;
           cursor: pointer;
           transition: all 0.3s ease;
+          text-decoration: none;
         }
 
         .primary-btn {
