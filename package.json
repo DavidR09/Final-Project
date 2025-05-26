@@ -1,8 +1,20 @@
 {
   "name": "final-project",
-  "private": true,
   "version": "0.0.0",
+  "private": true,
+  "description": "conexión mysql desde nodejs",
+  "homepage": "https://github.com/DavidR09/Final-Project#readme",
+  "bugs": {
+    "url": "https://github.com/DavidR09/Final-Project/issues"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/DavidR09/Final-Project.git"
+  },
+  "license": "ISC",
+  "author": "",
   "type": "module",
+  "main": "app.js",
   "scripts": {
     "dev": "vite",
     "build": "vite build",
@@ -11,6 +23,8 @@
   },
   "dependencies": {
     "final-project": "file:",
+    "mysql": "^2.18.1",
+    "mysql2": "^3.14.1",
     "react": "^19.1.0",
     "react-dom": "^19.1.0",
     "react-router-dom": "^7.6.0"
