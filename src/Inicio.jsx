@@ -34,6 +34,7 @@ export default function Inicio() {
           <li onClick={() => navigate('/productos')}>Piezas</li>
           <li onClick={() => navigate('/pedidos')}>Pedidos</li> {/* Aquí está la novedad */}
           <li onClick={() => navigate('/contacto')}>Sobre Nosotros</li>
+          <li onClick={() => navigate('/register')}>Register</li>
         </ul>
       </aside>
 

@@ -11,6 +11,7 @@ import Perfil from './Perfil.jsx';
 import Productos from './Productos.jsx';
 import Contacto from './Contacto.jsx';
 import Pedidos from './Pedidos.jsx';
+import Contactanos from './Contactanos.jsx';
 
 
 
@@ -27,6 +28,8 @@ ReactDOM.createRoot(document.getElementById('root')).render(
         <Route path="/productos" element={<Productos />} /> 
         <Route path="/contacto" element={<Contacto />} /> 
         <Route path="/pedidos" element={<Pedidos />} />
+        <Route path="/contactanos" element={<Contactanos />} />
+        
 
 
 
