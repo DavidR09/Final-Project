@@ -12,19 +12,8 @@ export default function Register() {
   const [mensaje, setMensaje] = useState(null);
   const [tipoMensaje, setTipoMensaje] = useState('');
 
-  const handleRegister = (e) => {
+  const handleRegister = async (e) => {
     e.preventDefault();
-
-    const users = JSON.parse(localStorage.getItem('users')) || [];
-    const existe = users.some(
-      (user) => user.correo_electronico_usuario.toLowerCase() === correo.toLowerCase()
-    );
-
-    if (existe) {
-      setTipoMensaje('error');
-      setMensaje('El correo ya está registrado.');
-      return;
-    }
 
     const nuevoUsuario = {
       nombre_usuario: nombre,
@@ -36,20 +25,37 @@ export default function Register() {
       fecha_registro_usuario: new Date().toISOString()
     };
 
-    users.push(nuevoUsuario);
-    localStorage.setItem('users', JSON.stringify(users));
+    try {
+      const response = await fetch('https://example.org/post', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify(nuevoUsuario)
+      });
 
-    setTipoMensaje('success');
-    setMensaje('Registro exitoso.');
+      if (!response.ok) {
+        throw new Error('Error en el registro');
+      }
 
-    // Limpiar campos
-    setNombre('');
-    setApellido('');
-    setCorreo('');
-    setRol('');
-    setContrasenia('');
-    setTelefono('');
-    
+      const data = await response.json();
+      console.log('Respuesta del servidor:', data);
+
+      setTipoMensaje('success');
+      setMensaje('Registro exitoso.');
+
+      // Limpiar campos
+      setNombre('');
+      setApellido('');
+      setCorreo('');
+      setRol('');
+      setContrasenia('');
+      setTelefono('');
+    } catch (error) {
+      console.error('Error:', error);
+      setTipoMensaje('error');
+      setMensaje('Hubo un problema al registrar el usuario.');
+    }
   };
 
   return (
