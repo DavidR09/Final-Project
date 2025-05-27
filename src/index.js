@@ -1,9 +1,13 @@
 import express from 'express';
 import connectToDatabase from './database/connectionMySQL.js';
+import cors from 'cors';
 import usuarioRouter from './database/insertUser.js'; // Ajusta la ruta según tu estructura
 
 const app = express();
 const port = 3000;
+
+// Habilitar CORS
+app.use(cors());
 
 // Middlewares
 app.use(express.json());
