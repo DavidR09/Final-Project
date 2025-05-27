@@ -1,5 +1,5 @@
 import express from 'express';
-import connectToDatabase from 'connectionMySQL.js';
+import connectToDatabase from './connectionMySQL.js';
 
 const router = express.Router();
 
