@@ -24,8 +24,10 @@ export default function Carrito() {
 
         <ul>
           <li onClick={() => navigate('/inicio')}>Inicio</li>
+          <li onClick={() => navigate('/pedidos')}>Pedidos</li>
           <li onClick={() => navigate('/perfil')}>Perfil</li>
           <li onClick={() => navigate('/carrito')}>
+            
             <img src="/carrito.png" alt="Carrito" className="icon-img" />
             Carrito
           </li>
