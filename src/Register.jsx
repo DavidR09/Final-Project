@@ -19,14 +19,13 @@ export default function Register() {
       nombre_usuario: nombre,
       apellido_usuario: apellido,
       correo_electronico_usuario: correo,
-      rol_usuario: rol,
       contrasenia_usuario: contrasenia,
+      rol_usuario: rol,
       telefono_usuario: telefono,
-      fecha_registro_usuario: new Date().toISOString()
     };
 
     try {
-const response = await fetch('http://localhost:3000/api/insertar-usuario', {
+      const response = await fetch('http://localhost:3000/insertar-usuario', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json'
@@ -34,15 +33,14 @@ const response = await fetch('http://localhost:3000/api/insertar-usuario', {
         body: JSON.stringify(nuevoUsuario)
       });
 
+      const data = await response.json();
+
       if (!response.ok) {
-        throw new Error('Error en el registro');
+        throw new Error(data.error || 'Error en el registro');
       }
 
-      const data = await response.json();
-      console.log('Respuesta del servidor:', data);
-
       setTipoMensaje('success');
-      setMensaje('Registro exitoso.');
+      setMensaje(data.message || 'Usuario registrado exitosamente.');
 
       // Limpiar campos
       setNombre('');
@@ -54,7 +52,7 @@ const response = await fetch('http://localhost:3000/api/insertar-usuario', {
     } catch (error) {
       console.error('Error:', error);
       setTipoMensaje('error');
-      setMensaje('Hubo un problema al registrar el usuario.');
+      setMensaje(error.message || 'Hubo un problema al registrar el usuario.');
     }
   };
 

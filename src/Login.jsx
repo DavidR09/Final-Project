@@ -4,43 +4,14 @@ import { useNavigate } from 'react-router-dom';
 export default function Login() {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
-  const [mensaje, setMensaje] = useState(null);
-  const [tipoMensaje, setTipoMensaje] = useState('');
+  const [showPassword, setShowPassword] = useState(false); // 👁️ Estado para mostrar/ocultar
   const navigate = useNavigate();
 
- const handleLogin = async (e) => {
-  e.preventDefault();
-
-  const usuario = {
-    correo_electronico_usuario: email,
-    contrasenia_usuario: password,
+  const handleLogin = (e) => {
+    e.preventDefault();
+    console.log('Iniciando sesión con:', { email, password });
+    navigate('/inicio'); 
   };
-
-  try {
-    const response = await fetch('http://localhost:3000/api/login', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify(usuario)
-    });
-
-    const data = await response.json(); // parseamos JSON directamente
-
-    if (!response.ok) {
-      throw new Error(data.error || 'Error al iniciar sesión');
-    }
-
-    setTipoMensaje('success');
-    setMensaje(data.message || 'Inicio de sesión exitoso');
-    navigate('/inicio');
-
-  } catch (error) {
-    console.error('Error:', error);
-    setTipoMensaje('error');
-    setMensaje(error.message || 'Hubo un problema al iniciar sesión.');
-  }
-};
-
-
 
   return (
     <div className="welcome-container">
@@ -57,17 +28,6 @@ export default function Login() {
         </div>
         <div className="login-box">
           <h2>Iniciar Sesión</h2>
-          {mensaje && (
-            <div
-              className={`mensaje ${tipoMensaje}`}
-              style={{
-                color: tipoMensaje === 'error' ? 'red' : 'green',
-                marginBottom: '15px',
-              }}
-            >
-              {mensaje}
-            </div>
-          )}
           <form onSubmit={handleLogin}>
             <div className="user-box">
               <input
@@ -78,15 +38,23 @@ export default function Login() {
               />
               <label>Correo Electrónico</label>
             </div>
-            <div className="user-box">
+
+            <div className="user-box password-box">
               <input
-                type="password"
+                type={showPassword ? 'text' : 'password'}
                 required
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
               />
               <label>Contraseña</label>
+              <span
+                className="toggle-password"
+                onClick={() => setShowPassword(!showPassword)}
+              >
+                {showPassword ? '🙈' : '👁️'}
+              </span>
             </div>
+
             <button type="submit" className="login-button">Iniciar Sesión</button>
           </form>
         </div>
@@ -187,6 +155,16 @@ export default function Login() {
           font-size: 12px;
         }
 
+        .password-box .toggle-password {
+          position: absolute;
+          right: 0;
+          top: 50%;
+          transform: translateY(-50%);
+          color: #ccc;
+          cursor: pointer;
+          font-size: 18px;
+        }
+
         .login-button {
           width: 100%;
           padding: 12px;
@@ -205,8 +183,16 @@ export default function Login() {
           color: #fff;
         }
 
-        .mensaje {
+        .register-link {
+          margin-top: 10px;
           font-size: 14px;
+          color: #ccc;
+        }
+
+        .register-link a {
+          color: #24487f;
+          text-decoration: none;
+          font-weight: bold;
         }
       `}</style>
     </div>
