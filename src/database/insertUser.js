@@ -1,5 +1,6 @@
 import express from 'express';
 import connectToDatabase from './connectionMySQL.js';
+import bcrypt from 'bcrypt';
 
 const router = express.Router();
 
@@ -28,6 +29,9 @@ router.post('/insertar-usuario', async (req, res) => {
             return res.status(400).json({ error: 'Todos los campos son requeridos' });
         }
 
+        // Hashear la contraseña antes de guardarla
+        const hashedPassword = await bcrypt.hash(contrasenia_usuario, 10);
+
         // Ejecutar la consulta SQL
         const [results] = await connection.execute(
             `INSERT INTO usuario 
@@ -38,7 +42,7 @@ router.post('/insertar-usuario', async (req, res) => {
                 nombre_usuario,
                 apellido_usuario,
                 correo_electronico_usuario,
-                contrasenia_usuario,
+                hashedPassword,
                 rol_usuario,
                 telefono_usuario
             ]
