@@ -5,11 +5,12 @@ import usuarioRouter from './database/insertUser.js'; // Ajusta la ruta según t
 import loginRouter from './database/comprobarRol.js'; // Ajusta el path según tu estructura
 
 const app = express();
-const port = 3000;
+const port = 3000; // o 4000, 5000, etc.
 
 // Habilitar CORS
 app.use(cors({
   origin: 'http://localhost:5173', // o '*' si estás probando localmente
+    credentials: true
 }));
 
 // Middlewares

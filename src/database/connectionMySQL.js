@@ -5,10 +5,11 @@ let connection;
 async function connectToDatabase() {
     if (!connection) {
         connection = await mysql.createConnection({
-            host: 'bl1y8xb3pst0jrf0v0ur-mysql.services.clever-cloud.com',
-            user: 'upblfsqfoehyidyp',
-            password: 'V9bCQlga4xXOXTZvsBrT',
-            database: 'bl1y8xb3pst0jrf0v0ur',
+            host: 'localhost',
+            user: 'root',
+            password: 'DERP090307',
+            database: 'repuestosgra',
+            port: 3306
         });
         console.log('Conectado a la base de datos Repuestos GRA');
     }
