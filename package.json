@@ -22,6 +22,7 @@
     "preview": "vite preview"
   },
   "dependencies": {
+    "cors": "^2.8.5",
     "final-project": "file:",
     "mysql": "^2.18.1",
     "mysql2": "^3.14.1",

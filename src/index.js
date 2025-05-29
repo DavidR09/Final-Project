@@ -7,7 +7,9 @@ const app = express();
 const port = 3000;
 
 // Habilitar CORS
-app.use(cors());
+app.use(cors({
+  origin: 'http://localhost:5173', // o '*' si estás probando localmente
+}));
 
 // Middlewares
 app.use(express.json());

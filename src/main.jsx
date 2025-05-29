@@ -43,6 +43,19 @@ ReactDOM.createRoot(document.getElementById('root')).render(
 
         {/* Rutas de categorías con prefijo /repuestos */}
         <Route path="/repuestos/neumaticos" element={<Neumaticos />} />
+        <Route path="/repuestos/baterias" element={<Baterias />} />
+        <Route path="/repuestos/faroles" element={<Faroles />} />
+        <Route path="/repuestos/aros" element={<Aros />} />
+        <Route path="/repuestos/gatos" element={<Gatos />} />
+        <Route path="/repuestos/lubricantes" element={<Lubricantes />} />
+        <Route path="/repuestos/carrocerias" element={<Carrocerias />} />
+        <Route path="/repuestos/electricos" element={<Electricos />} />
+        <Route path="/repuestos/amortiguadores" element={<Amortiguadores />} />
+        <Route path="/repuestos/filtros_aceite" element={<Filtros_aceite />} />
+        
+        
+
+    
      
       </Routes>
     </Router>
