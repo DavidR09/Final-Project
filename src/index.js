@@ -2,6 +2,7 @@ import express from 'express';
 import connectToDatabase from './database/connectionMySQL.js';
 import cors from 'cors';
 import usuarioRouter from './database/insertUser.js'; // Ajusta la ruta según tu estructura
+import loginRouter from './database/comprobarRol.js'; // Ajusta el path según tu estructura
 
 const app = express();
 const port = 3000;
@@ -17,6 +18,9 @@ app.use(express.urlencoded({ extended: true }));
 
 // Usar el router de usuarios
 app.use('/api', usuarioRouter);
+
+// Usa el router para /login
+app.use('/api', loginRouter); // o `app.use('/api', loginRouter);` si lo prefieres
 
 // Resto de tu configuración...
 app.listen(port, async () => {

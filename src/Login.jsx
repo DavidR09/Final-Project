@@ -8,42 +8,39 @@ export default function Login() {
   const [tipoMensaje, setTipoMensaje] = useState('');
   const navigate = useNavigate();
 
-  const handleLogin = async (e) => {
-    e.preventDefault();
+ const handleLogin = async (e) => {
+  e.preventDefault();
 
-    const usuario = {
-      correo_electronico_usuario: email,
-      contrasenia_usuario: password,
-    };
-
-    try {
-      const response = await fetch('http://localhost:3000/login', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json'
-        },
-        body: JSON.stringify(usuario)
-      });
-
-      const data = await response.json();
-
-      if (!response.ok) {
-        throw new Error(data.error || 'Error al iniciar sesión');
-      }
-
-      setTipoMensaje('success');
-      setMensaje(data.message || 'Inicio de sesión exitoso');
-
-      // Puedes guardar un token o info de sesión aquí si tu backend lo envía
-      // localStorage.setItem('token', data.token);
-
-      navigate('/inicio');
-    } catch (error) {
-      console.error('Error:', error);
-      setTipoMensaje('error');
-      setMensaje(error.message || 'Hubo un problema al iniciar sesión.');
-    }
+  const usuario = {
+    correo_electronico_usuario: email,
+    contrasenia_usuario: password,
   };
+
+  try {
+    const response = await fetch('http://localhost:3000/api/login', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(usuario)
+    });
+
+    const data = await response.json(); // parseamos JSON directamente
+
+    if (!response.ok) {
+      throw new Error(data.error || 'Error al iniciar sesión');
+    }
+
+    setTipoMensaje('success');
+    setMensaje(data.message || 'Inicio de sesión exitoso');
+    navigate('/inicio');
+
+  } catch (error) {
+    console.error('Error:', error);
+    setTipoMensaje('error');
+    setMensaje(error.message || 'Hubo un problema al iniciar sesión.');
+  }
+};
+
+
 
   return (
     <div className="welcome-container">
