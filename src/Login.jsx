@@ -4,12 +4,45 @@ import { useNavigate } from 'react-router-dom';
 export default function Login() {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
+  const [mensaje, setMensaje] = useState(null);
+  const [tipoMensaje, setTipoMensaje] = useState('');
   const navigate = useNavigate();
 
-  const handleLogin = (e) => {
+  const handleLogin = async (e) => {
     e.preventDefault();
-    console.log('Iniciando sesión con:', { email, password });
-    navigate('/inicio'); 
+
+    const usuario = {
+      correo_electronico_usuario: email,
+      contrasenia_usuario: password,
+    };
+
+    try {
+      const response = await fetch('http://localhost:3000/login', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify(usuario)
+      });
+
+      const data = await response.json();
+
+      if (!response.ok) {
+        throw new Error(data.error || 'Error al iniciar sesión');
+      }
+
+      setTipoMensaje('success');
+      setMensaje(data.message || 'Inicio de sesión exitoso');
+
+      // Puedes guardar un token o info de sesión aquí si tu backend lo envía
+      // localStorage.setItem('token', data.token);
+
+      navigate('/inicio');
+    } catch (error) {
+      console.error('Error:', error);
+      setTipoMensaje('error');
+      setMensaje(error.message || 'Hubo un problema al iniciar sesión.');
+    }
   };
 
   return (
@@ -27,6 +60,17 @@ export default function Login() {
         </div>
         <div className="login-box">
           <h2>Iniciar Sesión</h2>
+          {mensaje && (
+            <div
+              className={`mensaje ${tipoMensaje}`}
+              style={{
+                color: tipoMensaje === 'error' ? 'red' : 'green',
+                marginBottom: '15px',
+              }}
+            >
+              {mensaje}
+            </div>
+          )}
           <form onSubmit={handleLogin}>
             <div className="user-box">
               <input
@@ -48,8 +92,6 @@ export default function Login() {
             </div>
             <button type="submit" className="login-button">Iniciar Sesión</button>
           </form>
-
-
         </div>
       </div>
 
@@ -59,7 +101,6 @@ export default function Login() {
           height: 100vh;
           font-family: 'Segoe UI', sans-serif;
         }
-          
 
         .left-section {
           flex: 1;
@@ -167,16 +208,8 @@ export default function Login() {
           color: #fff;
         }
 
-        .register-link {
-          margin-top: 10px;
+        .mensaje {
           font-size: 14px;
-          color: #ccc;
-        }
-
-        .register-link a {
-          color: #24487f;
-          text-decoration: none;
-          font-weight: bold;
         }
       `}</style>
     </div>
