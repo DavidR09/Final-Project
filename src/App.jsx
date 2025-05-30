@@ -4,14 +4,14 @@ import axios from 'axios';
 
 export default function App() {
   const navigate = useNavigate();
-  const [user, setUser] = useState(null);
+  const [, setUser] = useState(null);
 
   useEffect(() => {
     const checkAuth = async () => {
       try {
         const { data } = await axios.get('/api/check-auth', { withCredentials: true });
         setUser(data.user);
-        navigate('/dashboard');
+        navigate('');
       } catch {
         setUser(null);
       }
