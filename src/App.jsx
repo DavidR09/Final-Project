@@ -1,8 +1,24 @@
-import React from 'react';
+import React, { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
+import axios from 'axios';
 
 export default function App() {
   const navigate = useNavigate();
+  const [user, setUser] = useState(null);
+
+  useEffect(() => {
+    const checkAuth = async () => {
+      try {
+        const { data } = await axios.get('/api/check-auth', { withCredentials: true });
+        setUser(data.user);
+        navigate('/dashboard');
+      } catch {
+        setUser(null);
+      }
+    };
+
+    checkAuth();
+  }, []);
 
   return (
     <div className="welcome-container">
