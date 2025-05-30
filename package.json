@@ -16,11 +16,13 @@
   "type": "module",
   "main": "app.js",
   "scripts": {
-    "dev": "vite",
-    "build": "vite build",
-    "lint": "eslint .",
-    "preview": "vite preview"
-  },
+  "dev": "vite",
+  "server": "node backend/index.js", 
+  "build": "vite build",
+  "lint": "eslint .",
+  "preview": "vite preview"
+}
+,
   "dependencies": {
     "bcrypt": "^6.0.0",
     "cookie-parser": "^1.4.7",
@@ -44,13 +46,5 @@
     "eslint-plugin-react-refresh": "^0.4.19",
     "globals": "^16.0.0",
     "vite": "^6.3.5"
-  },
-  "scriptsB": {
-  "dev": "vite",
-  "server": "node backend/index.js", 
-  "build": "vite build",
-  "lint": "eslint .",
-  "preview": "vite preview"
-}
-
+  }
 }

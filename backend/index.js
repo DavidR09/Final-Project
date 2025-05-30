@@ -4,7 +4,7 @@ dotenv.config();
 
 import express from 'express';
 import cookieParser from 'cookie-parser';
-import connectToDatabase from './database/connectionMySQL.js';
+import connectToDatabase from './database/connectionMySQL.js'; // Ajusta la ruta según tu estructura
 import cors from 'cors';
 import usuarioRouter from './database/insertUser.js'; // Ajusta la ruta según tu estructura
 import loginRouter from './database/comprobarRol.js'; // Ajusta el path según tu estructura

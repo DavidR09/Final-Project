@@ -1,7 +1,7 @@
 /* global process */
 import jwt from 'jsonwebtoken';
 import bcrypt from 'bcrypt';
-import connectToDatabase from '../connectionMySQL.js';
+import connectToDatabase from './database/connectionMySQL.js';
 import dotenv from 'dotenv';
 
 dotenv.config();

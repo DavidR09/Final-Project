@@ -1,5 +1,5 @@
 import express from 'express';
-import login from '../backend/authController.js'; // Ajusta la ruta según tu estructura
+import login from '../authController.js'; // Ajusta la ruta según tu estructura
 
 const router = express.Router();
 
