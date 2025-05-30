@@ -1,3 +1,4 @@
+/* global process */
 import dotenv from 'dotenv';
 dotenv.config();
 
@@ -9,8 +10,11 @@ import usuarioRouter from './database/insertUser.js'; // Ajusta la ruta según t
 import loginRouter from './database/comprobarRol.js'; // Ajusta el path según tu estructura
 
 const app = express();
-app.use(cookieParser());
 const port = 3000; // o 4000, 5000, etc.
+
+console.log("Node.js está usando JWT_SECRET:", process.env.JWT_SECRET);
+
+console.log('Entorno:', typeof process !== 'undefined' ? 'Node.js' : 'Navegador');
 
 // Habilitar CORS
 app.use(cors({
@@ -19,6 +23,7 @@ app.use(cors({
 }));
 
 // Middlewares
+app.use(cookieParser());
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 

@@ -1,3 +1,4 @@
+/* global process */
 import jwt from 'jsonwebtoken';
 
 const authenticate = (req, res, next) => {

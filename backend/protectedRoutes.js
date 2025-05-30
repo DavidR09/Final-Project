@@ -1,6 +1,7 @@
-const express = require('express');
+import express from 'express';
+import authenticate from './authMiddleware.js'; // Asegúrate de tener la extensión .js
+
 const router = express.Router();
-const authenticate = require('./authMiddleware');
 
 // Ruta protegida
 router.get('/datos-sensibles', authenticate, (req, res) => {

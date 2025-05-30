@@ -23,6 +23,7 @@
   },
   "dependencies": {
     "bcrypt": "^6.0.0",
+    "cookie-parser": "^1.4.7",
     "cors": "^2.8.5",
     "dotenv": "^16.5.0",
     "final-project": "file:",
@@ -43,5 +44,13 @@
     "eslint-plugin-react-refresh": "^0.4.19",
     "globals": "^16.0.0",
     "vite": "^6.3.5"
-  }
+  },
+  "scriptsB": {
+  "dev": "vite",
+  "server": "node backend/index.js", 
+  "build": "vite build",
+  "lint": "eslint .",
+  "preview": "vite preview"
+}
+
 }
