@@ -1,10 +1,15 @@
+import dotenv from 'dotenv';
+dotenv.config();
+
 import express from 'express';
+import cookieParser from 'cookie-parser';
 import connectToDatabase from './database/connectionMySQL.js';
 import cors from 'cors';
 import usuarioRouter from './database/insertUser.js'; // Ajusta la ruta según tu estructura
 import loginRouter from './database/comprobarRol.js'; // Ajusta el path según tu estructura
 
 const app = express();
+app.use(cookieParser());
 const port = 3000; // o 4000, 5000, etc.
 
 // Habilitar CORS
