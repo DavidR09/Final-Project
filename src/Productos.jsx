@@ -20,7 +20,7 @@ export default function Productos() {
   return (
     <div className="productos-container">
       <aside className="sidebar">
-        <div className="logo-wrapper" onClick={() => navigate('/inicio')}>
+        <div className="logo-wrapper" onClick={() => navigate('/inicio_client')}>
           <img src="/Logo.png" alt="Logo" />
         </div>
 

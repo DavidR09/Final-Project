@@ -23,6 +23,8 @@ import Carrocerias from './Carrocerías.jsx';
 import Electricos from './Eléctricos.jsx';
 import Amortiguadores from './Amortiguadores.jsx';
 import Filtros_aceite from './Filtros_aceite.jsx';
+import Inicio_Client from './Inicio_Client.jsx';
+
 
 ReactDOM.createRoot(document.getElementById('root')).render(
   <React.StrictMode>
@@ -38,6 +40,7 @@ ReactDOM.createRoot(document.getElementById('root')).render(
         <Route path="/contacto" element={<Contacto />} />
         <Route path="/pedidos" element={<Pedidos />} />
         <Route path="/contactanos" element={<Contactanos />} />
+        <Route path="/inicio_client" element={<Inicio_Client />} />
 
         {/* Rutas de categorías con prefijo /repuestos */}
         <Route path="/repuestos/neumaticos" element={<Neumaticos />} />

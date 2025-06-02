@@ -1,6 +1,7 @@
 /* global process */
 import dotenv from 'dotenv';
 dotenv.config();
+console.log('DB_USER:', process.env.DB_USER);
 
 import express from 'express';
 import cookieParser from 'cookie-parser';
