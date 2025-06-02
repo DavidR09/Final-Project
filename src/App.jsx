@@ -1,4 +1,120 @@
-import React from 'react';
+import React, { useEffect, useState } from 'react';
+import { useNavigate, Routes, Route, Navigate } from 'react-router-dom';
+import axios from 'axios';
+import Login from './Login';
+import Contactanos from './Contactanos';
+import Dashboard from './Dashboard';
+import ProtectedRoute from './ProtectedRoute';
+
+export default function App() {
+  const [isAuthenticated, setIsAuthenticated] = useState(null);
+  const [userRole, setUserRole] = useState(null);
+  const navigate = useNavigate();
+
+  // Verificar autenticación al cargar
+  useEffect(() => {
+    const checkAuth = async () => {
+      try {
+        const { data } = await axios.get('/api/verify-auth', { 
+          withCredentials: true 
+        });
+        setIsAuthenticated(true);
+        setUserRole(data.user?.rol);
+        
+        // Redirigir a dashboard si ya está autenticado
+        if (window.location.pathname === '/') {
+          navigate(data.user?.rol === 'admin' ? '/admin' : '/dashboard');
+        }
+      } catch (error) {
+  console.error('Error al verificar autenticación:', error);
+  setIsAuthenticated(false);
+}
+    };
+
+    checkAuth();
+  }, [navigate]);
+
+  if (isAuthenticated === null) {
+    return <div className="loading-screen">Cargando...</div>;
+  }
+
+  return (
+    <>
+      <Routes>
+        <Route path="/login" element={<Login />} />
+        <Route path="/contactanos" element={<Contactanos />} />
+        
+        {/* Rutas protegidas */}
+        <Route element={<ProtectedRoute isAllowed={isAuthenticated} />}>
+          <Route path="/dashboard" element={<Dashboard />} />
+          <Route path="/admin" element={
+            <ProtectedRoute isAllowed={userRole === 'admin'} redirectPath="/dashboard">
+              <AdminDashboard />
+            </ProtectedRoute>
+          } />
+        </Route>
+        
+        {/* Ruta principal */}
+        <Route path="/" element={
+          isAuthenticated ? (
+            <Navigate to={userRole === 'admin' ? '/admin' : '/dashboard'} replace />
+          ) : (
+            <WelcomePage />
+          )
+        } />
+        
+        {/* Ruta por defecto */}
+        <Route path="*" element={<Navigate to="/" replace />} />
+      </Routes>
+    </>
+  );
+}
+
+// Componente de página de bienvenida (tu código original)
+function WelcomePage() {
+  const navigate = useNavigate();
+
+  return (
+    <div className="welcome-container">
+      <div className="left-section">
+        <img src="/public/fotinicio.jpg" alt="Dashboard ilustración" />
+      </div>
+      <div className="right-section">
+        <div className="logo-container">
+          <img src="/public/Logo.png" alt="Logo de Repuestos G.R.A" />
+        </div>
+        <h1>Bienvenido a <span className="highlight">Repuestos G.R.A</span></h1>
+        <p className="intro-text">
+          Somos una plataforma de comercio electrónico especializada en la venta de piezas automotrices 
+          para vehículos de cualquier marca, modelo o año.
+        </p>
+        <div className="button-group">
+          <button onClick={() => navigate('/login')} className="primary-btn">
+            Iniciar Sesión
+          </button>
+          <button onClick={() => navigate('/contactanos')} className="secondary-btn">
+            Contáctanos
+          </button>
+        </div>
+      </div>
+
+      {/* Estilos igual que en tu código original */}
+      <style jsx>{`
+        /* ... (mantén todos tus estilos existentes) ... */
+        
+        .loading-screen {
+          display: flex;
+          justify-content: center;
+          align-items: center;
+          height: 100vh;
+          font-size: 1.5rem;
+        }
+      `}</style>
+    </div>
+  );
+}
+
+/* import React from 'react';
 import { useNavigate } from 'react-router-dom';
 
 
@@ -133,4 +249,4 @@ export default function App() {
       `}</style>
     </div>
   );
-}
+} */

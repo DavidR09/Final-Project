@@ -1,4 +1,20 @@
-import { Navigate, Outlet, useLocation } from 'react-router-dom';
+import { Navigate, useLocation } from 'react-router-dom';
+
+export default function ProtectedRoute({ 
+  children, 
+  isAllowed, 
+  redirectPath = '/login' 
+}) {
+  const location = useLocation();
+
+  if (!isAllowed) {
+    return <Navigate to={redirectPath} state={{ from: location }} replace />;
+  }
+
+  return children;
+}
+
+/* import { Navigate, Outlet, useLocation } from 'react-router-dom';
 import { useEffect, useState } from 'react';
 import axios from 'axios';
 
@@ -32,4 +48,4 @@ const ProtectedRoute = ({ allowedRoles = [] }) => {
   return <Outlet />;
 };
 
-export default ProtectedRoute;
+export default ProtectedRoute; */

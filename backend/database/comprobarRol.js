@@ -1,5 +1,5 @@
 import express from 'express';
-import login from '../authController.js'; // Ajusta la ruta según tu estructura
+//import login from '../authController.js'; // Ajusta la ruta según tu estructura
 
 const router = express.Router();
 
@@ -8,7 +8,7 @@ router.use(express.json());
 router.use(express.urlencoded({ extended: true }));
 
 // Ruta de login
-router.post('/login', login);
+//router.post('/login', login);
 
 // Ruta de prueba
 router.get('/login/test', (req, res) => {
