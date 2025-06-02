@@ -4,22 +4,81 @@ dotenv.config();
 
 import express from 'express';
 import cookieParser from 'cookie-parser';
-import connectToDatabase from './database/connectionMySQL.js'; // Ajusta la ruta según tu estructura
+import connectToDatabase from './database/connectionMySQL.js';
 import cors from 'cors';
-import usuarioRouter from './database/insertUser.js'; // Ajusta la ruta según tu estructura
-import loginRouter from './database/comprobarRol.js'; // Ajusta el path según tu estructura
+import usuarioRouter from './database/insertUser.js';
+import loginRouter from './database/comprobarRol.js';
 
 const app = express();
-const port = 3000; // o 4000, 5000, etc.
+const port = 3000;
+
+// Configuración para desarrollo local
+console.log("Entorno: Desarrollo Local (Node.js)");
+console.log("JWT_SECRET:", process.env.JWT_SECRET || "No configurado");
+
+// Middlewares esenciales
+app.use(cookieParser());
+app.use(express.json());
+app.use(express.urlencoded({ extended: true }));
+
+// CORS ajustado para desarrollo local
+app.use(cors({
+  origin: 'http://localhost:5173', // URL de tu frontend en Vite/React
+  credentials: true,
+  methods: ['GET', 'POST', 'PUT', 'DELETE'],
+  allowedHeaders: ['Content-Type', 'Authorization']
+}));
+
+// Rutas API
+app.use('/api', usuarioRouter);
+app.use('/api', loginRouter);
+
+// Middleware para rutas no existentes (útil para debugging)
+app.use((req, res) => {
+  console.warn(`Ruta no manejada: ${req.method} ${req.path}`);
+  res.status(404).json({ error: 'Ruta no encontrada' });
+});
+
+// Iniciar servidor
+app.listen(port, async () => {
+    try {
+        await connectToDatabase();
+        console.log(`Servidor backend local iniciado en http://localhost:${port}`);
+        console.log(`Rutas protegidas requieren autenticación JWT`);
+    } catch (err) {
+        console.error('Error al conectar a la base de datos:', err.message);
+        process.exit(1); // Detener la aplicación si no hay conexión a DB
+    }
+});
+
+// /* global process */
+/* import dotenv from 'dotenv';
+dotenv.config();
+
+import express from 'express';
+import cookieParser from 'cookie-parser';
+import connectToDatabase from './database/connectionMySQL.js';
+import cors from 'cors';
+import usuarioRouter from './database/insertUser.js';
+import loginRouter from './database/comprobarRol.js';
+import path from 'path';
+import { fileURLToPath } from 'url';
+
+// Configuración para ES Modules (porque usas 'import')
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = path.dirname(__filename);
+
+const app = express();
+const port = 3000;
 
 console.log("Node.js está usando JWT_SECRET:", process.env.JWT_SECRET);
 
-console.log('Entorno:', typeof process !== 'undefined' ? 'Node.js' : 'Navegador');
-
-// Habilitar CORS
+// Habilitar CORS (ajusta el origen en producción)
 app.use(cors({
-  origin: 'http://localhost:5173', // o '*' si estás probando localmente
-    credentials: true
+  origin: process.env.NODE_ENV === 'production' 
+    ? 'https://tudominio.com' 
+    : 'http://localhost:5173',
+  credentials: true
 }));
 
 // Middlewares
@@ -27,13 +86,22 @@ app.use(cookieParser());
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 
-// Usar el router de usuarios
+// Rutas API
 app.use('/api', usuarioRouter);
+app.use('/api', loginRouter);
 
-// Usa el router para /login
-app.use('/api', loginRouter); // o `app.use('/api', loginRouter);` si lo prefieres
+// --- Configuración para producción (punto 3) ---
+if (process.env.NODE_ENV === 'production') {
+  // 1. Sirve archivos estáticos del frontend (React/Vite)
+  app.use(express.static(path.join(__dirname, '../frontend/dist')));
 
-// Resto de tu configuración...
+  // 2. Todas las rutas no manejadas por API sirven el index.html
+  app.get('*', (req, res) => {
+    res.sendFile(path.join(__dirname, '../frontend/dist', 'index.html'));
+  });
+}
+
+// Iniciar servidor
 app.listen(port, async () => {
     try {
         await connectToDatabase();
@@ -41,4 +109,4 @@ app.listen(port, async () => {
     } catch (err) {
         console.error('No se pudo conectar a la base de datos:', err.message);
     }
-});
+}); */
