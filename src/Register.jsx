@@ -68,18 +68,13 @@ const response = await fetch('http://localhost:3000/api/insertar-usuario', {
         </div>
         <ul>
           <li onClick={() => navigate('/inicio')}>Inicio</li>
-          <li onClick={() => navigate('/carrito')}>
-            <img src="/carrito.png" alt="Carrito" className="icon-img" />
-            Carrito
-          </li>
           <li onClick={() => navigate('/')}>Cerrar sesión</li>
         </ul>
       </aside>
 
       <main className="main-content">
         <header className="header">
-          <img src="/carrito.png" alt="Carrito" className="cart-img" onClick={() => navigate('/carrito')} />
-          <img src="/perfil.png" alt="Perfil" className="perfil-img" onClick={() => navigate('/perfil')} />
+          
         </header>
 
         <section className="content">
