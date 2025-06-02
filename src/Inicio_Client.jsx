@@ -25,12 +25,12 @@ export default function Inicio_Client() {
   return (
     <div className="inicio-container">
       <aside className="sidebar">
-        <div className="logo-wrapper" onClick={() => navigate('/inicio')}>
+        <div className="logo-wrapper" onClick={() => navigate('/inicio_client')}>
           <img src="/Logo.png" alt="Logo" />
         </div>
 
         <ul>
-          <li onClick={() => navigate('/inicio')}>Inicio</li>
+          <li onClick={() => navigate('/inicio_client')}>Inicio</li>
           <li onClick={() => navigate('/productos')}>Piezas</li>
           <li onClick={() => navigate('/pedidos')}>Pedidos</li>
           <li onClick={() => navigate('/contacto')}>Sobre Nosotros</li>
@@ -81,7 +81,7 @@ export default function Inicio_Client() {
           </div>
         </section>
       </main>
-      
+
            <style jsx>{`
         .inicio-container {
           display: flex;

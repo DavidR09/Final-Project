@@ -16,7 +16,7 @@ export default function Perfil() {
       <aside className="sidebar">
         <div
           className="logo-container"
-          onClick={() => navigate('/inicio')}
+          onClick={() => navigate('/inicio_client')}
         >
           <div className="logo-circle">
             <img src="/Logo.png" alt="Logo" />
@@ -24,7 +24,7 @@ export default function Perfil() {
         </div>
 
         <ul>
-          <li onClick={() => navigate('/inicio')}>Inicio</li>
+          <li onClick={() => navigate('/inicio_client')}>Inicio</li>
           <li onClick={() => navigate('/carrito')}>
             <img src="/carrito.png" alt="Carrito" className="icon-img" />
             Carrito

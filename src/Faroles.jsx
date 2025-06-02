@@ -23,7 +23,7 @@ export default function Faroles() {
           <img src="/Logo.png" alt="Logo" />
         </div>
         <ul>
-          <li onClick={() => navigate('/inicio')}>Inicio</li>
+          <li onClick={() => navigate('/inicio_client')}>Inicio</li>
           <li onClick={() => navigate('/productos')}>Piezas</li>
           <li onClick={() => navigate('/contacto')}>Sobre Nosotros</li>
         </ul>
