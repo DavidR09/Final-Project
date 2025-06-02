@@ -1,0 +1,50 @@
+{
+  "name": "final-project",
+  "version": "0.0.0",
+  "private": true,
+  "description": "conexión mysql desde nodejs",
+  "homepage": "https://github.com/DavidR09/Final-Project#readme",
+  "bugs": {
+    "url": "https://github.com/DavidR09/Final-Project/issues"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/DavidR09/Final-Project.git"
+  },
+  "license": "ISC",
+  "author": "",
+  "type": "module",
+  "main": "app.js",
+  "scripts": {
+  "dev": "vite",
+  "server": "node backend/index.js", 
+  "build": "vite build",
+  "lint": "eslint .",
+  "preview": "vite preview"
+}
+,
+  "dependencies": {
+    "bcrypt": "^6.0.0",
+    "cookie-parser": "^1.4.7",
+    "cors": "^2.8.5",
+    "dotenv": "^16.5.0",
+    "final-project": "file:",
+    "jsonwebtoken": "^9.0.2",
+    "mysql": "^2.18.1",
+    "mysql2": "^3.14.1",
+    "react": "^19.1.0",
+    "react-dom": "^19.1.0",
+    "react-router-dom": "^7.6.0"
+  },
+  "devDependencies": {
+    "@eslint/js": "^9.25.0",
+    "@types/react": "^19.1.2",
+    "@types/react-dom": "^19.1.2",
+    "@vitejs/plugin-react": "^4.4.1",
+    "eslint": "^9.25.0",
+    "eslint-plugin-react-hooks": "^5.2.0",
+    "eslint-plugin-react-refresh": "^0.4.19",
+    "globals": "^16.0.0",
+    "vite": "^6.3.5"
+  }
+}
