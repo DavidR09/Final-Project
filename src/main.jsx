@@ -1,6 +1,7 @@
 import React from 'react';
 import ReactDOM from 'react-dom/client';
-import { BrowserRouter as Router, Routes, Route } from 'react-router-dom';
+import { BrowserRouter, Routes, Route } from 'react-router-dom';
+
 import App from './App.jsx';
 import Register from './Register.jsx';
 import Login from './Login.jsx';
@@ -22,14 +23,13 @@ import Carrocerias from './Carrocerías.jsx';
 import Electricos from './Eléctricos.jsx';
 import Amortiguadores from './Amortiguadores.jsx';
 import Filtros_aceite from './Filtros_aceite.jsx';
-
-
+import Inicio_Client from './Inicio_Client.jsx';
 
 
 ReactDOM.createRoot(document.getElementById('root')).render(
   <React.StrictMode>
-    <Router>
-  <Routes>
+    <BrowserRouter>
+      <Routes>
         <Route path="/" element={<App />} />
         <Route path="/register" element={<Register />} />
         <Route path="/login" element={<Login />} />
@@ -40,6 +40,7 @@ ReactDOM.createRoot(document.getElementById('root')).render(
         <Route path="/contacto" element={<Contacto />} />
         <Route path="/pedidos" element={<Pedidos />} />
         <Route path="/contactanos" element={<Contactanos />} />
+        <Route path="/inicio_client" element={<Inicio_Client />} />
 
         {/* Rutas de categorías con prefijo /repuestos */}
         <Route path="/repuestos/neumaticos" element={<Neumaticos />} />
@@ -52,12 +53,7 @@ ReactDOM.createRoot(document.getElementById('root')).render(
         <Route path="/repuestos/electricos" element={<Electricos />} />
         <Route path="/repuestos/amortiguadores" element={<Amortiguadores />} />
         <Route path="/repuestos/filtros_aceite" element={<Filtros_aceite />} />
-        
-        
-
-    
-     
       </Routes>
-    </Router>
+    </BrowserRouter>
   </React.StrictMode>
 );

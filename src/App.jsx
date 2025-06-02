@@ -3,7 +3,7 @@ import { useNavigate, Routes, Route, Navigate } from 'react-router-dom';
 import axios from 'axios';
 import Login from './Login';
 import Contactanos from './Contactanos';
-import Dashboard from './Dashboard';
+//import Dashboard from './Dashboard';
 import ProtectedRoute from './ProtectedRoute';
 
 export default function App() {
@@ -23,7 +23,7 @@ export default function App() {
         
         // Redirigir a dashboard si ya está autenticado
         if (window.location.pathname === '/') {
-          navigate(data.user?.rol === 'admin' ? '/admin' : '/dashboard');
+          navigate(data.user?.rol === 'admin' ? '/admin' : '/');
         }
       } catch (error) {
   console.error('Error al verificar autenticación:', error);
@@ -46,9 +46,9 @@ export default function App() {
         
         {/* Rutas protegidas */}
         <Route element={<ProtectedRoute isAllowed={isAuthenticated} />}>
-          <Route path="/dashboard" element={<Dashboard />} />
+          <Route path="/inicio_clien" element={<Dashboard />} />
           <Route path="/admin" element={
-            <ProtectedRoute isAllowed={userRole === 'admin'} redirectPath="/dashboard">
+            <ProtectedRoute isAllowed={userRole === 'admin'} redirectPath="/inicio_clien">
               <AdminDashboard />
             </ProtectedRoute>
           } />
@@ -57,7 +57,7 @@ export default function App() {
         {/* Ruta principal */}
         <Route path="/" element={
           isAuthenticated ? (
-            <Navigate to={userRole === 'admin' ? '/admin' : '/dashboard'} replace />
+            <Navigate to={userRole === 'admin' ? '/admin' : '/'} replace />
           ) : (
             <WelcomePage />
           )
@@ -98,16 +98,104 @@ function WelcomePage() {
         </div>
       </div>
 
-      {/* Estilos igual que en tu código original */}
       <style jsx>{`
-        /* ... (mantén todos tus estilos existentes) ... */
-        
-        .loading-screen {
+        .welcome-container {
           display: flex;
-          justify-content: center;
-          align-items: center;
           height: 100vh;
-          font-size: 1.5rem;
+          font-family: 'Segoe UI', sans-serif;
+        }
+
+        .left-section {
+          flex: 1;
+          background-color: #2a2829;
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          overflow: hidden;
+        }
+
+        .left-section img {
+          width: 100%;
+          height: 100%;
+          object-fit: cover;
+        }
+
+        .right-section {
+          flex: 1;
+          display: flex;
+          flex-direction: column;
+          align-items: center;
+          justify-content: center;
+          text-align: center;
+          background-color: white;
+          color: #111;
+          padding: 40px;
+        }
+
+        .logo-container {
+          width: 120px;
+          height: 120px;
+          border-radius: 50%;
+          overflow: hidden;
+          margin-bottom: 20px;
+          box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
+        }
+
+        .logo-container img {
+          width: 100%;
+          height: 100%;
+          object-fit: cover;
+        }
+
+        .right-section h1 {
+          font-size: 36px;
+          margin-bottom: 20px;
+        }
+
+        .highlight {
+          color: #24487f;
+        }
+
+        .intro-text {
+          font-size: 18px;
+          color: #333;
+          margin-bottom: 15px;
+          max-width: 600px;
+        }
+
+        .button-group {
+          display: flex;
+          gap: 15px;
+          margin-top: 30px;
+        }
+
+        .primary-btn,
+        .secondary-btn {
+          padding: 12px 24px;
+          font-size: 16px;
+          border-radius: 8px;
+          border: none;
+          cursor: pointer;
+          transition: all 0.3s ease;
+        }
+
+        .primary-btn {
+          background-color: #24487f;
+          color: white;
+        }
+
+        .primary-btn:hover {
+          background-color: #b9d7d9;
+          color: black;
+        }
+
+        .secondary-btn {
+          background-color: #e0e7ff;
+          color: #1e3a8a;
+        }
+
+        .secondary-btn:hover {
+          background-color: #c7d2fe;
         }
       `}</style>
     </div>
@@ -117,8 +205,10 @@ function WelcomePage() {
 /* import React from 'react';
 import { useNavigate } from 'react-router-dom';
 
+
 export default function App() {
   const navigate = useNavigate();
+
 
   return (
     <div className="welcome-container">

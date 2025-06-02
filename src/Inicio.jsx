@@ -1,26 +1,11 @@
-import React, { useState } from 'react';
+import React from 'react';
 import { useNavigate } from 'react-router-dom';
 
 export default function Inicio() {
   const navigate = useNavigate();
-  const [busqueda, setBusqueda] = useState('');
 
-  const categorias = [
-    { nombre: 'Neumáticos', imagen: '/Neumatico.png', ruta: 'neumaticos' },
-    { nombre: 'Baterías De Carro', imagen: '/bateria.jpg', ruta: 'baterias' },
-    { nombre: 'Faroles y Pantallas', imagen: '/pantallasmicas.png', ruta: 'faroles' },
-    { nombre: 'Aros', imagen: '/aros.png', ruta: 'aros' },
-    { nombre: 'Gatos', imagen: '/gato.png', ruta: 'gatos' },
-    { nombre: 'Lubricantes', imagen: '/lubricante.png', ruta: 'lubricantes' },
-    { nombre: 'Carrocerías', imagen: '/carroceria.png', ruta: 'carrocerias' },
-    { nombre: 'Eléctricos', imagen: '/electricas.png', ruta: 'electricos' },
-    { nombre: 'Amortiguadores', imagen: '/amortiguadores.png', ruta: 'amortiguadores' },
-    { nombre: 'Filtros De aceite', imagen: '/filtros.png', ruta: 'filtros_aceite' },
-  ];
 
-  const categoriasFiltradas = categorias.filter(cat =>
-    cat.nombre.toLowerCase().includes(busqueda.toLowerCase())
-  );
+  // Mantenemos el sidebar igual con las rutas
 
   return (
     <div className="inicio-container">
@@ -30,54 +15,20 @@ export default function Inicio() {
         </div>
 
         <ul>
-          <li onClick={() => navigate('/inicio')}>Inicio</li>
-          <li onClick={() => navigate('/productos')}>Piezas</li>
-          <li onClick={() => navigate('/pedidos')}>Pedidos</li> {/* Aquí está la novedad */}
-          <li onClick={() => navigate('/contacto')}>Sobre Nosotros</li>
-          <li onClick={() => navigate('/register')}>Register</li>
+         <li onClick={() => navigate('/inicio')}>Inicio</li>
+         <li onClick={() => navigate('/register')}>Register</li>
+         <li onClick={() => navigate('/inicio_client')}>Vista Cliente</li> 
+         <li onClick={() => navigate('/')}>Cerrar sesión</li>
         </ul>
+
       </aside>
 
       <main className="main-content">
-        <header className="header">
-          <input
-            type="text"
-            placeholder="Buscar categoria..."
-            value={busqueda}
-            onChange={(e) => setBusqueda(e.target.value)}
-            className="buscador"
-          />
-          <div className="iconos-header">
-            <img
-              src="/carrito.png"
-              alt="Carrito"
-              className="cart-img"
-              onClick={() => navigate('/carrito')}
-            />
-            <img
-              src="/perfil.png"
-              alt="Perfil"
-              className="perfil-img"
-              onClick={() => navigate('/perfil')}
-            />
-          </div>
-        </header>
+        
 
         <section className="content">
-          <div className="repuestos-section">
-            <h2>Categoria</h2>
-            <div className="categorias-grid">
-              {categoriasFiltradas.map((cat) => (
-                <div
-                  key={cat.nombre}
-                  className="categoria-card"
-                  onClick={() => navigate(`/repuestos/${cat.ruta}`)}
-                >
-                  <img src={cat.imagen} alt={cat.nombre} />
-                  <p>{cat.nombre}</p>
-                </div>
-              ))}
-            </div>
+          <div className="register-text">
+            Register
           </div>
         </section>
       </main>
@@ -163,6 +114,11 @@ export default function Inicio() {
           outline: none;
         }
 
+        .buscador:disabled {
+          background-color: #ddd;
+          cursor: not-allowed;
+        }
+
         .iconos-header {
           display: flex;
           align-items: center;
@@ -187,57 +143,19 @@ export default function Inicio() {
         }
 
         .content {
-          padding: 20px 40px;
+          flex: 1;
           display: flex;
-          flex-direction: column;
+          justify-content: center;
           align-items: center;
-          overflow-y: auto;
           background-color: #ffffff;
           color: black;
-        }
-
-        .repuestos-section {
-          text-align: center;
-          width: 100%;
-        }
-
-        .repuestos-section h2 {
-          font-size: 28px;
-          margin-bottom: 20px;
-          color: #333333;
-        }
-
-        .categorias-grid {
-          display: grid;
-          grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
-          gap: 30px;
-          max-width: 1000px;
-          margin: 0 auto;
-        }
-
-        .categoria-card {
-          display: flex;
-          flex-direction: column;
-          align-items: center;
-          cursor: pointer;
-          transition: transform 0.2s ease;
-        }
-
-        .categoria-card img {
-          width: 100px;
-          height: 100px;
-          object-fit: contain;
-        }
-
-        .categoria-card p {
-          margin-top: 10px;
+          font-size: 48px;
           font-weight: bold;
-          text-align: center;
-          color: black;
+          user-select: none;
         }
 
-        .categoria-card:hover {
-          transform: scale(1.05);
+        .register-text {
+          /* Extra centering and styling if needed */
         }
       `}</style>
     </div>

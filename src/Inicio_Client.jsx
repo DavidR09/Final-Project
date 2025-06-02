@@ -1,31 +1,40 @@
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 
-export default function Gatos() {
+export default function Inicio_Client() {
   const navigate = useNavigate();
   const [busqueda, setBusqueda] = useState('');
 
-  const gatos = [
-    { nombre: 'Gato Hidráulico 2T', imagen: '/gato_hidraulico.png' },
-    { nombre: 'Gato de Tijera', imagen: '/gato_tijera.png' },
-    { nombre: 'Gato Botella 3T', imagen: '/gato_botella.png' },
-    { nombre: 'Gato Eléctrico Portátil', imagen: '/gato_electrico.png' },
+  const categorias = [
+    { nombre: 'Neumáticos', imagen: '/Neumatico.png', ruta: 'neumaticos' },
+    { nombre: 'Baterías De Carro', imagen: '/bateria.jpg', ruta: 'baterias' },
+    { nombre: 'Faroles y Pantallas', imagen: '/pantallasmicas.png', ruta: 'faroles' },
+    { nombre: 'Aros', imagen: '/aros.png', ruta: 'aros' },
+    { nombre: 'Gatos', imagen: '/gato.png', ruta: 'gatos' },
+    { nombre: 'Lubricantes', imagen: '/lubricante.png', ruta: 'lubricantes' },
+    { nombre: 'Carrocerías', imagen: '/carroceria.png', ruta: 'carrocerias' },
+    { nombre: 'Eléctricos', imagen: '/electricas.png', ruta: 'electricos' },
+    { nombre: 'Amortiguadores', imagen: '/amortiguadores.png', ruta: 'amortiguadores' },
+    { nombre: 'Filtros De aceite', imagen: '/filtros.png', ruta: 'filtros_aceite' },
   ];
 
-  const gatosFiltrados = gatos.filter((g) =>
-    g.nombre.toLowerCase().includes(busqueda.toLowerCase())
+  const categoriasFiltradas = categorias.filter(cat =>
+    cat.nombre.toLowerCase().includes(busqueda.toLowerCase())
   );
 
   return (
-    <div className="productos-container">
+    <div className="inicio-container">
       <aside className="sidebar">
         <div className="logo-wrapper" onClick={() => navigate('/inicio_client')}>
           <img src="/Logo.png" alt="Logo" />
         </div>
+
         <ul>
           <li onClick={() => navigate('/inicio_client')}>Inicio</li>
           <li onClick={() => navigate('/productos')}>Piezas</li>
+          <li onClick={() => navigate('/pedidos')}>Pedidos</li>
           <li onClick={() => navigate('/contacto')}>Sobre Nosotros</li>
+          {/* ¡Sin botón de registro aquí! */}
         </ul>
       </aside>
 
@@ -33,7 +42,7 @@ export default function Gatos() {
         <header className="header">
           <input
             type="text"
-            placeholder="Buscar gato..."
+            placeholder="Buscar categoría..."
             value={busqueda}
             onChange={(e) => setBusqueda(e.target.value)}
             className="buscador"
@@ -55,14 +64,17 @@ export default function Gatos() {
         </header>
 
         <section className="content">
-          <div className="productos-section">
-            <h2>Gatos Disponibles</h2>
-            <div className="productos-grid">
-              {gatosFiltrados.map((prod, index) => (
-                <div key={index} className="producto-card">
-                  <img src={prod.imagen} alt={prod.nombre} />
-                  <p>{prod.nombre}</p>
-                  <button className="btn-agregar">Agregar</button>
+          <div className="repuestos-section">
+            <h2>Categoría</h2>
+            <div className="categorias-grid">
+              {categoriasFiltradas.map((cat) => (
+                <div
+                  key={cat.nombre}
+                  className="categoria-card"
+                  onClick={() => navigate(`/repuestos/${cat.ruta}`)}
+                >
+                  <img src={cat.imagen} alt={cat.nombre} />
+                  <p>{cat.nombre}</p>
                 </div>
               ))}
             </div>
@@ -70,8 +82,8 @@ export default function Gatos() {
         </section>
       </main>
 
-      <style jsx>{`
-        .productos-container {
+           <style jsx>{`
+        .inicio-container {
           display: flex;
           height: 100vh;
           font-family: 'Segoe UI', sans-serif;
@@ -184,18 +196,18 @@ export default function Gatos() {
           color: black;
         }
 
-        .productos-section {
+        .repuestos-section {
           text-align: center;
           width: 100%;
         }
 
-        .productos-section h2 {
+        .repuestos-section h2 {
           font-size: 28px;
           margin-bottom: 20px;
           color: #333333;
         }
 
-        .productos-grid {
+        .categorias-grid {
           display: grid;
           grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
           gap: 30px;
@@ -203,44 +215,28 @@ export default function Gatos() {
           margin: 0 auto;
         }
 
-        .producto-card {
+        .categoria-card {
           display: flex;
           flex-direction: column;
           align-items: center;
-          padding: 15px;
-          border: 1px solid #eee;
-          border-radius: 10px;
+          cursor: pointer;
           transition: transform 0.2s ease;
-          background-color: #f9f9f9;
         }
 
-        .producto-card img {
+        .categoria-card img {
           width: 100px;
           height: 100px;
           object-fit: contain;
         }
 
-        .producto-card p {
+        .categoria-card p {
           margin-top: 10px;
           font-weight: bold;
+          text-align: center;
           color: black;
         }
 
-        .btn-agregar {
-          margin-top: 10px;
-          padding: 6px 12px;
-          border: none;
-          background-color: #24487f;
-          color: white;
-          border-radius: 5px;
-          cursor: pointer;
-        }
-
-        .btn-agregar:hover {
-          background-color: #1a3763;
-        }
-
-        .producto-card:hover {
+        .categoria-card:hover {
           transform: scale(1.05);
         }
       `}</style>

@@ -4,78 +4,85 @@ import { useNavigate } from 'react-router-dom';
 export default function Carrito() {
   const navigate = useNavigate();
 
+  // Simulación de productos en el carrito
   const productos = [
-    { id: 1, nombre: 'Lorem ipsum.', cantidad: 6, precio: 66, imagen: '/zapatilla.jpg' },
-    { id: 2, nombre: 'Lorem ipsum.', cantidad: 7, precio: 36, imagen: '/zapatilla.jpg' },
-    { id: 3, nombre: 'Lorem ipsum.', cantidad: 1, precio: 16, imagen: '/zapatilla.jpg' },
+    { id: 1, nombre: 'Producto A', precio: 100, cantidad: 2 },
+    { id: 2, nombre: 'Producto B', precio: 150, cantidad: 1 },
   ];
 
   const total = productos.reduce((acc, p) => acc + p.precio * p.cantidad, 0);
 
   return (
-    <div className="main-container">
+    <div className="carrito-container">
       <aside className="sidebar">
         <div
           className="logo-wrapper"
-          onClick={() => navigate('/inicio')}
+          onClick={() => navigate('/inicio_client')}
         >
           <img src="/Logo.png" alt="Logo" />
         </div>
 
         <ul>
-          <li onClick={() => navigate('/inicio')}>Inicio</li>
+          <li onClick={() => navigate('/inicio_client')}>Inicio</li>
+          <li onClick={() => navigate('/productos')}>Piezas</li>
+          <li onClick={() => navigate('/contacto')}>Sobre Nosotros</li>
           <li onClick={() => navigate('/pedidos')}>Pedidos</li>
-          <li onClick={() => navigate('/perfil')}>Perfil</li>
-          <li onClick={() => navigate('/carrito')}>
-            
-            <img src="/carrito.png" alt="Carrito" className="icon-img" />
-            Carrito
-          </li>
         </ul>
       </aside>
 
       <main className="main-content">
+        <header className="header">
+          <img
+            src="/carrito.png"
+            alt="Carrito"
+            className="cart-img"
+            onClick={() => navigate('/carrito')}
+          />
+          <img
+            src="/perfil.png"
+            alt="Perfil"
+            className="perfil-img"
+            onClick={() => navigate('/perfil')}
+          />
+        </header>
+
         <section className="carrito-section">
           <table className="carrito-table">
             <thead>
               <tr>
                 <th>Producto</th>
-                <th>Nombre</th>
-                <th>Cantidad</th>
                 <th>Precio</th>
-                <th>Total</th>
+                <th>Cantidad</th>
+                <th>Subtotal</th>
               </tr>
             </thead>
             <tbody>
-              {productos.map((prod) => (
-                <tr key={prod.id}>
-                  <td>
-                    <img src={prod.imagen} alt={prod.nombre} className="product-img" />
-                  </td>
-                  <td>{prod.nombre}</td>
-                  <td>{prod.cantidad}</td>
-                  <td>${prod.precio}</td>
-                  <td>${prod.precio * prod.cantidad}</td>
+              {productos.map((p) => (
+                <tr key={p.id}>
+                  <td>{p.nombre}</td>
+                  <td>${p.precio}</td>
+                  <td>{p.cantidad}</td>
+                  <td>${p.precio * p.cantidad}</td>
                 </tr>
               ))}
             </tbody>
           </table>
 
           <div className="detalle-compra">
-            <h3 className="detalle-title">Resumen</h3>
+            <h3 className="detalle-title">Resumen de Compra</h3>
             <p className="total">Total: ${total}</p>
-            <button className="confirmar-btn">Confirmar Compra</button>
-            <p className="vuelva">Gracias por tu visita</p>
+            <button className="confirmar-btn">Confirmar Pedido</button>
+            <p className="vuelva">Vuelva pronto 😄</p>
           </div>
         </section>
       </main>
 
       <style jsx>{`
-        .main-container {
+        .carrito-container {
           display: flex;
           height: 100vh;
           font-family: 'Segoe UI', sans-serif;
-          background-color: #fff;
+          background-color: #ffffff;
         }
 
         .sidebar {
@@ -112,9 +119,6 @@ export default function Carrito() {
         .sidebar li {
           margin-bottom: 15px;
           cursor: pointer;
-          display: flex;
-          align-items: center;
-          gap: 10px;
           padding: 8px;
           border-radius: 5px;
         }
@@ -123,15 +127,36 @@ export default function Carrito() {
           background-color: #333;
         }
 
-        .icon-img {
-          width: 18px;
-          height: 18px;
-        }
-
         .main-content {
           flex: 1;
           display: flex;
           flex-direction: column;
+        }
+
+        .header {
+          display: flex;
+          justify-content: flex-end;
+          align-items: center;
+          padding: 20px;
+          background-color: #24487f;
+        }
+
+        .cart-img,
+        .perfil-img {
+          width: 30px;
+          height: 30px;
+          cursor: pointer;
+        }
+
+        .perfil-img {
+          margin-left: 15px;
+          border-radius: 50%;
+          object-fit: cover;
+        }
+
+        .cart-img:hover,
+        .perfil-img:hover {
+          filter: brightness(1.2);
         }
 
         .carrito-section {
@@ -159,12 +184,6 @@ export default function Carrito() {
           padding: 15px;
           text-align: center;
           border-bottom: 1px solid #ddd;
-        }
-
-        .product-img {
-          width: 60px;
-          height: 60px;
-          border-radius: 10px;
         }
 
         .detalle-compra {
