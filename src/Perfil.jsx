@@ -1,14 +1,98 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
+import axios from 'axios';
 
 export default function Perfil() {
   const navigate = useNavigate();
-  const [nombre, setNombre] = useState('');
-  const [ubicacion, setUbicacion] = useState('');
-  const [descripcion, setDescripcion] = useState('');
+  const [usuario, setUsuario] = useState({
+    nombre_usuario: '',
+    apellido_usuario: '',
+    correo_electronico_usuario: '',
+    telefono_usuario: '',
+    fecha_registro_usuario: ''
+  });
+  const [editando, setEditando] = useState(false);
+  const [mensaje, setMensaje] = useState('');
+  const [tipoMensaje, setTipoMensaje] = useState('');
+  const [isLoading, setIsLoading] = useState(false);
 
-  const handleGuardar = () => {
-    alert('Cambios guardados correctamente');
+  // Obtener datos del usuario desde localStorage
+  const idUsuario = localStorage.getItem('id_usuario');
+  const nombreUsuario = localStorage.getItem('nombre_usuario');
+
+  useEffect(() => {
+    const cargarDatosUsuario = async () => {
+      try {
+        const token = localStorage.getItem('token');
+        setIsLoading(true);
+        const response = await axios.get(`http://localhost:3000/api/usuarios/${idUsuario}`, {
+          headers: {
+            Authorization: `Bearer ${token}`
+          },
+          withCredentials: true
+        });
+        setUsuario(response.data);
+      } catch (error) {
+        console.error('Error al cargar datos del usuario:', error);
+        setTipoMensaje('error');
+        setMensaje('Error al cargar los datos del perfil');
+      } finally {
+        setIsLoading(false);
+      }
+    };
+
+    if (idUsuario) {
+      cargarDatosUsuario();
+    } else {
+      navigate('/login');
+    }
+  }, [idUsuario, navigate]);
+
+  const handleInputChange = (e) => {
+    const { name, value } = e.target;
+    setUsuario(prev => ({
+      ...prev,
+      [name]: value
+    }));
+  };
+
+  const handleGuardar = async () => {
+    try {
+      const token = localStorage.getItem('token');
+      setIsLoading(true);
+      await axios.put(`http://localhost:3000/api/usuarios/${idUsuario}`, usuario, {
+        headers: {
+          Authorization: `Bearer ${token}`
+        },
+        withCredentials: true
+      });
+      
+      // Actualizar localStorage si el nombre cambió
+      if (usuario.nombre_usuario !== nombreUsuario) {
+        localStorage.setItem('nombre_usuario', usuario.nombre_usuario);
+      }
+      
+      setTipoMensaje('success');
+      setMensaje('Cambios guardados correctamente');
+      setEditando(false);
+    } catch (error) {
+      console.error('Error al guardar cambios:', error);
+      setTipoMensaje('error');
+      setMensaje(error.response?.data?.error || 'Error al guardar los cambios');
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  const handleCerrarSesion = () => {
+    // Limpiar localStorage
+    localStorage.removeItem('token');
+    localStorage.removeItem('id_usuario');
+    localStorage.removeItem('nombre_usuario');
+    localStorage.removeItem('rol_usuario');
+    
+    // Redirigir al login
+    navigate('/login');
   };
 
   return (
@@ -29,12 +113,15 @@ export default function Perfil() {
             <img src="/carrito.png" alt="Carrito" className="icon-img" />
             Carrito
           </li>
-          <li onClick={() => navigate('/')}>Cerrar sesión</li>
+          <li onClick={handleCerrarSesion}>Cerrar sesión</li>
         </ul>
       </aside>
 
       <main className="main-content">
         <header className="header">
+          <span className="nombre-usuario">
+            Hola, {nombreUsuario || 'Usuario'}
+          </span>
           <img
             src="/carrito.png"
             alt="Carrito"
@@ -51,37 +138,116 @@ export default function Perfil() {
 
         <section className="content">
           <div className="welcome">
-            <h1>Editar Perfil</h1>
+            <h1>Mi Perfil</h1>
+            {mensaje && (
+              <div className={`mensaje ${tipoMensaje}`}>
+                {mensaje}
+              </div>
+            )}
           </div>
 
-          <div className="perfil-form">
-            <label>Nombre:</label>
-            <input
-              type="text"
-              value={nombre}
-              onChange={(e) => setNombre(e.target.value)}
-              placeholder="Tu nombre"
-            />
-
-            <label>Ubicación:</label>
-            <input
-              type="text"
-              value={ubicacion}
-              onChange={(e) => setUbicacion(e.target.value)}
-              placeholder="Ciudad o país"
-            />
-
-            <label>Descripción:</label>
-            <textarea
-              value={descripcion}
-              onChange={(e) => setDescripcion(e.target.value)}
-              placeholder="Cuéntanos algo sobre ti"
-            />
-
-            <button className="guardar-btn" onClick={handleGuardar}>
-              Guardar Cambios
-            </button>
-          </div>
+          {isLoading ? (
+            <div className="loading">Cargando...</div>
+          ) : (
+            <div className="perfil-info">
+              {!editando ? (
+                <>
+                  <div className="info-item">
+                    <label>Nombre:</label>
+                    <p>{usuario.nombre_usuario} {usuario.apellido_usuario}</p>
+                  </div>
+                  
+                  <div className="info-item">
+                    <label>Correo electrónico:</label>
+                    <p>{usuario.correo_electronico_usuario}</p>
+                  </div>
+                  
+                  <div className="info-item">
+                    <label>Teléfono:</label>
+                    <p>{usuario.telefono_usuario}</p>
+                  </div>
+                  
+                  <div className="info-item">
+                    <label>Fecha de registro:</label>
+                    <p>{new Date(usuario.fecha_registro_usuario).toLocaleDateString()}</p>
+                  </div>
+                  
+                  <button 
+                    className="editar-btn" 
+                    onClick={() => setEditando(true)}
+                    disabled={isLoading}
+                  >
+                    Editar Perfil
+                  </button>
+                </>
+              ) : (
+                <div className="perfil-form">
+                  <div className="form-group">
+                    <label>Nombre:</label>
+                    <input
+                      type="text"
+                      name="nombre_usuario"
+                      value={usuario.nombre_usuario}
+                      onChange={handleInputChange}
+                      disabled={isLoading}
+                    />
+                  </div>
+                  
+                  <div className="form-group">
+                    <label>Apellido:</label>
+                    <input
+                      type="text"
+                      name="apellido_usuario"
+                      value={usuario.apellido_usuario}
+                      onChange={handleInputChange}
+                      disabled={isLoading}
+                    />
+                  </div>
+                  
+                  <div className="form-group">
+                    <label>Correo electrónico:</label>
+                    <input
+                      type="email"
+                      name="correo_electronico_usuario"
+                      value={usuario.correo_electronico_usuario}
+                      onChange={handleInputChange}
+                      disabled={isLoading}
+                    />
+                  </div>
+                  
+                  <div className="form-group">
+                    <label>Teléfono:</label>
+                    <input
+                      type="tel"
+                      name="telefono_usuario"
+                      value={usuario.telefono_usuario}
+                      onChange={handleInputChange}
+                      maxLength="12"
+                      disabled={isLoading}
+                    />
+                  </div>
+                  
+                  <div className="botones">
+                    <button 
+                      className="guardar-btn" 
+                      onClick={handleGuardar}
+                      disabled={isLoading}
+                    >
+                      {isLoading ? 'Guardando...' : 'Guardar Cambios'}
+                    </button>
+                    
+                    <button 
+                      className="cancelar-btn" 
+                      onClick={() => setEditando(false)}
+                      disabled={isLoading}
+                    >
+                      Cancelar
+                    </button>
+                  </div>
+                </div>
+              )}
+            </div>
+          )}
         </section>
       </main>
 
@@ -155,6 +321,14 @@ export default function Perfil() {
           align-items: center;
           padding: 20px;
           background-color: #24487f;
+          gap: 15px;
+        }
+
+        .nombre-usuario {
+          color: white;
+          margin-right: auto;
+          padding-left: 20px;
+          font-weight: bold;
         }
 
         .cart-img,
@@ -188,47 +362,149 @@ export default function Perfil() {
         .welcome {
           margin-bottom: 30px;
           text-align: center;
+          width: 100%;
+        }
+
+        .welcome h1 {
+          margin-bottom: 10px;
+        }
+
+        .mensaje {
+          margin: 15px 0;
+          padding: 10px;
+          border-radius: 5px;
+          text-align: center;
+          width: 100%;
+          max-width: 500px;
+        }
+
+        .mensaje.success {
+          background-color: rgba(81, 207, 102, 0.1);
+          color: #51cf66;
+          border: 1px solid #51cf66;
+        }
+
+        .mensaje.error {
+          background-color: rgba(255, 107, 107, 0.1);
+          color: #ff6b6b;
+          border: 1px solid #ff6b6b;
+        }
+
+        .loading {
+          padding: 20px;
+          text-align: center;
+          font-size: 18px;
+          color: #24487f;
+        }
+
+        .perfil-info {
+          width: 100%;
+          max-width: 600px;
+          background: #f9f9f9;
+          padding: 20px;
+          border-radius: 8px;
+          box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+
+        .info-item {
+          margin-bottom: 15px;
+        }
+
+        .info-item label {
+          font-weight: bold;
+          display: block;
+          margin-bottom: 5px;
+          color: #24487f;
+        }
+
+        .info-item p {
+          margin: 0;
+          padding: 8px;
+          background: white;
+          border-radius: 4px;
+          border: 1px solid #ddd;
         }
 
         .perfil-form {
           width: 100%;
-          max-width: 500px;
-          display: flex;
-          flex-direction: column;
-          gap: 15px;
         }
 
-        .perfil-form label {
+        .form-group {
+          margin-bottom: 15px;
+        }
+
+        .form-group label {
           font-weight: bold;
-          color: #333;
+          display: block;
+          margin-bottom: 5px;
+          color: #24487f;
         }
 
-        .perfil-form input,
-        .perfil-form textarea {
-          padding: 10px;
-          border: 1px solid #ccc;
-          border-radius: 5px;
-          font-size: 16px;
+        .form-group input {
           width: 100%;
+          padding: 8px;
+          border: 1px solid #ddd;
+          border-radius: 4px;
+          font-size: 16px;
         }
 
-        .perfil-form textarea {
-          resize: vertical;
-          min-height: 80px;
+        .botones {
+          display: flex;
+          gap: 10px;
+          margin-top: 20px;
+        }
+
+        .editar-btn,
+        .guardar-btn,
+        .cancelar-btn {
+          padding: 10px 15px;
+          border: none;
+          border-radius: 4px;
+          cursor: pointer;
+          font-size: 16px;
+          transition: background-color 0.3s;
+        }
+
+        .editar-btn {
+          background-color: #24487f;
+          color: white;
+        }
+
+        .editar-btn:hover {
+          background-color: #1b3560;
+        }
+
+        .editar-btn:disabled {
+          background-color: #cccccc;
+          cursor: not-allowed;
         }
 
         .guardar-btn {
-          background-color: #24487f;
+          background-color: #28a745;
           color: white;
-          border: none;
-          padding: 10px;
-          font-size: 16px;
-          border-radius: 5px;
-          cursor: pointer;
         }
 
         .guardar-btn:hover {
-          background-color: #1b3560;
+          background-color: #218838;
+        }
+
+        .guardar-btn:disabled {
+          background-color: #cccccc;
+          cursor: not-allowed;
+        }
+
+        .cancelar-btn {
+          background-color: #dc3545;
+          color: white;
+        }
+
+        .cancelar-btn:hover {
+          background-color: #c82333;
+        }
+
+        .cancelar-btn:disabled {
+          background-color: #cccccc;
+          cursor: not-allowed;
         }
       `}</style>
     </div>

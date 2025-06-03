@@ -4,14 +4,6 @@ import { useNavigate } from 'react-router-dom';
 export default function Carrito() {
   const navigate = useNavigate();
 
-  // Simulación de productos en el carrito
-  const productos = [
-    { id: 1, nombre: 'Producto A', precio: 100, cantidad: 2 },
-    { id: 2, nombre: 'Producto B', precio: 150, cantidad: 1 },
-  ];
-
-  const total = productos.reduce((acc, p) => acc + p.precio * p.cantidad, 0);
-
   return (
     <div className="carrito-container">
       <aside className="sidebar">
@@ -57,21 +49,14 @@ export default function Carrito() {
               </tr>
             </thead>
             <tbody>
-              {productos.map((p) => (
-                <tr key={p.id}>
-                  <td>{p.nombre}</td>
-                  <td>${p.precio}</td>
-                  <td>{p.cantidad}</td>
-                  <td>${p.precio * p.cantidad}</td>
-                </tr>
-              ))}
+              {/* Sin productos aún */}
             </tbody>
           </table>
 
           <div className="detalle-compra">
             <h3 className="detalle-title">Resumen de Compra</h3>
-            <p className="total">Total: ${total}</p>
-            <button className="confirmar-btn">Confirmar Pedido</button>
+            <p className="total">Total: $0</p>
+            <button className="confirmar-btn" disabled>Confirmar Pedido</button>
             <p className="vuelva">Vuelva pronto 😄</p>
           </div>
         </section>
@@ -212,11 +197,8 @@ export default function Carrito() {
           padding: 10px 20px;
           font-size: 16px;
           border-radius: 6px;
-          cursor: pointer;
-        }
-
-        .confirmar-btn:hover {
-          background-color: #1b355b;
+          cursor: not-allowed;
+          opacity: 0.6;
         }
 
         .vuelva {

@@ -1,4 +1,4 @@
-/* import React, { useState } from 'react';
+import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 
 export default function Productos() {
@@ -15,30 +15,7 @@ export default function Productos() {
 
   const productosFiltrados = productos.filter((prod) =>
     prod.nombre.toLowerCase().includes(busqueda.toLowerCase())
-  ); */
-
-import { useNavigate } from 'react-router-dom';
-import React, { useState, useEffect } from 'react';
-
-export default function Productos() {
-    const navigate = useNavigate(); 
-  const [busqueda, setBusqueda] = useState('');
-  const [productos, setProductos] = useState([]);
-
-  useEffect(() => {
-    fetch('http://localhost:3000/api/productos')
-      .then((res) => res.json())
-      .then((data) => {
-        console.log("Productos recibidos:", data); // Verifica que lleguen correctamente
-        setProductos(data);
-      })
-      .catch((err) => console.error('Error al obtener productos:', err));
-  }, []);
-
-const productosFiltrados = productos.filter((prod) =>
-  prod.nombre_pieza?.toLowerCase().includes(busqueda.toLowerCase())
-);
-
+  );
 
   return (
     <div className="productos-container">
@@ -84,15 +61,14 @@ const productosFiltrados = productos.filter((prod) =>
           <div className="productos-section">
             <h2>Productos Disponibles</h2>
             <div className="productos-grid">
-            {productosFiltrados.map((prod, index) => (
-            <div key={index} className="producto-card">
-            <img src={prod.imagen_pieza} alt={prod.nombre_pieza} />
-            <p>{prod.nombre_pieza}</p>
-            <button className="btn-agregar">Agregar</button>
+              {productosFiltrados.map((prod, index) => (
+                <div key={index} className="producto-card">
+                  <img src={prod.imagen} alt={prod.nombre} />
+                  <p>{prod.nombre}</p>
+                  <button className="btn-agregar">Agregar</button>
+                </div>
+              ))}
             </div>
-          ))}
-          </div>
-
           </div>
         </section>
       </main>

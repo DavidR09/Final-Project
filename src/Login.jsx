@@ -20,7 +20,7 @@ export default function Login() {
         correo_electronico_usuario: email,
         contrasenia_usuario: password
       }, {
-        withCredentials: true, // Importante para cookies
+        withCredentials: true,
         headers: { 'Content-Type': 'application/json' }
       });
 
@@ -28,11 +28,17 @@ export default function Login() {
         setTipoMensaje('success');
         setMensaje('Inicio de sesión exitoso');
         
-        // Redirige según el rol del usuario
+        // Guardar datos del usuario
+        localStorage.setItem('token', response.data.token);
+        localStorage.setItem('id_usuario', response.data.userId);
+        localStorage.setItem('nombre_usuario', response.data.nombre);
+        localStorage.setItem('rol_usuario', response.data.rol);
+        
+        // Redirigir según el rol
         if (response.data.rol === 'admin') {
           navigate('/admin/dashboard');
         } else {
-          navigate('/inicio');
+          navigate('/inicio_client');
         }
       } else {
         throw new Error('Respuesta inesperada del servidor');
@@ -62,16 +68,7 @@ export default function Login() {
         <div className="login-box">
           <h2>Iniciar Sesión</h2>
           {mensaje && (
-            <div
-              className={`mensaje ${tipoMensaje}`}
-              style={{
-                color: tipoMensaje === 'error' ? '#ff6b6b' : '#51cf66',
-                marginBottom: '15px',
-                padding: '10px',
-                borderRadius: '5px',
-                backgroundColor: tipoMensaje === 'error' ? 'rgba(255, 107, 107, 0.1)' : 'rgba(81, 207, 102, 0.1)'
-              }}
-            >
+            <div className={`mensaje ${tipoMensaje}`}>
               {mensaje}
             </div>
           )}
@@ -221,6 +218,23 @@ export default function Login() {
         .login-button:disabled {
           background-color: #cccccc;
           cursor: not-allowed;
+        }
+
+        .mensaje {
+          margin: 15px 0;
+          padding: 10px;
+          border-radius: 5px;
+          text-align: center;
+        }
+
+        .mensaje.success {
+          background-color: rgba(81, 207, 102, 0.1);
+          color: #51cf66;
+        }
+
+        .mensaje.error {
+          background-color: rgba(255, 107, 107, 0.1);
+          color: #ff6b6b;
         }
       `}</style>
     </div>

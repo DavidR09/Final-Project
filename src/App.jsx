@@ -1,6 +1,10 @@
 import React from 'react';
 import { useNavigate } from 'react-router-dom';
 
+ 
+
+
+
 
 export default function App() {
   const navigate = useNavigate();
@@ -30,7 +34,8 @@ export default function App() {
           </button>
         </div>
       </div>
-      
+
+
 
       <style jsx>{`
         .welcome-container {
