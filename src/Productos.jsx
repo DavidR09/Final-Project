@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+/* import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 
 export default function Productos() {
@@ -12,6 +12,26 @@ export default function Productos() {
     { nombre: 'Neumático Goodyear', imagen: '/Neumatico.png' },
     { nombre: 'Amortiguador trasero', imagen: '/amortiguadores.png' },
   ];
+
+  const productosFiltrados = productos.filter((prod) =>
+    prod.nombre.toLowerCase().includes(busqueda.toLowerCase())
+  ); */
+
+import React, { useState, useEffect } from 'react';
+import { useNavigate } from 'react-router-dom';
+
+export default function Productos() {
+  const navigate = useNavigate();
+  const [busqueda, setBusqueda] = useState('');
+  const [productos, setProductos] = useState([]);
+
+  // Paso 3: Llamar a la API para obtener los productos
+  useEffect(() => {
+    fetch('http://localhost:3000/api/productos') // Ajusta la URL si es diferente
+      .then((res) => res.json())
+      .then((data) => setProductos(data))
+      .catch((err) => console.error('Error al obtener productos:', err));
+  }, []);
 
   const productosFiltrados = productos.filter((prod) =>
     prod.nombre.toLowerCase().includes(busqueda.toLowerCase())
