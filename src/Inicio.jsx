@@ -28,7 +28,7 @@ export default function Inicio() {
 
         <section className="content">
           <div className="register-text">
-            Register
+            Repuestos G.R.A
           </div>
         </section>
       </main>

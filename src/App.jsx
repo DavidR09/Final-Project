@@ -1,78 +1,10 @@
-import React, { useEffect, useState } from 'react';
-import { useNavigate, Routes, Route, Navigate } from 'react-router-dom';
-import axios from 'axios';
-import Login from './Login';
-import Contactanos from './Contactanos';
-//import Dashboard from './Dashboard';
-import ProtectedRoute from './ProtectedRoute';
+import React from 'react';
+import { useNavigate } from 'react-router-dom';
+
 
 export default function App() {
-  const [isAuthenticated, setIsAuthenticated] = useState(null);
-  const [userRole, setUserRole] = useState(null);
   const navigate = useNavigate();
 
-  // Verificar autenticación al cargar
-  useEffect(() => {
-    const checkAuth = async () => {
-      try {
-        const { data } = await axios.get('/api/verify-auth', { 
-          withCredentials: true 
-        });
-        setIsAuthenticated(true);
-        setUserRole(data.user?.rol);
-        
-        // Redirigir a dashboard si ya está autenticado
-        if (window.location.pathname === '/') {
-          navigate(data.user?.rol === 'admin' ? '/admin' : '/');
-        }
-      } catch (error) {
-  console.error('Error al verificar autenticación:', error);
-  setIsAuthenticated(false);
-}
-    };
-
-    checkAuth();
-  }, [navigate]);
-
-  if (isAuthenticated === null) {
-    return <div className="loading-screen">Cargando...</div>;
-  }
-
-  return (
-    <>
-      <Routes>
-        <Route path="/login" element={<Login />} />
-        <Route path="/contactanos" element={<Contactanos />} />
-        
-        {/* Rutas protegidas */}
-        <Route element={<ProtectedRoute isAllowed={isAuthenticated} />}>
-          <Route path="/inicio_clien" element={<Dashboard />} />
-          <Route path="/admin" element={
-            <ProtectedRoute isAllowed={userRole === 'admin'} redirectPath="/inicio_clien">
-              <AdminDashboard />
-            </ProtectedRoute>
-          } />
-        </Route>
-        
-        {/* Ruta principal */}
-        <Route path="/" element={
-          isAuthenticated ? (
-            <Navigate to={userRole === 'admin' ? '/admin' : '/'} replace />
-          ) : (
-            <WelcomePage />
-          )
-        } />
-        
-        {/* Ruta por defecto */}
-        <Route path="*" element={<Navigate to="/" replace />} />
-      </Routes>
-    </>
-  );
-}
-
-// Componente de página de bienvenida (tu código original)
-function WelcomePage() {
-  const navigate = useNavigate();
 
   return (
     <div className="welcome-container">
@@ -86,7 +18,8 @@ function WelcomePage() {
         <h1>Bienvenido a <span className="highlight">Repuestos G.R.A</span></h1>
         <p className="intro-text">
           Somos una plataforma de comercio electrónico especializada en la venta de piezas automotrices 
-          para vehículos de cualquier marca, modelo o año.
+          para vehículos de cualquier marca, modelo o año. Nuestro principal objetivo es resolver la mayor 
+          necesidad del mercado: <strong>la demora en la obtención de piezas esenciales</strong>.
         </p>
         <div className="button-group">
           <button onClick={() => navigate('/login')} className="primary-btn">
@@ -97,6 +30,7 @@ function WelcomePage() {
           </button>
         </div>
       </div>
+      
 
       <style jsx>{`
         .welcome-container {
@@ -202,6 +136,7 @@ function WelcomePage() {
   );
 }
 
+// Asegúrate de que WelcomePage esté definido en este archivo o importado.
 /* import React from 'react';
 import { useNavigate } from 'react-router-dom';
 
