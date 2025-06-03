@@ -1,4 +1,110 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
+import { useNavigate } from 'react-router-dom';
+import './Inicio_Client.css';
+
+export default function Inicio_Client() {
+  const navigate = useNavigate();
+  const [busqueda, setBusqueda] = useState('');
+  const [categorias, setCategorias] = useState([]);
+  const [categoriaSeleccionada, setCategoriaSeleccionada] = useState(null);
+
+  // Cargar categorías del backend
+  useEffect(() => {
+    // Asociar imágenes locales con nombres
+    const imagenes = {
+      'Baterías De Carro': '/bateria.jpg',
+      'Neumáticos': '/Neumatico.png',
+      'Faroles y Pantallas': '/pantallasmicas.png',
+      'Aros': '/aros.png',
+      'Gatos': '/gato.png',
+      'Lubricantes': '/lubricante.png',
+      'Carrocerías': '/carroceria.png',
+      'Eléctricos': '/electricas.png',
+      'Amortiguadores': '/amortiguadores.png',
+      'Filtros De aceite': '/filtros.png',
+    };
+
+    fetch('http://localhost:3000/api/categorias')
+      .then(res => res.json())
+      .then(data => {
+        const categoriasConImagen = data.map(cat => ({
+          ...cat,
+          imagen: imagenes[cat.nombre_categoria_pieza] || '/default.png',
+        }));
+        setCategorias(categoriasConImagen);
+      })
+      .catch(err => console.error('Error cargando categorías:', err));
+  }, []);
+
+  // Filtro por búsqueda
+  const categoriasFiltradas = categorias.filter(cat =>
+    cat.nombre_categoria_pieza.toLowerCase().includes(busqueda.toLowerCase())
+  );
+
+  return (
+    <div className="inicio-container">
+      <aside className="sidebar">
+        <div className="logo-wrapper" onClick={() => navigate('/inicio_client')}>
+          <img src="/Logo.png" alt="Logo" />
+        </div>
+
+        <ul>
+          <li onClick={() => navigate('/inicio_client')}>Inicio</li>
+          <li onClick={() => navigate('/productos')}>Piezas</li>
+          <li onClick={() => navigate('/pedidos')}>Pedidos</li>
+          <li onClick={() => navigate('/contacto')}>Sobre Nosotros</li>
+        </ul>
+      </aside>
+
+      <main className="main-content">
+        <header className="header">
+          <input
+            type="text"
+            placeholder="Buscar categoría..."
+            value={busqueda}
+            onChange={(e) => setBusqueda(e.target.value)}
+            className="buscador"
+          />
+          <div className="iconos-header">
+            <img src="/carrito.png" alt="Carrito" className="cart-img" onClick={() => navigate('/carrito')} />
+            <img src="/perfil.png" alt="Perfil" className="perfil-img" onClick={() => navigate('/perfil')} />
+          </div>
+        </header>
+
+        <section className="content">
+          <div className="repuestos-section">
+            <h2>Categoría</h2>
+            <div className="categorias-grid">
+              {categoriasFiltradas.map((cat) => (
+                <div
+                  key={cat.id_categoria_pieza}
+                  className="categoria-card"
+                  onClick={() => setCategoriaSeleccionada(cat)}
+                >
+                  <img src={cat.imagen} alt={cat.nombre_categoria_pieza} />
+                  <p>{cat.nombre_categoria_pieza}</p>
+                </div>
+              ))}
+            </div>
+          </div>
+        </section>
+      </main>
+
+            {/* Ventana emergente con la información de la categoría */}
+      {categoriaSeleccionada && (
+        <div className="modal-overlay" onClick={() => setCategoriaSeleccionada(null)}>
+          <div className="modal-content" onClick={(e) => e.stopPropagation()}>
+            <h3>{categoriaSeleccionada.nombre_categoria_pieza}</h3>
+            <p>{categoriaSeleccionada.descripcion_categoria_pieza}</p>
+            <button onClick={() => setCategoriaSeleccionada(null)}>Cerrar</button>
+          </div>
+        </div>
+      )}
+    </div>
+  );
+}
+
+{/* import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 
 export default function Inicio_Client() {
@@ -33,9 +139,9 @@ export default function Inicio_Client() {
           <li onClick={() => navigate('/inicio_client')}>Inicio</li>
           <li onClick={() => navigate('/productos')}>Piezas</li>
           <li onClick={() => navigate('/pedidos')}>Pedidos</li>
-          <li onClick={() => navigate('/contacto')}>Sobre Nosotros</li>
+          <li onClick={() => navigate('/contacto')}>Sobre Nosotros</li> */
           {/* ¡Sin botón de registro aquí! */}
-        </ul>
+     /*   </ul>
       </aside>
 
       <main className="main-content">
@@ -80,7 +186,7 @@ export default function Inicio_Client() {
             </div>
           </div>
         </section>
-      </main>
+      </main> 
 
            <style jsx>{`
         .inicio-container {
@@ -242,4 +348,4 @@ export default function Inicio_Client() {
       `}</style>
     </div>
   );
-}
+*/}

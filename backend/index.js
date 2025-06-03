@@ -10,6 +10,7 @@ import cors from 'cors';
 import usuarioRouter from './database/insertUser.js';
 import loginRouter from './database/comprobarRol.js';
 import productosRouter from './productos.js';
+import categoriasRoute from './categoriasRoute.js'; 
 
 const app = express();
 const port = 3000;
@@ -35,6 +36,7 @@ app.use(cors({
 app.use('/api', usuarioRouter);
 app.use('/api', loginRouter);
 app.use('/api/productos', productosRouter);
+app.use('/api/categorias', categoriasRoute);
 
 // Middleware para rutas no existentes (útil para debugging)
 app.use((req, res) => {
