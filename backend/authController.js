@@ -16,7 +16,7 @@ const generarToken = (usuario) => {
 };
 
 // Controlador de login
-const login = async (req, res) => {
+export const login = async (req, res) => {
   try {
     const connection = await connectToDatabase();
     const { correo_electronico_usuario, contrasenia_usuario } = req.body;
@@ -67,4 +67,23 @@ const login = async (req, res) => {
   }
 };
 
-export default login;
+// Controlador para verificar autenticación
+export const checkAuth = async (req, res) => {
+  try {
+    const token = req.cookies.token;
+    
+    if (!token) {
+      return res.status(401).json({ error: 'No autenticado' });
+    }
+
+    const decoded = jwt.verify(token, process.env.JWT_SECRET);
+    
+    res.json({
+      userId: decoded.id,
+      rol: decoded.rol
+    });
+  } catch (error) {
+    console.error('Error al verificar autenticación:', error);
+    res.status(401).json({ error: 'Token inválido' });
+  }
+};

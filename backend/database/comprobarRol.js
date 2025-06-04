@@ -1,5 +1,6 @@
 import express from 'express';
-import login from '../authController.js'; // Ajusta la ruta según tu estructura
+import { login, checkAuth } from '../authController.js';
+import { authenticate } from '../authMiddleware.js';
 
 const router = express.Router();
 
@@ -9,6 +10,9 @@ router.use(express.urlencoded({ extended: true }));
 
 // Ruta de login
 router.post('/login', login);
+
+// Ruta para verificar autenticación
+router.get('/check-auth', authenticate(), checkAuth);
 
 // Ruta de prueba
 router.get('/login/test', (req, res) => {
