@@ -1,43 +1,91 @@
-/* import React, { useState } from 'react';
-import { useNavigate } from 'react-router-dom';
-
-export default function Productos() {
-  const navigate = useNavigate();
-  const [busqueda, setBusqueda] = useState('');
-
-  const productos = [
-    { nombre: 'Aceite de motor', imagen: '/public/lubricante.png' },
-    { nombre: 'Filtro de aire', imagen: '/public/filtros.png' },
-    { nombre: 'Batería Bosch', imagen: '/bateria.jpg' },
-    { nombre: 'Neumático Goodyear', imagen: '/Neumatico.png' },
-    { nombre: 'Amortiguador trasero', imagen: '/amortiguadores.png' },
-  ];
-
-  const productosFiltrados = productos.filter((prod) =>
-    prod.nombre.toLowerCase().includes(busqueda.toLowerCase())
-  ); */
-
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useLocation } from 'react-router-dom';
 import React, { useState, useEffect } from 'react';
 import './productos.css';
 
 export default function Productos() {
-  const navigate = useNavigate(); 
+  const navigate = useNavigate();
+  const location = useLocation();
   const [busqueda, setBusqueda] = useState('');
   const [productos, setProductos] = useState([]);
+  const [categorias, setCategorias] = useState([]);
   const [selectedProduct, setSelectedProduct] = useState(null);
   const [showModal, setShowModal] = useState(false);
 
+  // Obtener la categoría de los parámetros de URL
+  const searchParams = new URLSearchParams(location.search);
+  const categoriaFiltro = searchParams.get('categoria');
+
   useEffect(() => {
+    // Obtener las categorías
+    fetch('http://localhost:3000/api/categorias')
+      .then((res) => res.json())
+      .then((data) => {
+        console.log('=== DATOS DE CATEGORÍAS ===');
+        if (data.length > 0) {
+          console.log('Estructura de la primera categoría:');
+          console.log(JSON.stringify(data[0], null, 2));
+          console.log('Propiedades disponibles en categoría:', Object.keys(data[0]));
+        }
+        setCategorias(data);
+      })
+      .catch((err) => console.error('Error al obtener categorías:', err));
+
+    // Obtener los productos
     fetch('http://localhost:3000/api/productos')
       .then((res) => res.json())
-      .then((data) => setProductos(data))
+      .then((data) => {
+        console.log('=== DATOS DE PRODUCTOS ===');
+        if (data.length > 0) {
+          console.log('Estructura del primer producto:');
+          console.log(JSON.stringify(data[0], null, 2));
+          console.log('Propiedades disponibles en producto:', Object.keys(data[0]));
+        }
+        setProductos(data);
+      })
       .catch((err) => console.error('Error al obtener productos:', err));
   }, []);
 
-  const productosFiltrados = productos.filter((prod) =>
-    prod.nombre_pieza?.toLowerCase().includes(busqueda.toLowerCase())
-  );
+  useEffect(() => {
+    console.log('=== ESTADO ACTUAL ===');
+    console.log('Categorías en estado:', categorias);
+    console.log('Productos en estado:', productos);
+    console.log('Categoría a filtrar:', categoriaFiltro);
+  }, [categorias, productos, categoriaFiltro]);
+
+  const productosFiltrados = productos.filter((prod) => {
+    const coincideBusqueda = prod.nombre_pieza?.toLowerCase().includes(busqueda.toLowerCase());
+    
+    // Encontrar la categoría del producto basándonos en el id_categoria_pieza
+    const idCategoria = prod.id_categoria_pieza;
+    
+    // Mapeo de IDs a nombres de categorías
+    const mapeoCategoriasId = {
+      1: 'Neumáticos',
+      2: 'Baterías de Carro',
+      3: 'Faroles y pantallas',
+      4: 'Aros',
+      5: 'Gatos',
+      6: 'Lubricantes',
+      7: 'Carrocerías',
+      8: 'Eléctricos',
+      9: 'Amortiguadores',
+      10: 'Filtros de aceite'
+    };
+
+    const nombreCategoriaProducto = mapeoCategoriasId[idCategoria];
+
+    console.log('Comparación de categorías:', {
+      id_categoria: idCategoria,
+      nombre_categoria_producto: nombreCategoriaProducto,
+      categoria_filtro: categoriaFiltro,
+      coincide: nombreCategoriaProducto?.toLowerCase() === categoriaFiltro?.toLowerCase()
+    });
+
+    const coincideCategoria = !categoriaFiltro || 
+                            nombreCategoriaProducto?.toLowerCase() === categoriaFiltro?.toLowerCase();
+    
+    return coincideBusqueda && coincideCategoria;
+  });
 
   const handleProductClick = (producto) => {
     setSelectedProduct(producto);

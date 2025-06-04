@@ -68,6 +68,8 @@ const response = await fetch('http://localhost:3000/api/insertar-usuario', {
         </div>
         <ul>
           <li onClick={() => navigate('/inicio')}>Inicio</li>
+          <li onClick={() => navigate('/register')}>Register</li>
+          <li onClick={() => navigate('/inicio_client')}>Vista Cliente</li> 
           <li onClick={() => navigate('/')}>Cerrar sesión</li>
         </ul>
       </aside>

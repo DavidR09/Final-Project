@@ -15,10 +15,11 @@ export default function Inicio_Client() {
         const response = await fetch('http://localhost:3000/api/categorias');
         const data = await response.json();
         
+        console.log('Datos originales de categorías:', data);
+        
         // Mapeamos los datos de la base de datos con las imágenes locales
         const categoriasConImagenes = data.map((cat, index) => ({
-          nombre: cat.nombre_categoria_pieza,
-          descripcion: cat.descripcion_categoria_pieza,
+          ...cat, // Mantenemos todos los datos originales
           imagen: [
             '/Neumatico.png',
             '/bateria.jpg',
@@ -30,10 +31,10 @@ export default function Inicio_Client() {
             '/electricas.png',
             '/amortiguadores.png',
             '/filtros.png'
-          ][index % 10], // Usamos módulo para evitar desbordamiento
-          ruta: cat.nombre_categoria_pieza.toLowerCase().replace(/\s+/g, '_')
+          ][index % 10]
         }));
         
+        console.log('Categorías procesadas:', categoriasConImagenes);
         setCategorias(categoriasConImagenes);
       } catch (error) {
         console.error('Error al obtener categorías:', error);
@@ -44,11 +45,11 @@ export default function Inicio_Client() {
   }, []);
 
   const categoriasFiltradas = categorias.filter(cat =>
-    cat.nombre.toLowerCase().includes(busqueda.toLowerCase())
+    cat.nombre_categoria_pieza.toLowerCase().includes(busqueda.toLowerCase())
   );
 
   const handleCategoryClick = (cat) => {
-    if (selectedCategory && selectedCategory.nombre === cat.nombre) {
+    if (selectedCategory && selectedCategory.nombre_categoria_pieza === cat.nombre_categoria_pieza) {
       setSelectedCategory(null);
     } else {
       setSelectedCategory(cat);
@@ -95,31 +96,42 @@ export default function Inicio_Client() {
         </header>
 
         <section className="content">
-          <div className="repuestos-section">
+          <div className="productos-section">
             <h2>Categorías</h2>
-            <div className="categorias-grid">
-              {categoriasFiltradas.map((cat) => (
-                <div
-                  key={cat.nombre}
-                  className="categoria-card"
-                  onClick={() => handleCategoryClick(cat)}
-                >
-                  <img src={cat.imagen} alt={cat.nombre} />
-                  <p>{cat.nombre}</p>
-                </div>
-              ))}
-            </div>
+            {categoriasFiltradas.length === 0 ? (
+              <p style={{ textAlign: 'center', marginTop: '3rem' }}><h3>Categoría no encontrada</h3></p>
+            ) : (
+              <div className="productos-grid">
+                {categoriasFiltradas.map((cat) => (
+                  <div key={cat.nombre_categoria_pieza} className="producto-card">
+                    <img 
+                      src={cat.imagen} 
+                      alt={cat.nombre_categoria_pieza} 
+                      onClick={() => handleCategoryClick(cat)}
+                    />
+                    <p>{cat.nombre_categoria_pieza}</p>
+                    <button 
+                      className="btn-agregar"
+                      onClick={() => {
+                        console.log('Navegando a categoría (datos completos):', {
+                          categoria: cat,
+                          nombre: cat.nombre_categoria_pieza,
+                          id: cat.id_categoria_pieza
+                        });
+                        navigate(`/productos?categoria=${encodeURIComponent(cat.nombre_categoria_pieza)}`);
+                      }}
+                    >
+                      Ver productos
+                    </button>
+                  </div>
+                ))}
+              </div>
+            )}
 
             {selectedCategory && (
               <div className="category-details">
-                <h3>{selectedCategory.nombre}</h3>
-                <p>{selectedCategory.descripcion}</p>
-                <button 
-                  className="ver-productos-btn"
-                  onClick={() => navigate(`/repuestos/${selectedCategory.ruta}`)}
-                >
-                  Ver productos
-                </button>
+                <h3>{selectedCategory.nombre_categoria_pieza}</h3>
+                <p>{selectedCategory.descripcion_categoria_pieza}</p>
               </div>
             )}
           </div>
