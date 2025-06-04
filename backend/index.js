@@ -5,7 +5,7 @@ console.log('DB_USER:', process.env.DB_USER);
 
 import express from 'express';
 import cookieParser from 'cookie-parser';
-import connectToDatabase from './database/connectionMySQL.js';
+import { connectToDatabase } from './database/connectionMySQL.js';
 import cors from 'cors';
 import usuarioRouter from './database/insertUser.js';
 import loginRouter from './database/comprobarRol.js';
@@ -13,6 +13,7 @@ import productosRouter from './productos.js';
 import categoriasRoute from './categoriasRoute.js'; 
 
 const app = express();
+
 const port = 3000;
 
 // Configuración para desarrollo local
