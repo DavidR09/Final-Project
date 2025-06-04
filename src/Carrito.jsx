@@ -12,7 +12,7 @@ export default function Carrito() {
     // Verificar la autenticación del usuario
     const checkAuth = async () => {
       try {
-        const response = await axios.get('http://localhost:3000/api/check-auth', {
+        const response = await axios.get('/api/check-auth', {
           withCredentials: true
         });
         
@@ -36,9 +36,24 @@ export default function Carrito() {
   }, [navigate]);
 
   const handleNavigate = (path) => {
-    // Si es administrador, usar las rutas de admin, si no, usar las rutas de cliente
-    const baseRoute = userRole === 'administrador' ? '' : '_client';
-    navigate(`/${path}${baseRoute}`);
+    // Si es administrador, usar las rutas de admin, si no, usar las rutas normales
+    if (userRole === 'administrador') {
+      switch(path) {
+        case 'inicio':
+          navigate('/Inicio');
+          break;
+        default:
+          navigate(`/${path}`);
+      }
+    } else {
+      switch(path) {
+        case 'inicio':
+          navigate('/Inicio_Client');
+          break;
+        default:
+          navigate(`/${path}`);
+      }
+    }
   };
 
   const eliminarProducto = (id_repuesto) => {

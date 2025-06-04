@@ -10,7 +10,7 @@ export const useAuth = () => {
 
   const checkAuth = async () => {
     try {
-      const response = await axios.get('http://localhost:3000/api/check-auth', {
+      const response = await axios.get('/api/check-auth', {
         withCredentials: true
       });
       

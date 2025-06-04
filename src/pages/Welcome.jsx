@@ -23,7 +23,7 @@ export default function Welcome() {
           <button onClick={() => navigate('/login')} className="primary-btn">
             Iniciar Sesión
           </button>
-          <button onClick={() => navigate('/contactanos')} className="secondary-btn">
+          <button onClick={() => navigate('/Contactanos')} className="secondary-btn">
             Contáctanos
           </button>
         </div>

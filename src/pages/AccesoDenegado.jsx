@@ -9,9 +9,9 @@ export default function AccesoDenegado() {
   const handleRedirect = () => {
     // Redirigir según el rol del usuario
     if (userRole === 'administrador') {
-      navigate('/admin/dashboard');
+      navigate('/Inicio');
     } else {
-      navigate('/inicio_client');
+      navigate('/Inicio_Client');
     }
   };
 

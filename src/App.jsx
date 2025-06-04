@@ -5,6 +5,14 @@ import Login from './Login';
 import Carrito from './Carrito';
 import Welcome from './pages/Welcome';
 import AccesoDenegado from './pages/AccesoDenegado';
+import Inicio from './Inicio';
+import InicioClient from './Inicio_Client';
+import Productos from './Productos';
+import Contacto from './Contacto';
+import Pedidos from './Pedidos';
+import Contactanos from './Contactanos';
+import Perfil from './Perfil';
+import Register from './Register';
 
 // Importa aquí el resto de tus componentes
 // import Inicio from './pages/Inicio';
@@ -18,47 +26,72 @@ export default function App() {
       <Route path="/" element={<Welcome />} />
       <Route path="/login" element={<Login />} />
       <Route path="/acceso-denegado" element={<AccesoDenegado />} />
+      <Route path="/Contactanos" element={<Contactanos />} />
       
       {/* Rutas protegidas para usuarios normales */}
       <Route
         path="/Inicio_Client"
         element={
-          <ProtectedRoute allowedRoles={['usuario']}>
-            {/* <Inicio /> */}
+          <ProtectedRoute allowedRoles={['usuario', 'administrador']}>
+            <InicioClient />
           </ProtectedRoute>
         }
       />
       <Route
-        path="/productos_client"
+        path="/productos"
         element={
           <ProtectedRoute allowedRoles={['usuario']}>
-            {/* <Productos /> */}
+            <Productos />
           </ProtectedRoute>
         }
       />
       <Route
-        path="/Carrito"
+        path="/carrito"
         element={
           <ProtectedRoute allowedRoles={['usuario']}>
             <Carrito />
           </ProtectedRoute>
         }
       />
-
-      {/* Rutas protegidas para administradores */}
       <Route
-        path="/admin/dashboard"
+        path="/pedidos"
         element={
-          <ProtectedRoute allowedRoles={['administrador']}>
-            {/* <AdminDashboard /> */}
+          <ProtectedRoute allowedRoles={['usuario']}>
+            <Pedidos />
           </ProtectedRoute>
         }
       />
       <Route
-        path="/admin/productos"
+        path="/contacto"
+        element={
+          <ProtectedRoute allowedRoles={['usuario']}>
+            <Contacto />
+          </ProtectedRoute>
+        }
+      />
+      <Route
+        path="/perfil"
+        element={
+          <ProtectedRoute allowedRoles={['usuario']}>
+            <Perfil />
+          </ProtectedRoute>
+        }
+      />
+
+      {/* Rutas protegidas para administradores */}
+      <Route
+        path="/Inicio"
         element={
           <ProtectedRoute allowedRoles={['administrador']}>
-            {/* <AdminProductos /> */}
+            <Inicio />
+          </ProtectedRoute>
+        }
+      />
+      <Route
+        path="/register"
+        element={
+          <ProtectedRoute allowedRoles={['administrador']}>
+            <Register />
           </ProtectedRoute>
         }
       />
