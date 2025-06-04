@@ -1,275 +1,103 @@
 import React from 'react';
-import { useNavigate } from 'react-router-dom';
+import { Routes, Route, Navigate } from 'react-router-dom';
+import { ProtectedRoute } from './components/ProtectedRoute';
+import Login from './Login';
+import Carrito from './Carrito';
+import Welcome from './pages/Welcome';
+import AccesoDenegado from './pages/AccesoDenegado';
+import Inicio from './Inicio';
+import InicioClient from './Inicio_Client';
+import Productos from './Productos';
+import Contacto from './Contacto';
+import Pedidos from './Pedidos';
+import Contactanos from './Contactanos';
+import Perfil from './Perfil';
+import Register from './Register';
 
+// Importa aquí el resto de tus componentes
+// import Inicio from './pages/Inicio';
+// import Productos from './pages/Productos';
+// etc...
 
 export default function App() {
-  const navigate = useNavigate();
-
-
   return (
-    <div className="welcome-container">
-      <div className="left-section">
-        <img src="/public/fotinicio.jpg" alt="Dashboard ilustración" />
-      </div>
-      <div className="right-section">
-        <div className="logo-container">
-          <img src="/public/Logo.png" alt="Logo de Repuestos G.R.A" />
-        </div>
-        <h1>Bienvenido a <span className="highlight">Repuestos G.R.A</span></h1>
-        <p className="intro-text">
-          Somos una plataforma de comercio electrónico especializada en la venta de piezas automotrices 
-          para vehículos de cualquier marca, modelo o año. Nuestro principal objetivo es resolver la mayor 
-          necesidad del mercado: <strong>la demora en la obtención de piezas esenciales</strong>.
-        </p>
-        <div className="button-group">
-          <button onClick={() => navigate('/login')} className="primary-btn">
-            Iniciar Sesión
-          </button>
-          <button onClick={() => navigate('/contactanos')} className="secondary-btn">
-            Contáctanos
-          </button>
-        </div>
-      </div>
+    <Routes>
+      {/* Rutas públicas */}
+      <Route path="/" element={<Welcome />} />
+      <Route path="/login" element={<Login />} />
+      <Route path="/acceso-denegado" element={<AccesoDenegado />} />
+      <Route path="/Contactanos" element={<Contactanos />} />
       
-
-      <style jsx>{`
-        .welcome-container {
-          display: flex;
-          height: 100vh;
-          font-family: 'Segoe UI', sans-serif;
+      {/* Rutas protegidas para usuarios normales */}
+      <Route
+        path="/Inicio_Client"
+        element={
+          <ProtectedRoute allowedRoles={['usuario', 'administrador']}>
+            <InicioClient />
+          </ProtectedRoute>
         }
-
-        .left-section {
-          flex: 1;
-          background-color: #2a2829;
-          display: flex;
-          align-items: center;
-          justify-content: center;
-          overflow: hidden;
+      />
+      <Route
+        path="/productos"
+        element={
+          <ProtectedRoute allowedRoles={['usuario']}>
+            <Productos />
+          </ProtectedRoute>
         }
-
-        .left-section img {
-          width: 100%;
-          height: 100%;
-          object-fit: cover;
+      />
+      <Route
+        path="/carrito"
+        element={
+          <ProtectedRoute allowedRoles={['usuario']}>
+            <Carrito />
+          </ProtectedRoute>
         }
-
-        .right-section {
-          flex: 1;
-          display: flex;
-          flex-direction: column;
-          align-items: center;
-          justify-content: center;
-          text-align: center;
-          background-color: white;
-          color: #111;
-          padding: 40px;
+      />
+      <Route
+        path="/pedidos"
+        element={
+          <ProtectedRoute allowedRoles={['usuario']}>
+            <Pedidos />
+          </ProtectedRoute>
         }
-
-        .logo-container {
-          width: 120px;
-          height: 120px;
-          border-radius: 50%;
-          overflow: hidden;
-          margin-bottom: 20px;
-          box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
+      />
+      <Route
+        path="/contacto"
+        element={
+          <ProtectedRoute allowedRoles={['usuario']}>
+            <Contacto />
+          </ProtectedRoute>
         }
-
-        .logo-container img {
-          width: 100%;
-          height: 100%;
-          object-fit: cover;
+      />
+      <Route
+        path="/perfil"
+        element={
+          <ProtectedRoute allowedRoles={['usuario']}>
+            <Perfil />
+          </ProtectedRoute>
         }
+      />
 
-        .right-section h1 {
-          font-size: 36px;
-          margin-bottom: 20px;
+      {/* Rutas protegidas para administradores */}
+      <Route
+        path="/Inicio"
+        element={
+          <ProtectedRoute allowedRoles={['administrador']}>
+            <Inicio />
+          </ProtectedRoute>
         }
+      />
+      <Route
+        path="/register"
+        element={
+          <ProtectedRoute allowedRoles={['administrador']}>
+            <Register />
+          </ProtectedRoute>
+        }
+      />
 
-        .highlight {
-          color: #24487f;
-        }
-
-        .intro-text {
-          font-size: 18px;
-          color: #333;
-          margin-bottom: 15px;
-          max-width: 600px;
-        }
-
-        .button-group {
-          display: flex;
-          gap: 15px;
-          margin-top: 30px;
-        }
-
-        .primary-btn,
-        .secondary-btn {
-          padding: 12px 24px;
-          font-size: 16px;
-          border-radius: 8px;
-          border: none;
-          cursor: pointer;
-          transition: all 0.3s ease;
-        }
-
-        .primary-btn {
-          background-color: #24487f;
-          color: white;
-        }
-
-        .primary-btn:hover {
-          background-color: #b9d7d9;
-          color: black;
-        }
-
-        .secondary-btn {
-          background-color: #e0e7ff;
-          color: #1e3a8a;
-        }
-
-        .secondary-btn:hover {
-          background-color: #c7d2fe;
-        }
-      `}</style>
-    </div>
+      {/* Ruta para manejar rutas no encontradas */}
+      <Route path="*" element={<Navigate to="/" replace />} />
+    </Routes>
   );
 }
-
-// Asegúrate de que WelcomePage esté definido en este archivo o importado.
-/* import React from 'react';
-import { useNavigate } from 'react-router-dom';
-
-
-export default function App() {
-  const navigate = useNavigate();
-
-
-  return (
-    <div className="welcome-container">
-      <div className="left-section">
-        <img src="/public/fotinicio.jpg" alt="Dashboard ilustración" />
-      </div>
-      <div className="right-section">
-        <div className="logo-container">
-          <img src="/public/Logo.png" alt="Logo de Repuestos G.R.A" />
-        </div>
-        <h1>Bienvenido a <span className="highlight">Repuestos G.R.A</span></h1>
-        <p className="intro-text">
-          Somos una plataforma de comercio electrónico especializada en la venta de piezas automotrices 
-          para vehículos de cualquier marca, modelo o año. Nuestro principal objetivo es resolver la mayor 
-          necesidad del mercado: <strong>la demora en la obtención de piezas esenciales</strong>.
-        </p>
-        <div className="button-group">
-          <button onClick={() => navigate('/login')} className="primary-btn">
-            Iniciar Sesión
-          </button>
-          <button onClick={() => navigate('/contactanos')} className="secondary-btn">
-            Contáctanos
-          </button>
-        </div>
-      </div>
-
-      <style jsx>{`
-        .welcome-container {
-          display: flex;
-          height: 100vh;
-          font-family: 'Segoe UI', sans-serif;
-        }
-
-        .left-section {
-          flex: 1;
-          background-color: #2a2829;
-          display: flex;
-          align-items: center;
-          justify-content: center;
-          overflow: hidden;
-        }
-
-        .left-section img {
-          width: 100%;
-          height: 100%;
-          object-fit: cover;
-        }
-
-        .right-section {
-          flex: 1;
-          display: flex;
-          flex-direction: column;
-          align-items: center;
-          justify-content: center;
-          text-align: center;
-          background-color: white;
-          color: #111;
-          padding: 40px;
-        }
-
-        .logo-container {
-          width: 120px;
-          height: 120px;
-          border-radius: 50%;
-          overflow: hidden;
-          margin-bottom: 20px;
-          box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
-        }
-
-        .logo-container img {
-          width: 100%;
-          height: 100%;
-          object-fit: cover;
-        }
-
-        .right-section h1 {
-          font-size: 36px;
-          margin-bottom: 20px;
-        }
-
-        .highlight {
-          color: #24487f;
-        }
-
-        .intro-text {
-          font-size: 18px;
-          color: #333;
-          margin-bottom: 15px;
-          max-width: 600px;
-        }
-
-        .button-group {
-          display: flex;
-          gap: 15px;
-          margin-top: 30px;
-        }
-
-        .primary-btn,
-        .secondary-btn {
-          padding: 12px 24px;
-          font-size: 16px;
-          border-radius: 8px;
-          border: none;
-          cursor: pointer;
-          transition: all 0.3s ease;
-        }
-
-        .primary-btn {
-          background-color: #24487f;
-          color: white;
-        }
-
-        .primary-btn:hover {
-          background-color: #b9d7d9;
-          color: black;
-        }
-
-        .secondary-btn {
-          background-color: #e0e7ff;
-          color: #1e3a8a;
-        }
-
-        .secondary-btn:hover {
-          background-color: #c7d2fe;
-        }
-      `}</style>
-    </div>
-  );
-} */

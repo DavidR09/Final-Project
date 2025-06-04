@@ -19,7 +19,8 @@ export default function Inicio_Client() {
         
         // Mapeamos los datos de la base de datos con las imágenes locales
         const categoriasConImagenes = data.map((cat, index) => ({
-          ...cat, // Mantenemos todos los datos originales
+          ...cat,
+          id_categoria_pieza: index + 1, // ID secuencial empezando en 1
           imagen: [
             '/Neumatico.png',
             '/bateria.jpg',
@@ -34,7 +35,10 @@ export default function Inicio_Client() {
           ][index % 10]
         }));
         
-        console.log('Categorías procesadas:', categoriasConImagenes);
+        console.log('Categorías con IDs asignados:', categoriasConImagenes.map(cat => ({
+          id: cat.id_categoria_pieza,
+          nombre: cat.nombre_categoria_pieza
+        })));
         setCategorias(categoriasConImagenes);
       } catch (error) {
         console.error('Error al obtener categorías:', error);

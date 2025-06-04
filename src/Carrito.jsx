@@ -1,88 +1,249 @@
-import React from 'react';
+import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
+import Swal from 'sweetalert2';
+import axios from 'axios';
 
 export default function Carrito() {
   const navigate = useNavigate();
+  const [productos, setProductos] = useState([]);
+  const [userRole, setUserRole] = useState(null);
 
-  // Simulación de productos en el carrito
-  const productos = [
-    { id: 1, nombre: 'Producto A', precio: 100, cantidad: 2 },
-    { id: 2, nombre: 'Producto B', precio: 150, cantidad: 1 },
-  ];
+  useEffect(() => {
+    // Verificar la autenticación del usuario
+    const checkAuth = async () => {
+      try {
+        const response = await axios.get('/api/check-auth', {
+          withCredentials: true
+        });
+        
+        if (response.data.rol) {
+          setUserRole(response.data.rol);
+        } else {
+          // Si no hay rol, redirigir al login
+          navigate('/login');
+        }
+      } catch (error) {
+        console.error('Error de autenticación:', error);
+        navigate('/login');
+      }
+    };
 
-  const total = productos.reduce((acc, p) => acc + p.precio * p.cantidad, 0);
+    checkAuth();
+    
+    // Cargar productos del carrito
+    const carritoGuardado = JSON.parse(localStorage.getItem('carrito')) || [];
+    setProductos(carritoGuardado);
+  }, [navigate]);
+
+  const handleNavigate = (path) => {
+    // Si es administrador, usar las rutas de admin, si no, usar las rutas normales
+    if (userRole === 'administrador') {
+      switch(path) {
+        case 'inicio':
+          navigate('/Inicio');
+          break;
+        default:
+          navigate(`/${path}`);
+      }
+    } else {
+      switch(path) {
+        case 'inicio':
+          navigate('/Inicio_Client');
+          break;
+        default:
+          navigate(`/${path}`);
+      }
+    }
+  };
+
+  const eliminarProducto = (id_repuesto) => {
+    Swal.fire({
+      title: '¿Estás seguro?',
+      text: "¿Deseas eliminar este producto del carrito?",
+      icon: 'warning',
+      showCancelButton: true,
+      confirmButtonColor: '#24487f',
+      cancelButtonColor: '#d33',
+      confirmButtonText: 'Sí, eliminar',
+      cancelButtonText: 'Cancelar'
+    }).then((result) => {
+      if (result.isConfirmed) {
+        const nuevosProductos = productos.filter(p => p.id_repuesto !== id_repuesto);
+        setProductos(nuevosProductos);
+        localStorage.setItem('carrito', JSON.stringify(nuevosProductos));
+        Swal.fire(
+          '¡Eliminado!',
+          'El producto ha sido eliminado del carrito.',
+          'success'
+        );
+      }
+    });
+  };
+
+  const actualizarCantidad = (id_repuesto, nuevaCantidad) => {
+    if (nuevaCantidad < 1) return;
+    
+    const nuevosProductos = productos.map(p => 
+      p.id_repuesto === id_repuesto 
+        ? { ...p, cantidad: nuevaCantidad }
+        : p
+    );
+    setProductos(nuevosProductos);
+    localStorage.setItem('carrito', JSON.stringify(nuevosProductos));
+  };
+
+  const total = productos.reduce((acc, p) => acc + p.precio_pieza * p.cantidad, 0);
+
+  const confirmarPedido = () => {
+    Swal.fire({
+      title: '¿Confirmar pedido?',
+      text: "¿Deseas proceder con la compra?",
+      icon: 'question',
+      showCancelButton: true,
+      confirmButtonColor: '#24487f',
+      cancelButtonColor: '#d33',
+      confirmButtonText: 'Sí, confirmar',
+      cancelButtonText: 'Cancelar'
+    }).then((result) => {
+      if (result.isConfirmed) {
+        setProductos([]);
+        localStorage.removeItem('carrito');
+        Swal.fire(
+          '¡Pedido Confirmado!',
+          'Gracias por tu compra.',
+          'success'
+        );
+      }
+    });
+  };
+
+  if (!userRole) {
+    return <div>Cargando...</div>;
+  }
 
   return (
     <div className="carrito-container">
       <aside className="sidebar">
-        <div
-          className="logo-wrapper"
-          onClick={() => navigate('/inicio_client')}
+        <div 
+          className="logo-wrapper" 
+          onClick={() => handleNavigate('inicio')}
         >
           <img src="/Logo.png" alt="Logo" />
         </div>
 
         <ul>
-          <li onClick={() => navigate('/inicio_client')}>Inicio</li>
-          <li onClick={() => navigate('/productos')}>Piezas</li>
-          <li onClick={() => navigate('/contacto')}>Sobre Nosotros</li>
-          <li onClick={() => navigate('/pedidos')}>Pedidos</li>
+          <li onClick={() => handleNavigate('inicio')}>Inicio</li>
+          <li onClick={() => handleNavigate('productos')}>Piezas</li>
+          <li onClick={() => handleNavigate('pedidos')}>Pedidos</li>
+          <li onClick={() => handleNavigate('contacto')}>Sobre Nosotros</li>
         </ul>
       </aside>
 
       <main className="main-content">
         <header className="header">
-          <img
-            src="/carrito.png"
-            alt="Carrito"
-            className="cart-img"
-            onClick={() => navigate('/carrito')}
-          />
-          <img
-            src="/perfil.png"
-            alt="Perfil"
-            className="perfil-img"
-            onClick={() => navigate('/perfil')}
-          />
+          <div className="header-title">
+            <h1>Mi Carrito</h1>
+          </div>
+          <div className="header-icons">
+            <img
+              src="/carrito.png"
+              alt="Carrito"
+              className="cart-img"
+              onClick={() => handleNavigate('carrito')}
+            />
+            <img
+              src="/perfil.png"
+              alt="Perfil"
+              className="perfil-img"
+              onClick={() => handleNavigate('perfil')}
+            />
+          </div>
         </header>
 
         <section className="carrito-section">
-          <table className="carrito-table">
-            <thead>
-              <tr>
-                <th>Producto</th>
-                <th>Precio</th>
-                <th>Cantidad</th>
-                <th>Subtotal</th>
-              </tr>
-            </thead>
-            <tbody>
-              {productos.map((p) => (
-                <tr key={p.id}>
-                  <td>{p.nombre}</td>
-                  <td>${p.precio}</td>
-                  <td>{p.cantidad}</td>
-                  <td>${p.precio * p.cantidad}</td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
+          {productos.length === 0 ? (
+            <div className="carrito-vacio">
+              <img src="/empty-cart.png" alt="Carrito vacío" className="empty-cart-img" />
+              <h2>Tu carrito está vacío</h2>
+              <p>¡Agrega algunos productos para comenzar!</p>
+              <button onClick={() => handleNavigate('productos')} className="continuar-comprando">
+                Explorar productos
+              </button>
+            </div>
+          ) : (
+            <div className="carrito-content">
+              <div className="productos-lista">
+                {productos.map((p) => (
+                  <div key={p.id_repuesto} className="producto-card">
+                    <div className="producto-imagen-container">
+                      <img src={p.imagen_pieza} alt={p.nombre_pieza} className="producto-imagen" />
+                    </div>
+                    <div className="producto-detalles">
+                      <h3>{p.nombre_pieza}</h3>
+                      <p className="precio">${p.precio_pieza}</p>
+                      <div className="cantidad-control">
+                        <button 
+                          className="cantidad-btn"
+                          onClick={() => actualizarCantidad(p.id_repuesto, p.cantidad - 1)}
+                        >
+                          -
+                        </button>
+                        <span>{p.cantidad}</span>
+                        <button 
+                          className="cantidad-btn"
+                          onClick={() => actualizarCantidad(p.id_repuesto, p.cantidad + 1)}
+                        >
+                          +
+                        </button>
+                      </div>
+                    </div>
+                    <div className="producto-acciones">
+                      <p className="subtotal">Subtotal: ${p.precio_pieza * p.cantidad}</p>
+                      <button 
+                        className="eliminar-btn"
+                        onClick={() => eliminarProducto(p.id_repuesto)}
+                      >
+                        Eliminar
+                      </button>
+                    </div>
+                  </div>
+                ))}
+              </div>
 
-          <div className="detalle-compra">
-            <h3 className="detalle-title">Resumen de Compra</h3>
-            <p className="total">Total: ${total}</p>
-            <button className="confirmar-btn">Confirmar Pedido</button>
-            <p className="vuelva">Vuelva pronto 😄</p>
-          </div>
+              <div className="detalle-compra">
+                <h3 className="detalle-title">Resumen de Compra</h3>
+                <div className="detalle-info">
+                  <div className="detalle-row">
+                    <span>Subtotal</span>
+                    <span>${total}</span>
+                  </div>
+                  <div className="detalle-row">
+                    <span>Envío</span>
+                    <span>Gratis</span>
+                  </div>
+                  <div className="detalle-row total">
+                    <span>Total</span>
+                    <span>${total}</span>
+                  </div>
+                </div>
+                <button className="confirmar-btn" onClick={confirmarPedido}>
+                  Proceder al pago
+                </button>
+                <button className="seguir-comprando" onClick={() => handleNavigate('productos')}>
+                  Seguir comprando
+                </button>
+              </div>
+            </div>
+          )}
         </section>
       </main>
 
       <style jsx>{`
         .carrito-container {
           display: flex;
-          height: 100vh;
+          min-height: 100vh;
+          background-color: #f8f9fa;
           font-family: 'Segoe UI', sans-serif;
-          background-color: #ffffff;
         }
 
         .sidebar {
@@ -90,6 +251,9 @@ export default function Carrito() {
           background-color: #24487f;
           color: white;
           padding: 20px;
+          position: sticky;
+          top: 0;
+          height: 100vh;
         }
 
         .logo-wrapper {
@@ -98,11 +262,16 @@ export default function Carrito() {
           background-color: white;
           border-radius: 50%;
           overflow: hidden;
-          margin: 0 auto 20px auto;
+          margin: 0 auto 20px;
           display: flex;
           align-items: center;
           justify-content: center;
           cursor: pointer;
+          transition: transform 0.2s;
+        }
+
+        .logo-wrapper:hover {
+          transform: scale(1.05);
         }
 
         .logo-wrapper img {
@@ -114,17 +283,21 @@ export default function Carrito() {
         .sidebar ul {
           list-style: none;
           padding: 0;
+          margin-top: 30px;
         }
 
         .sidebar li {
           margin-bottom: 15px;
           cursor: pointer;
-          padding: 8px;
-          border-radius: 5px;
+          padding: 12px 15px;
+          border-radius: 8px;
+          transition: all 0.3s ease;
+          font-size: 16px;
         }
 
         .sidebar li:hover {
-          background-color: #333;
+          background-color: rgba(255, 255, 255, 0.1);
+          transform: translateX(5px);
         }
 
         .main-content {
@@ -134,11 +307,23 @@ export default function Carrito() {
         }
 
         .header {
+          background-color: white;
+          padding: 20px 40px;
           display: flex;
-          justify-content: flex-end;
+          justify-content: space-between;
           align-items: center;
-          padding: 20px;
-          background-color: #24487f;
+          box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+
+        .header-title h1 {
+          margin: 0;
+          color: #24487f;
+          font-size: 24px;
+        }
+
+        .header-icons {
+          display: flex;
+          gap: 20px;
         }
 
         .cart-img,
@@ -146,82 +331,281 @@ export default function Carrito() {
           width: 30px;
           height: 30px;
           cursor: pointer;
-        }
-
-        .perfil-img {
-          margin-left: 15px;
-          border-radius: 50%;
-          object-fit: cover;
+          transition: transform 0.2s;
         }
 
         .cart-img:hover,
         .perfil-img:hover {
-          filter: brightness(1.2);
+          transform: scale(1.1);
+        }
+
+        .perfil-img {
+          border-radius: 50%;
+          object-fit: cover;
         }
 
         .carrito-section {
-          display: flex;
-          padding: 20px;
-          gap: 30px;
-          background-color: #ffffff;
-          color: black;
+          padding: 30px;
+          flex: 1;
         }
 
-        .carrito-table {
-          flex: 3;
-          width: 100%;
-          border-collapse: collapse;
-          background-color: #f5f5f5;
+        .carrito-vacio {
+          text-align: center;
+          padding: 60px 20px;
+          background: white;
+          border-radius: 12px;
+          box-shadow: 0 2px 4px rgba(0,0,0,0.1);
         }
 
-        .carrito-table thead {
+        .empty-cart-img {
+          width: 150px;
+          margin-bottom: 20px;
+          opacity: 0.7;
+        }
+
+        .carrito-vacio h2 {
+          color: #333;
+          margin-bottom: 10px;
+        }
+
+        .carrito-vacio p {
+          color: #666;
+          margin-bottom: 30px;
+        }
+
+        .continuar-comprando {
           background-color: #24487f;
           color: white;
+          border: none;
+          padding: 12px 25px;
+          border-radius: 8px;
+          cursor: pointer;
+          font-size: 16px;
+          transition: all 0.3s ease;
         }
 
-        .carrito-table th,
-        .carrito-table td {
-          padding: 15px;
-          text-align: center;
-          border-bottom: 1px solid #ddd;
+        .continuar-comprando:hover {
+          background-color: #1b355b;
+          transform: translateY(-2px);
+        }
+
+        .carrito-content {
+          display: grid;
+          grid-template-columns: 1fr 350px;
+          gap: 30px;
+        }
+
+        .productos-lista {
+          display: flex;
+          flex-direction: column;
+          gap: 20px;
+        }
+
+        .producto-card {
+          background: white;
+          border-radius: 12px;
+          padding: 20px;
+          display: grid;
+          grid-template-columns: auto 1fr auto;
+          gap: 20px;
+          align-items: center;
+          box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+          transition: transform 0.2s;
+        }
+
+        .producto-card:hover {
+          transform: translateY(-2px);
+        }
+
+        .producto-imagen-container {
+          width: 100px;
+          height: 100px;
+          display: flex;
+          align-items: center;
+          justify-content: center;
+        }
+
+        .producto-imagen {
+          max-width: 100%;
+          max-height: 100%;
+          object-fit: contain;
+        }
+
+        .producto-detalles {
+          display: flex;
+          flex-direction: column;
+          gap: 10px;
+        }
+
+        .producto-detalles h3 {
+          margin: 0;
+          color: #333;
+          font-size: 18px;
+        }
+
+        .precio {
+          color: #24487f;
+          font-weight: bold;
+          font-size: 18px;
+          margin: 0;
+        }
+
+        .cantidad-control {
+          display: flex;
+          align-items: center;
+          gap: 15px;
+          background: #f8f9fa;
+          padding: 8px;
+          border-radius: 8px;
+          width: fit-content;
+        }
+
+        .cantidad-btn {
+          background-color: #24487f;
+          color: white;
+          border: none;
+          width: 30px;
+          height: 30px;
+          border-radius: 6px;
+          cursor: pointer;
+          font-size: 16px;
+          transition: background-color 0.2s;
+        }
+
+        .cantidad-btn:hover {
+          background-color: #1b355b;
+        }
+
+        .producto-acciones {
+          display: flex;
+          flex-direction: column;
+          gap: 15px;
+          align-items: flex-end;
+        }
+
+        .subtotal {
+          color: #666;
+          margin: 0;
+        }
+
+        .eliminar-btn {
+          background-color: #dc3545;
+          color: white;
+          border: none;
+          padding: 8px 15px;
+          border-radius: 6px;
+          cursor: pointer;
+          transition: all 0.2s;
+        }
+
+        .eliminar-btn:hover {
+          background-color: #c82333;
+          transform: scale(1.05);
         }
 
         .detalle-compra {
-          flex: 1;
-          border: 1px solid #ddd;
-          padding: 20px;
-          background-color: #f5f5f5;
-          border-radius: 8px;
-          text-align: center;
+          background: white;
+          border-radius: 12px;
+          padding: 25px;
+          position: sticky;
+          top: 30px;
+          height: fit-content;
+          box-shadow: 0 2px 4px rgba(0,0,0,0.1);
         }
 
         .detalle-title {
           color: #24487f;
-          margin-bottom: 10px;
+          margin: 0 0 20px 0;
+          font-size: 20px;
+          text-align: left;
         }
 
-        .total {
-          font-size: 24px;
-          margin: 10px 0;
+        .detalle-info {
+          margin-bottom: 25px;
+        }
+
+        .detalle-row {
+          display: flex;
+          justify-content: space-between;
+          padding: 12px 0;
+          border-bottom: 1px solid #eee;
+          color: #666;
+        }
+
+        .detalle-row.total {
+          border-bottom: none;
+          color: #24487f;
+          font-weight: bold;
+          font-size: 20px;
+          margin-top: 10px;
         }
 
         .confirmar-btn {
           background-color: #24487f;
           color: white;
           border: none;
-          padding: 10px 20px;
-          font-size: 16px;
-          border-radius: 6px;
+          padding: 15px;
+          border-radius: 8px;
           cursor: pointer;
+          font-size: 16px;
+          width: 100%;
+          margin-bottom: 10px;
+          transition: all 0.3s ease;
         }
 
         .confirmar-btn:hover {
           background-color: #1b355b;
+          transform: translateY(-2px);
         }
 
-        .vuelva {
-          margin-top: 20px;
-          color: #666;
+        .seguir-comprando {
+          background-color: transparent;
+          color: #24487f;
+          border: 2px solid #24487f;
+          padding: 15px;
+          border-radius: 8px;
+          cursor: pointer;
+          font-size: 16px;
+          width: 100%;
+          transition: all 0.3s ease;
+        }
+
+        .seguir-comprando:hover {
+          background-color: #f8f9fa;
+          transform: translateY(-2px);
+        }
+
+        @media (max-width: 1200px) {
+          .carrito-content {
+            grid-template-columns: 1fr;
+          }
+
+          .detalle-compra {
+            position: static;
+          }
+        }
+
+        @media (max-width: 768px) {
+          .sidebar {
+            display: none;
+          }
+
+          .producto-card {
+            grid-template-columns: 1fr;
+            text-align: center;
+          }
+
+          .producto-imagen-container {
+            margin: 0 auto;
+          }
+
+          .producto-acciones {
+            align-items: center;
+          }
+
+          .header {
+            padding: 15px;
+          }
         }
       `}</style>
     </div>

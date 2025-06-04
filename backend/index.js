@@ -11,7 +11,6 @@ import usuarioRouter from './database/insertUser.js';
 import loginRouter from './database/comprobarRol.js';
 import productosRouter from './productos.js';
 import categoriasRoute from './categoriasRoute.js'; 
-import neumaticosRouter from './selectNeumaticos.js';
 
 const app = express();
 const port = 3000;
@@ -27,10 +26,11 @@ app.use(express.urlencoded({ extended: true }));
 
 // CORS ajustado para desarrollo local
 app.use(cors({
-  origin: 'http://localhost:5173', // URL de tu frontend en Vite/React
+  origin: 'http://localhost:5173',
   credentials: true,
-  methods: ['GET', 'POST', 'PUT', 'DELETE'],
-  allowedHeaders: ['Content-Type', 'Authorization']
+  methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
+  allowedHeaders: ['Content-Type', 'Authorization', 'Cookie'],
+  exposedHeaders: ['set-cookie']
 }));
 
 // Rutas API
@@ -38,7 +38,6 @@ app.use('/api', usuarioRouter);
 app.use('/api', loginRouter);
 app.use('/api/productos', productosRouter);
 app.use('/api/categorias', categoriasRoute);
-app.use('/api/neumaticos', neumaticosRouter);
 
 // Middleware para rutas no existentes (útil para debugging)
 app.use((req, res) => {

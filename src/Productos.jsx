@@ -1,6 +1,8 @@
 import { useNavigate, useLocation } from 'react-router-dom';
 import React, { useState, useEffect } from 'react';
 import './productos.css';
+import Swal from 'sweetalert2';
+
 
 export default function Productos() {
   const navigate = useNavigate();
@@ -20,13 +22,17 @@ export default function Productos() {
     fetch('http://localhost:3000/api/categorias')
       .then((res) => res.json())
       .then((data) => {
-        console.log('=== DATOS DE CATEGORÍAS ===');
-        if (data.length > 0) {
-          console.log('Estructura de la primera categoría:');
-          console.log(JSON.stringify(data[0], null, 2));
-          console.log('Propiedades disponibles en categoría:', Object.keys(data[0]));
-        }
-        setCategorias(data);
+        console.log('=== CATEGORÍAS DISPONIBLES ===');
+        // Asignar IDs específicos según la base de datos
+        const categoriasConId = data.map((cat, index) => ({
+          ...cat,
+          id_categoria_pieza: [3, 2, 4, 6, 7, 8, 9, 5, 11, 10][index]
+        }));
+        console.log('Categorías con IDs:', categoriasConId.map(cat => ({
+          id: cat.id_categoria_pieza,
+          nombre: cat.nombre_categoria_pieza
+        })));
+        setCategorias(categoriasConId);
       })
       .catch((err) => console.error('Error al obtener categorías:', err));
 
@@ -34,13 +40,37 @@ export default function Productos() {
     fetch('http://localhost:3000/api/productos')
       .then((res) => res.json())
       .then((data) => {
-        console.log('=== DATOS DE PRODUCTOS ===');
-        if (data.length > 0) {
-          console.log('Estructura del primer producto:');
-          console.log(JSON.stringify(data[0], null, 2));
-          console.log('Propiedades disponibles en producto:', Object.keys(data[0]));
-        }
-        setProductos(data);
+        console.log('=== PRODUCTOS Y SUS CATEGORÍAS ===');
+        // Mapear los productos con sus IDs de categoría correctos
+        const productosConCategoriasCorrectas = data.map(prod => {
+          const categoriaMap = {
+            'Baterías de Carro': 2,
+            'Neumáticos': 3,
+            'Faroles y pantallas': 4,
+            'Eléctricos': 6,
+            'Aros': 7,
+            'Gatos': 8,
+            'Lubricantes': 9,
+            'Carrocerías': 5,
+            'Filtros de aceite': 11,
+            'Amortiguadores': 10
+          };
+          
+          return {
+            ...prod,
+            id_categoria_pieza: categoriaMap[prod.nombre_categoria_pieza] || prod.id_categoria_pieza
+          };
+        });
+        
+        setProductos(productosConCategoriasCorrectas);
+        
+        // Log para depuración
+        productosConCategoriasCorrectas.forEach(prod => {
+          console.log(`${prod.nombre_pieza}:`, {
+            categoria: prod.nombre_categoria_pieza,
+            id_categoria: prod.id_categoria_pieza
+          });
+        });
       })
       .catch((err) => console.error('Error al obtener productos:', err));
   }, []);
@@ -55,34 +85,20 @@ export default function Productos() {
   const productosFiltrados = productos.filter((prod) => {
     const coincideBusqueda = prod.nombre_pieza?.toLowerCase().includes(busqueda.toLowerCase());
     
-    // Encontrar la categoría del producto basándonos en el id_categoria_pieza
-    const idCategoria = prod.id_categoria_pieza;
-    
-    // Mapeo de IDs a nombres de categorías
-    const mapeoCategoriasId = {
-      1: 'Neumáticos',
-      2: 'Baterías de Carro',
-      3: 'Faroles y pantallas',
-      4: 'Aros',
-      5: 'Gatos',
-      6: 'Lubricantes',
-      7: 'Carrocerías',
-      8: 'Eléctricos',
-      9: 'Amortiguadores',
-      10: 'Filtros de aceite'
-    };
+    // Encontrar el ID de la categoría que estamos buscando
+    const categoriaFiltrada = categorias.find(cat => 
+      cat.nombre_categoria_pieza === categoriaFiltro
+    );
 
-    const nombreCategoriaProducto = mapeoCategoriasId[idCategoria];
-
-    console.log('Comparación de categorías:', {
-      id_categoria: idCategoria,
-      nombre_categoria_producto: nombreCategoriaProducto,
-      categoria_filtro: categoriaFiltro,
-      coincide: nombreCategoriaProducto?.toLowerCase() === categoriaFiltro?.toLowerCase()
+    console.log('Filtrado:', {
+      producto: prod.nombre_pieza,
+      categoria_actual: prod.id_categoria_pieza,
+      categoria_buscada: categoriaFiltro,
+      id_categoria_buscada: categoriaFiltrada?.id_categoria_pieza
     });
 
     const coincideCategoria = !categoriaFiltro || 
-                            nombreCategoriaProducto?.toLowerCase() === categoriaFiltro?.toLowerCase();
+                            prod.id_categoria_pieza === categoriaFiltrada?.id_categoria_pieza;
     
     return coincideBusqueda && coincideCategoria;
   });
@@ -94,6 +110,41 @@ export default function Productos() {
 
   const closeModal = () => {
     setShowModal(false);
+  };
+
+  // Función para agregar al carrito
+  const agregarAlCarrito = (producto) => {
+    // Obtener el carrito actual del localStorage
+    const carritoActual = JSON.parse(localStorage.getItem('carrito')) || [];
+    
+    // Verificar si el producto ya está en el carrito
+    const productoExistente = carritoActual.find(item => item.id_repuesto === producto.id_repuesto);
+    
+    let nuevoCarrito;
+    if (productoExistente) {
+      // Si el producto existe, incrementar la cantidad
+      nuevoCarrito = carritoActual.map(item =>
+        item.id_repuesto === producto.id_repuesto
+          ? { ...item, cantidad: item.cantidad + 1 }
+          : item
+      );
+    } else {
+      // Si el producto no existe, agregarlo con cantidad 1
+      nuevoCarrito = [...carritoActual, { ...producto, cantidad: 1 }];
+    }
+    
+    // Guardar el carrito actualizado
+    localStorage.setItem('carrito', JSON.stringify(nuevoCarrito));
+    
+    Swal.fire({
+      icon: 'success',
+      title: '¡Agregado!',
+      text: 'Producto agregado al carrito',
+      confirmButtonColor: '#3085d6',
+      confirmButtonText: 'OK'
+    });
+        // Opcional: navegar al carrito
+    navigate('/carrito');
   };
 
   return (
@@ -123,7 +174,12 @@ export default function Productos() {
             onChange={(e) => setBusqueda(e.target.value)}
           />
           <div className="iconos-header">
-            <img src="/carrito.png" className="cart-img" alt="Carrito" />
+            <img 
+              src="/carrito.png" 
+              className="cart-img" 
+              alt="Carrito" 
+              onClick={() => navigate('/carrito')}
+            />
             <img src="/perfil.png" className="perfil-img" alt="Perfil" />
           </div>
         </div>
@@ -143,7 +199,12 @@ export default function Productos() {
               onClick={() => handleProductClick(prod)}
             />
             <p>{prod.nombre_pieza}</p>
-            <button className="btn-agregar">Agregar</button>
+            <button 
+              className="btn-agregar"
+              onClick={() => agregarAlCarrito(prod)}
+            >
+              Agregar
+            </button>
           </div>
         ))}
       </div>
@@ -189,7 +250,15 @@ export default function Productos() {
                   </div>
                 </div>
 
-                <button className="modal-add-btn">Añadir al carrito</button>
+                <button 
+                  className="modal-add-btn"
+                  onClick={() => {
+                    agregarAlCarrito(selectedProduct);
+                    closeModal();
+                  }}
+                >
+                  Añadir al carrito
+                </button>
               </div>
             </div>
           </div>

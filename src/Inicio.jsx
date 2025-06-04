@@ -15,10 +15,10 @@ export default function Inicio() {
         </div>
 
         <ul>
-         <li onClick={() => navigate('/inicio')}>Inicio</li>
-         <li onClick={() => navigate('/register')}>Register</li>
-         <li onClick={() => navigate('/inicio_client')}>Vista Cliente</li> 
-         <li onClick={() => navigate('/')}>Cerrar sesión</li>
+          <li onClick={() => navigate('/Inicio')}>Panel de Administración</li>
+          <li onClick={() => navigate('/register')}>Registrar Usuario</li>
+          <li onClick={() => navigate('/Inicio_Client')}>Ver Vista Cliente</li>
+          <li onClick={() => navigate('/')}>Cerrar sesión</li>
         </ul>
 
       </aside>
