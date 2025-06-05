@@ -28,7 +28,7 @@ export default function App() {
       <Route path="/acceso-denegado" element={<AccesoDenegado />} />
       <Route path="/Contactanos" element={<Contactanos />} />
       
-      {/* Rutas protegidas para usuarios normales */}
+      {/* Rutas protegidas para usuarios y administradores */}
       <Route
         path="/Inicio_Client"
         element={
@@ -40,7 +40,7 @@ export default function App() {
       <Route
         path="/productos"
         element={
-          <ProtectedRoute allowedRoles={['usuario']}>
+          <ProtectedRoute allowedRoles={['usuario', 'administrador']}>
             <Productos />
           </ProtectedRoute>
         }
@@ -48,7 +48,7 @@ export default function App() {
       <Route
         path="/carrito"
         element={
-          <ProtectedRoute allowedRoles={['usuario']}>
+          <ProtectedRoute allowedRoles={['usuario', 'administrador']}>
             <Carrito />
           </ProtectedRoute>
         }
@@ -56,7 +56,7 @@ export default function App() {
       <Route
         path="/pedidos"
         element={
-          <ProtectedRoute allowedRoles={['usuario']}>
+          <ProtectedRoute allowedRoles={['usuario', 'administrador']}>
             <Pedidos />
           </ProtectedRoute>
         }
@@ -64,7 +64,7 @@ export default function App() {
       <Route
         path="/contacto"
         element={
-          <ProtectedRoute allowedRoles={['usuario']}>
+          <ProtectedRoute allowedRoles={['usuario', 'administrador']}>
             <Contacto />
           </ProtectedRoute>
         }
@@ -72,13 +72,13 @@ export default function App() {
       <Route
         path="/perfil"
         element={
-          <ProtectedRoute allowedRoles={['usuario']}>
+          <ProtectedRoute allowedRoles={['usuario', 'administrador']}>
             <Perfil />
           </ProtectedRoute>
         }
       />
 
-      {/* Rutas protegidas para administradores */}
+      {/* Rutas exclusivas para administradores */}
       <Route
         path="/Inicio"
         element={
