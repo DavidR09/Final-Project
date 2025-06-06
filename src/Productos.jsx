@@ -29,6 +29,85 @@ export default function Productos() {
     }
   };
 
+    // Obtener las categorías
+    fetch('http://localhost:3000/api/categorias')
+      .then((res) => res.json())
+      .then((data) => {
+        console.log('Categorías cargadas (detallado):', data.map(cat => ({
+          id: cat.id_categoria_pieza,
+          nombre: cat.nombre_categoria_pieza
+        })));
+        setCategorias(data);
+      })
+      .catch((err) => console.error('Error al obtener categorías:', err));
+
+    // Obtener los productos
+    fetch('http://localhost:3000/api/productos')
+      .then((res) => res.json())
+      .then((data) => {
+        console.log('Productos originales:', data.map(prod => ({
+          id: prod.id_repuesto,
+          nombre: prod.nombre_pieza,
+          categoria_actual: prod.id_categoria_pieza
+        })));
+
+        // Convertir los precios a números y asegurar que las categorías estén correctamente asignadas
+        const productosConPreciosNumericos = data.map(prod => {
+          const nuevaCategoria = 
+            prod.nombre_pieza.includes('Batería') ? 3 :
+            prod.nombre_pieza.includes('Neumático') ? 2 :
+            prod.nombre_pieza.includes('Farol') ? 4 :
+            prod.nombre_pieza.includes('Pantalla') ? 4 :
+            prod.nombre_pieza.includes('Aro') ? 5 :
+            prod.nombre_pieza.includes('Gato') ? 6 :
+            prod.nombre_pieza.includes('Aceite') ? 7 :
+            prod.nombre_pieza.includes('Parachoques') ? 8 :
+            prod.nombre_pieza.includes('Sensor') ? 9 :
+            prod.nombre_pieza.includes('Amortiguador') ? 10 :
+            prod.nombre_pieza.includes('Filtro') ? 11 :
+            prod.id_categoria_pieza;
+
+          // Encontrar el nombre de la nueva categoría
+          const nombreNuevaCategoria = categorias.find(
+            cat => cat.id_categoria_pieza === nuevaCategoria
+          )?.nombre_categoria_pieza || '';
+
+          const productoActualizado = {
+            ...prod,
+            precio_pieza: parseFloat(prod.precio_pieza),
+            id_categoria_pieza: nuevaCategoria,
+            nombre_categoria_pieza: nombreNuevaCategoria
+          };
+
+          console.log(`Producto "${prod.nombre_pieza}": categoría original=${prod.id_categoria_pieza}, nueva categoría=${nuevaCategoria}, nombre categoría=${nombreNuevaCategoria}`);
+          
+          return productoActualizado;
+        });
+
+        console.log('Productos procesados (detallado):', productosConPreciosNumericos.map(prod => ({
+          id: prod.id_repuesto,
+          nombre: prod.nombre_pieza,
+          categoria_final: prod.id_categoria_pieza,
+          nombre_categoria: prod.nombre_categoria_pieza
+        })));
+
+        setProductos(productosConPreciosNumericos);
+      })
+      .catch((err) => console.error('Error al obtener productos:', err));
+  }, [categorias]);
+
+  const productosFiltrados = productos.filter((prod) => {
+    const coincideBusqueda = prod.nombre_pieza?.toLowerCase().includes(busqueda.toLowerCase());
+    
+    // Si no hay categoría seleccionada, solo filtra por búsqueda
+    if (!categoriaFiltro) {
+      return coincideBusqueda;
+    }
+
+    // Si hay categoría seleccionada, filtra por búsqueda y categoría
+    return coincideBusqueda && prod.nombre_categoria_pieza === categoriaFiltro;
+  });
+
   const handleProductClick = (producto) => {
     setSelectedProduct(producto);
     setShowModal(true);
