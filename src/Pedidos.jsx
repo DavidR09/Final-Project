@@ -17,8 +17,8 @@ export default function Pedidos() {
         <ul>
           <li onClick={() => navigate('/inicio_client')}>Inicio</li>
           <li onClick={() => navigate('/productos')}>Piezas</li>
-          <li onClick={() => navigate('/contacto')}>Sobre Nosotros</li>
           <li onClick={() => navigate('/pedidos')}>Pedidos</li>
+          <li onClick={() => navigate('/contacto')}>Sobre Nosotros</li>
         </ul>
       </aside>
 
