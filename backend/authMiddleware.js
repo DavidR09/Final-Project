@@ -19,6 +19,8 @@ export const authenticate = (rolesPermitidos = []) => {
         rolesPermitidos: rolesPermitidos
       });
 
+      //console.log('Login exitoso para:', correo, 'con rol:', user.rol_usuario);
+
       // Si no hay roles específicos requeridos, permitir acceso
       if (rolesPermitidos.length === 0) {
         return next();
@@ -48,9 +50,7 @@ export const authenticate = (rolesPermitidos = []) => {
       res.status(401).json({ 
         error: 'Token inválido o expirado',
         details: process.env.NODE_ENV === 'development' ? error.message : undefined
-} catch (error) {
-  console.error(error); // <-- Usar la variable
-  res.status(401).json({ error: 'Token inválido' });
-}
+      });
+    }
   };
 };

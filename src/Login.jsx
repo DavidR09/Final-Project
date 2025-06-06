@@ -16,24 +16,20 @@ export default function Login() {
     setMensaje(null);
 
     try {
-      const response = await axios.post('/api/login', {
-        correo: email,
-        contraseña: password
+      const response = await axios.post('http://localhost:3000/api/login', {
+        correo_electronico_usuario: email,
+        contrasenia_usuario: password
       }, {
-        withCredentials: true,
-        headers: { 'Content-Type': 'application/json' }
+        withCredentials: true
       });
 
-      console.log('Respuesta del servidor:', response.data);
+      //console.log('Respuesta del servidor:', response.data);
 
-      if (response.data && response.data.id) {
-        // Guardar el ID del usuario en localStorage
-        localStorage.setItem('userId', response.data.id);
-        
+      if (response.data && response.data.userId) {
+        // ...
         setTipoMensaje('success');
         setMensaje('Inicio de sesión exitoso');
         
-        // Redirige según el rol del usuario
         if (response.data.rol === 'administrador') {
           navigate('/Inicio');
         } else {
@@ -42,6 +38,7 @@ export default function Login() {
       } else {
         throw new Error('Respuesta inesperada del servidor');
       }
+      
     } catch (error) {
       console.error('Error:', error);
       setTipoMensaje('error');

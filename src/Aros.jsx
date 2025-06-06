@@ -70,7 +70,7 @@ export default function Aros() {
         </section>
       </main>
 
-      <style jsx>{`
+      <style>{`
         .productos-container {
           display: flex;
           height: 100vh;

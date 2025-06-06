@@ -10,7 +10,7 @@ export const ProtectedRoute = ({ children, allowedRoles = [] }) => {
       <div className="loading-container">
         <div className="loading-spinner"></div>
         <p>Cargando...</p>
-        <style jsx>{`
+        <style>{`
           .loading-container {
             display: flex;
             flex-direction: column;
