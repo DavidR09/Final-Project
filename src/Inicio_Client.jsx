@@ -103,7 +103,9 @@ export default function Inicio_Client() {
           <div className="productos-section">
             <h2>Categorías</h2>
             {categoriasFiltradas.length === 0 ? (
-              <p style={{ textAlign: 'center', marginTop: '3rem' }}><h3>Categoría no encontrada</h3></p>
+              <div style={{ textAlign: 'center', marginTop: '3rem' }}>
+                <h3>Categoría no encontrada</h3>
+              </div>
             ) : (
               <div className="productos-grid">
                 {categoriasFiltradas.map((cat) => (

@@ -1,0 +1,47 @@
+.taller-selector {
+  margin-bottom: 20px;
+}
+
+.taller-selector label {
+  display: block;
+  margin-bottom: 8px;
+  color: #24487f;
+  font-weight: bold;
+}
+
+.taller-selector select {
+  width: 100%;
+  padding: 10px;
+  border: 1px solid #ddd;
+  border-radius: 4px;
+  font-size: 16px;
+  color: #333;
+}
+
+.taller-selector select:focus {
+  outline: none;
+  border-color: #24487f;
+}
+
+.taller-selector select:disabled {
+  background-color: #f5f5f5;
+  cursor: not-allowed;
+}
+
+.taller-selector.loading {
+  text-align: center;
+  color: #24487f;
+  padding: 10px;
+}
+
+.taller-selector .no-talleres {
+  background-color: #f8f9fa;
+  border-color: #e9ecef;
+}
+
+.taller-selector .no-talleres-mensaje {
+  margin-top: 8px;
+  color: #6c757d;
+  font-size: 14px;
+  font-style: italic;
+} 
