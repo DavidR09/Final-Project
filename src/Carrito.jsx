@@ -68,16 +68,35 @@ export default function Carrito() {
   };
 
   const handleNavigate = (path) => {
-    // Si es administrador, usar las rutas de admin, si no, usar las rutas normales
+    // El administrador puede acceder a todas las rutas
     if (userRole === 'administrador') {
       switch(path) {
         case 'inicio':
           navigate('/Inicio');
           break;
+        case 'inicio_client':
+          navigate('/Inicio_Client');
+          break;
+        case 'productos':
+          navigate('/productos');
+          break;
+        case 'pedidos':
+          navigate('/pedidos');
+          break;
+        case 'contacto':
+          navigate('/contacto');
+          break;
+        case 'carrito':
+          navigate('/carrito');
+          break;
+        case 'perfil':
+          navigate('/perfil');
+          break;
         default:
           navigate(`/${path}`);
       }
     } else {
+      // Usuario normal solo accede a rutas de cliente
       switch(path) {
         case 'inicio':
           navigate('/Inicio_Client');
@@ -240,10 +259,22 @@ export default function Carrito() {
         </div>
 
         <ul>
-          <li onClick={() => handleNavigate('inicio')}>Inicio</li>
-          <li onClick={() => handleNavigate('productos')}>Piezas</li>
-          <li onClick={() => handleNavigate('pedidos')}>Pedidos</li>
-          <li onClick={() => handleNavigate('contacto')}>Sobre Nosotros</li>
+          {userRole === 'administrador' ? (
+            <>
+              <li onClick={() => handleNavigate('inicio')}>Inicio Admin</li>
+              <li onClick={() => handleNavigate('inicio_client')}>Inicio Cliente</li>
+              <li onClick={() => handleNavigate('productos')}>Piezas</li>
+              <li onClick={() => handleNavigate('pedidos')}>Pedidos</li>
+              <li onClick={() => handleNavigate('contacto')}>Sobre Nosotros</li>
+            </>
+          ) : (
+            <>
+              <li onClick={() => handleNavigate('inicio')}>Inicio</li>
+              <li onClick={() => handleNavigate('productos')}>Piezas</li>
+              <li onClick={() => handleNavigate('pedidos')}>Pedidos</li>
+              <li onClick={() => handleNavigate('contacto')}>Sobre Nosotros</li>
+            </>
+          )}
         </ul>
       </aside>
 
