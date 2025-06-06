@@ -12,101 +12,20 @@ export default function Productos() {
   const [selectedProduct, setSelectedProduct] = useState(null);
 
   useEffect(() => {
-    cargarProductos();
-  }, []);
-
-  const cargarProductos = async () => {
-    try {
-      const response = await axios.get('http://localhost:3000/api/productos');
-      setProductos(response.data);
-    } catch (error) {
-      console.error('Error al cargar productos:', error);
-      Swal.fire({
-        icon: 'error',
-        title: 'Error',
-        text: 'No se pudieron cargar los productos'
-      });
-    }
-  };
-
-    // Obtener las categorías
-    fetch('http://localhost:3000/api/categorias')
-      .then((res) => res.json())
-      .then((data) => {
-        console.log('Categorías cargadas (detallado):', data.map(cat => ({
-          id: cat.id_categoria_pieza,
-          nombre: cat.nombre_categoria_pieza
-        })));
-        setCategorias(data);
-      })
-      .catch((err) => console.error('Error al obtener categorías:', err));
-
-    // Obtener los productos
     fetch('http://localhost:3000/api/productos')
       .then((res) => res.json())
       .then((data) => {
-        console.log('Productos originales:', data.map(prod => ({
-          id: prod.id_repuesto,
-          nombre: prod.nombre_pieza,
-          categoria_actual: prod.id_categoria_pieza
+        setProductos(data.map(prod => ({
+          ...prod,
+          precio_pieza: parseFloat(prod.precio_pieza)
         })));
-
-        // Convertir los precios a números y asegurar que las categorías estén correctamente asignadas
-        const productosConPreciosNumericos = data.map(prod => {
-          const nuevaCategoria = 
-            prod.nombre_pieza.includes('Batería') ? 3 :
-            prod.nombre_pieza.includes('Neumático') ? 2 :
-            prod.nombre_pieza.includes('Farol') ? 4 :
-            prod.nombre_pieza.includes('Pantalla') ? 4 :
-            prod.nombre_pieza.includes('Aro') ? 5 :
-            prod.nombre_pieza.includes('Gato') ? 6 :
-            prod.nombre_pieza.includes('Aceite') ? 7 :
-            prod.nombre_pieza.includes('Parachoques') ? 8 :
-            prod.nombre_pieza.includes('Sensor') ? 9 :
-            prod.nombre_pieza.includes('Amortiguador') ? 10 :
-            prod.nombre_pieza.includes('Filtro') ? 11 :
-            prod.id_categoria_pieza;
-
-          // Encontrar el nombre de la nueva categoría
-          const nombreNuevaCategoria = categorias.find(
-            cat => cat.id_categoria_pieza === nuevaCategoria
-          )?.nombre_categoria_pieza || '';
-
-          const productoActualizado = {
-            ...prod,
-            precio_pieza: parseFloat(prod.precio_pieza),
-            id_categoria_pieza: nuevaCategoria,
-            nombre_categoria_pieza: nombreNuevaCategoria
-          };
-
-          console.log(`Producto "${prod.nombre_pieza}": categoría original=${prod.id_categoria_pieza}, nueva categoría=${nuevaCategoria}, nombre categoría=${nombreNuevaCategoria}`);
-          
-          return productoActualizado;
-        });
-
-        console.log('Productos procesados (detallado):', productosConPreciosNumericos.map(prod => ({
-          id: prod.id_repuesto,
-          nombre: prod.nombre_pieza,
-          categoria_final: prod.id_categoria_pieza,
-          nombre_categoria: prod.nombre_categoria_pieza
-        })));
-
-        setProductos(productosConPreciosNumericos);
       })
       .catch((err) => console.error('Error al obtener productos:', err));
-  }, [categorias]);
+  }, []);
 
-  const productosFiltrados = productos.filter((prod) => {
-    const coincideBusqueda = prod.nombre_pieza?.toLowerCase().includes(busqueda.toLowerCase());
-    
-    // Si no hay categoría seleccionada, solo filtra por búsqueda
-    if (!categoriaFiltro) {
-      return coincideBusqueda;
-    }
-
-    // Si hay categoría seleccionada, filtra por búsqueda y categoría
-    return coincideBusqueda && prod.nombre_categoria_pieza === categoriaFiltro;
-  });
+  const productosFiltrados = productos.filter(prod =>
+    prod.nombre_pieza.toLowerCase().includes(busqueda.toLowerCase())
+  );
 
   const handleProductClick = (producto) => {
     setSelectedProduct(producto);
@@ -121,7 +40,7 @@ export default function Productos() {
   const formatearPrecio = (precio) => {
     const precioNum = Number(precio);
     if (isNaN(precioNum)) {
-      return '0.00'; // valor por defecto o mensaje alternativo
+      return '0.00';
     }
     return precioNum.toFixed(2).replace(/\B(?=(\d{3})+(?!\d))/g, ",");
   };
@@ -222,13 +141,14 @@ export default function Productos() {
 
         <section className="content">
           <div className="productos-section">
-            <div className="productos-grid">
-              {productos
-                .filter(prod => 
-                  prod.nombre_pieza?.toLowerCase().includes(busqueda.toLowerCase()) ||
-                  prod.descripcion_pieza?.toLowerCase().includes(busqueda.toLowerCase())
-                )
-                .map((producto) => (
+            <h2>Piezas</h2>
+            {productosFiltrados.length === 0 ? (
+              <div style={{ textAlign: 'center', marginTop: '3rem' }}>
+                <h3>No se encontraron piezas</h3>
+              </div>
+            ) : (
+              <div className="productos-grid">
+                {productosFiltrados.map((producto) => (
                   <div key={producto.id_repuesto} className="producto-card">
                     <img
                       src={producto.imagen_pieza}
@@ -246,7 +166,8 @@ export default function Productos() {
                     </button>
                   </div>
                 ))}
-            </div>
+              </div>
+            )}
           </div>
         </section>
       </main>

@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import './Inicio_Client.css'; // Asegúrate de tener este archivo CSS para estilos
+import './Inicio_Client.css';
 import './styles/global.css';
 
 export default function Inicio_Client() {

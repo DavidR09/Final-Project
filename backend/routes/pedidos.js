@@ -137,7 +137,7 @@ router.post('/', async (req, res) => {
       const importe_total = producto.cantidad * producto.precio;
       
       await connection.execute(
-        'INSERT INTO detalle_pedido (id_pedido, id_pieza, cantidad, precio_unitario_pieza, importe_total_pedido) VALUES (?, ?, ?, ?, ?)',
+        'INSERT INTO detalle_pedido (id_pedido, id_pieza, cantidad_detalle, precio_unitario_pieza, importe_total_pedido) VALUES (?, ?, ?, ?, ?)',
         [pedidoId, producto.id_repuesto, producto.cantidad, producto.precio, importe_total]
       );
 
@@ -200,10 +200,9 @@ router.get('/', async (req, res) => {
 
     const [pedidos] = await connection.execute(
       `SELECT p.*, e.estado_pedido as nombre_estado,
-        COALESCE(t.direccion_taller, p.direccion_envio_pedido) as direccion_envio_pedido
+        p.direccion_envio_pedido
        FROM pedido p 
        JOIN estado_pedido e ON p.id_estado_pedido = e.id_estado_pedido
-       LEFT JOIN taller t ON p.id_taller = t.id_taller
        WHERE p.id_usuario = ? 
        ORDER BY p.fecha_pedido DESC`,
       [usuario_id]
@@ -218,7 +217,7 @@ router.get('/', async (req, res) => {
       const [detalles] = await connection.execute(
         `SELECT d.id_detalle_pedido, d.id_pieza, d.precio_unitario_pieza, d.importe_total_pedido, 
          r.nombre_pieza, r.imagen_pieza, r.cantidad_pieza as stock_actual,
-         d.cantidad
+         d.cantidad_detalle as cantidad
          FROM detalle_pedido d 
          JOIN pieza r ON d.id_pieza = r.id_repuesto 
          WHERE d.id_pedido = ?`,

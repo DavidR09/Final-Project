@@ -10,11 +10,14 @@ export const useAuth = () => {
 
   const checkAuth = async () => {
     try {
-      const response = await axios.get('/api/check-auth', {
-        withCredentials: true
+      const response = await axios.get('http://localhost:3000/api/auth/check-auth', {
+        withCredentials: true,
+        headers: {
+          'Content-Type': 'application/json'
+        }
       });
       
-      if (response.data.rol) {
+      if (response.data.authenticated && response.data.rol) {
         setUserRole(response.data.rol);
         setIsAuthenticated(true);
       } else {
@@ -24,7 +27,16 @@ export const useAuth = () => {
     } catch (error) {
       console.error('Error de autenticación:', error);
       setIsAuthenticated(false);
-      navigate('/login');
+      if (error.response?.status === 401) {
+        navigate('/login');
+      } else {
+        // Otros errores (404, 500, etc.)
+        console.error('Error detallado:', {
+          status: error.response?.status,
+          data: error.response?.data,
+          message: error.message
+        });
+      }
     } finally {
       setIsLoading(false);
     }

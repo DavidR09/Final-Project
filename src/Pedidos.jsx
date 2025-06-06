@@ -108,7 +108,6 @@ export default function Pedidos() {
           <div className="header-title">
             <h1>Mis Pedidos</h1>
           </div>
-
           <div className="iconos-header">
             <img
               src="/carrito.png"
@@ -118,7 +117,6 @@ export default function Pedidos() {
             <img
               src="/perfil.png"
               alt="Perfil"
-              className="perfil-img"
               onClick={() => navigate('/perfil')}
             />
           </div>
@@ -161,7 +159,7 @@ export default function Pedidos() {
                       <>
                         <div className="pedido-detalles">
                           {pedido.detalles && pedido.detalles.map((detalle) => (
-                            <div key={`detalle-${detalle.id_detalle_pedido}`} className="producto-detalle">
+                            <div key={`pedido-${pedido.id_pedido}-detalle-${detalle.id_detalle_pedido}`} className="producto-detalle">
                               <img 
                                 src={detalle.imagen_pieza} 
                                 alt={detalle.nombre_pieza} 
