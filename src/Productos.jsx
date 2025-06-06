@@ -1,22 +1,34 @@
-import { useNavigate, useLocation } from 'react-router-dom';
 import React, { useState, useEffect } from 'react';
-import './productos.css';
+import { useNavigate } from 'react-router-dom';
+import axios from 'axios';
 import Swal from 'sweetalert2';
+import './Productos.css';
 
 export default function Productos() {
   const navigate = useNavigate();
-  const location = useLocation();
-  const [busqueda, setBusqueda] = useState('');
   const [productos, setProductos] = useState([]);
-  const [categorias, setCategorias] = useState([]);
-  const [selectedProduct, setSelectedProduct] = useState(null);
+  const [busqueda, setBusqueda] = useState('');
   const [showModal, setShowModal] = useState(false);
-
-  // Obtener la categoría de los parámetros de URL
-  const searchParams = new URLSearchParams(location.search);
-  const categoriaFiltro = searchParams.get('categoria');
+  const [selectedProduct, setSelectedProduct] = useState(null);
 
   useEffect(() => {
+    cargarProductos();
+  }, []);
+
+  const cargarProductos = async () => {
+    try {
+      const response = await axios.get('http://localhost:3000/api/productos');
+      setProductos(response.data);
+    } catch (error) {
+      console.error('Error al cargar productos:', error);
+      Swal.fire({
+        icon: 'error',
+        title: 'Error',
+        text: 'No se pudieron cargar los productos'
+      });
+    }
+  };
+
     // Obtener las categorías
     fetch('http://localhost:3000/api/categorias')
       .then((res) => res.json())
@@ -103,74 +115,68 @@ export default function Productos() {
 
   const closeModal = () => {
     setShowModal(false);
+    setSelectedProduct(null);
   };
 
-  // Función para formatear precio
   const formatearPrecio = (precio) => {
-    if (typeof precio === 'string') {
-      return parseFloat(precio).toFixed(2);
-    }
-    if (typeof precio === 'number') {
-      return precio.toFixed(2);
-    }
-    return '0.00';
+    return precio.toFixed(2).replace(/\B(?=(\d{3})+(?!\d))/g, ",");
   };
 
-  // Función para agregar al carrito
   const agregarAlCarrito = (producto) => {
-    // Obtener el ID del usuario
-    const userId = localStorage.getItem('userId');
-    if (!userId) {
+    if (producto.cantidad_pieza <= 0) {
       Swal.fire({
         icon: 'error',
-        title: 'Error',
-        text: 'Debes iniciar sesión para agregar productos al carrito',
-        confirmButtonColor: '#3085d6',
-        confirmButtonText: 'Iniciar Sesión'
-      }).then((result) => {
-        if (result.isConfirmed) {
-          navigate('/login');
-        }
+        title: 'Sin stock',
+        text: 'Este producto no está disponible actualmente',
+        confirmButtonColor: '#24487f'
       });
       return;
     }
 
-    // Obtener el carrito actual del usuario específico
+    const userId = localStorage.getItem('userId');
+    if (!userId) {
+      navigate('/login');
+      return;
+    }
+
     const carritoKey = `carrito_${userId}`;
     const carritoActual = JSON.parse(localStorage.getItem(carritoKey)) || [];
     
-    // Verificar si el producto ya está en el carrito
-    const productoExistente = carritoActual.find(
-      item => item.id_repuesto === producto.id_repuesto && 
-              item.nombre_pieza === producto.nombre_pieza
-    );
+    const productoExistente = carritoActual.find(p => p.id_repuesto === producto.id_repuesto);
     
-    let nuevoCarrito;
     if (productoExistente) {
-      // Si el producto existe, incrementar la cantidad
-      nuevoCarrito = carritoActual.map(item =>
-        (item.id_repuesto === producto.id_repuesto && 
-         item.nombre_pieza === producto.nombre_pieza)
-          ? { ...item, cantidad: item.cantidad + 1 }
-          : item
-      );
+      if (productoExistente.cantidad >= producto.cantidad_pieza) {
+        Swal.fire({
+          icon: 'error',
+          title: 'Stock insuficiente',
+          text: 'No hay suficiente stock disponible',
+          confirmButtonColor: '#24487f'
+        });
+        return;
+      }
+      productoExistente.cantidad += 1;
     } else {
-      // Si el producto no existe, agregarlo con cantidad 1
-      nuevoCarrito = [...carritoActual, { ...producto, cantidad: 1 }];
+      carritoActual.push({
+        ...producto,
+        cantidad: 1
+      });
     }
-    
-    // Guardar el carrito actualizado
-    localStorage.setItem(carritoKey, JSON.stringify(nuevoCarrito));
-    
+
+    localStorage.setItem(carritoKey, JSON.stringify(carritoActual));
+
     Swal.fire({
       icon: 'success',
       title: '¡Agregado!',
-      text: 'Producto agregado al carrito',
-      confirmButtonColor: '#3085d6',
-      confirmButtonText: 'OK'
+      text: 'El producto se agregó al carrito',
+      confirmButtonColor: '#24487f',
+      showCancelButton: true,
+      confirmButtonText: 'Ir al carrito',
+      cancelButtonText: 'Seguir comprando'
+    }).then((result) => {
+      if (result.isConfirmed) {
+        navigate('/carrito');
+      }
     });
-    // Opcional: navegar al carrito
-    navigate('/carrito');
   };
 
   return (
@@ -187,77 +193,80 @@ export default function Productos() {
         </ul>
       </div>
 
-      <div className="main-content">
-        <div className="header">
+      <main className="main-content">
+        <header className="header">
           <input
             type="text"
-            className="buscador"
-            placeholder="Buscar productos..."
+            placeholder="Buscar pieza..."
             value={busqueda}
             onChange={(e) => setBusqueda(e.target.value)}
+            className="buscador"
           />
           <div className="iconos-header">
-            <img 
-              src="/carrito.png" 
-              className="cart-img" 
-              alt="Carrito" 
+            <img
+              src="/carrito.png"
+              alt="Carrito"
               onClick={() => navigate('/carrito')}
             />
-            <img src="/perfil.png" className="perfil-img" alt="Perfil" />
+            <img
+              src="/perfil.png"
+              alt="Perfil"
+              onClick={() => navigate('/perfil')}
+            />
           </div>
-        </div>
+        </header>
 
         <section className="content">
           <div className="productos-section">
-            <h2>
-              {categoriaFiltro ? `Productos en ${categoriaFiltro}` : 'Todas las Piezas'}
-            </h2>
-            {productosFiltrados.length === 0 ? (
-              <div style={{ textAlign: 'center', marginTop: '3rem' }}>
-                <h3>No se encontraron piezas</h3>
-              </div>
-            ) : (
-              <div className="productos-grid">
-                {productosFiltrados.map((prod) => (
-                  <div key={`${prod.id_repuesto}-${prod.nombre_pieza}`} className="producto-card">
-                    <img 
-                      src={prod.imagen_pieza} 
-                      alt={prod.nombre_pieza} 
-                      onClick={() => handleProductClick(prod)}
+            <div className="productos-grid">
+              {productos
+                .filter(prod => 
+                  prod.nombre_pieza?.toLowerCase().includes(busqueda.toLowerCase()) ||
+                  prod.descripcion_pieza?.toLowerCase().includes(busqueda.toLowerCase())
+                )
+                .map((producto) => (
+                  <div key={producto.id_repuesto} className="producto-card">
+                    <img
+                      src={producto.imagen_pieza}
+                      alt={producto.nombre_pieza}
+                      onClick={() => handleProductClick(producto)}
                     />
-                    <h3>{prod.nombre_pieza}</h3>
-                    <p className="precio">RD$ {formatearPrecio(prod.precio_pieza)}</p>
-                    <p className="categoria">{prod.nombre_categoria_pieza}</p>
-                    <button 
+                    <p>{producto.nombre_pieza}</p>
+                    <p className="precio">RD$ {formatearPrecio(producto.precio_pieza)}</p>
+                    <button
+                      onClick={() => agregarAlCarrito(producto)}
                       className="btn-agregar"
-                      onClick={() => agregarAlCarrito(prod)}
+                      disabled={producto.cantidad_pieza <= 0}
                     >
-                      Agregar al carrito
+                      {producto.cantidad_pieza <= 0 ? 'Sin stock' : 'Agregar al carrito'}
                     </button>
                   </div>
                 ))}
-              </div>
-            )}
+            </div>
           </div>
         </section>
-      </div>
+      </main>
 
       {showModal && selectedProduct && (
-        <div className="modal">
+        <div className="modal-overlay">
           <div className="modal-content">
-            <span className="close" onClick={closeModal}>&times;</span>
-            <h2>{selectedProduct.nombre_pieza}</h2>
+            <button className="close-modal" onClick={closeModal}>&times;</button>
+            <h3>{selectedProduct.nombre_pieza}</h3>
             <img src={selectedProduct.imagen_pieza} alt={selectedProduct.nombre_pieza} />
-            <p><strong>Precio:</strong> RD$ {formatearPrecio(selectedProduct.precio_pieza)}</p>
-            <p><strong>Categoría:</strong> {selectedProduct.nombre_categoria_pieza}</p>
-            <p><strong>Descripción:</strong> {selectedProduct.descripcion_pieza}</p>
-            <p><strong>Años compatibles:</strong> {selectedProduct.desde_anio_pieza} - {selectedProduct.hasta_anio_pieza}</p>
-            <p><strong>Stock disponible:</strong> {selectedProduct.cantidad_pieza}</p>
-            <button onClick={() => {
-              agregarAlCarrito(selectedProduct);
-              closeModal();
-            }}>
-              Agregar al carrito
+            <p className="precio">RD$ {formatearPrecio(selectedProduct.precio_pieza)}</p>
+            <p className="descripcion">{selectedProduct.descripcion_pieza}</p>
+            <p className="categoria">Categoría: {selectedProduct.nombre_categoria_pieza}</p>
+            <p className="anios">Años: {selectedProduct.desde_anio_pieza} - {selectedProduct.hasta_anio_pieza}</p>
+            <p className="stock">Stock disponible: {selectedProduct.cantidad_pieza}</p>
+            <button
+              onClick={() => {
+                agregarAlCarrito(selectedProduct);
+                closeModal();
+              }}
+              className="btn-agregar"
+              disabled={selectedProduct.cantidad_pieza <= 0}
+            >
+              {selectedProduct.cantidad_pieza <= 0 ? 'Sin stock' : 'Agregar al carrito'}
             </button>
           </div>
         </div>

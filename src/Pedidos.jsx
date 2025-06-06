@@ -108,11 +108,11 @@ export default function Pedidos() {
           <div className="header-title">
             <h1>Mis Pedidos</h1>
           </div>
-          <div className="header-icons">
+
+          <div className="iconos-header">
             <img
               src="/carrito.png"
               alt="Carrito"
-              className="cart-img"
               onClick={() => navigate('/carrito')}
             />
             <img
@@ -182,7 +182,7 @@ export default function Pedidos() {
                         <div className="pedido-footer">
                           <div className="pedido-direccion">
                             <strong>Dirección de envío:</strong>
-                            <p>{pedido.direccion_envio_pedido === 'Pendiente' ? 'Por confirmar' : pedido.direccion_envio_pedido}</p>
+                            <p>{pedido.direccion_envio_pedido || 'Por confirmar'}</p>
                           </div>
                           <div className="pedido-total">
                             <strong>Total del pedido:</strong>
@@ -267,6 +267,12 @@ export default function Pedidos() {
         .header-title h1 {
           margin: 0;
           color: white;
+          feat/backend
+        }
+
+        .iconos-header {
+          display: flex;
+          align-items: center;
         }
 
         .cart-img,

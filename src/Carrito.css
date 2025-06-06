@@ -1,9 +1,8 @@
 .carrito-container {
   display: flex;
-  min-height: 100vh;
-  background-color: #f8f9fa;
+  height: 100vh;
   font-family: 'Segoe UI', sans-serif;
-}
+  background-color: #ffffff;
 
 .sidebar {
   width: 250px;
@@ -48,15 +47,16 @@
 .sidebar li {
   margin-bottom: 15px;
   cursor: pointer;
-  padding: 12px 15px;
-  border-radius: 8px;
-  transition: all 0.3s ease;
-  font-size: 16px;
+  padding: 8px;
+  border-radius: 5px;
 }
 
 .sidebar li:hover {
-  background-color: rgba(255, 255, 255, 0.1);
-  transform: translateX(5px);
+  background-color: #333;
+}
+
+.sidebar li:active {
+  background-color: #1b355b;
 }
 
 .main-content {
@@ -66,46 +66,28 @@
 }
 
 .header {
-  background-color: white;
-  padding: 20px 40px;
   display: flex;
   justify-content: space-between;
   align-items: center;
-  box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+  padding: 20px;
+  background-color: #24487f;
+  color: white;
 }
 
-.header-title h1 {
-  margin: 0;
-  color: #24487f;
-  font-size: 24px;
-}
-
-.header-icons {
+.iconos-header {
   display: flex;
-  gap: 20px;
+  gap: 15px;
 }
 
-.cart-img,
-.perfil-img {
+.iconos-header img {
   width: 30px;
   height: 30px;
-  cursor: pointer;
-  transition: transform 0.2s;
-}
-
-.cart-img:hover,
-.perfil-img:hover {
-  transform: scale(1.1);
-}
-
-.perfil-img {
-  border-radius: 50%;
-  object-fit: cover;
 }
 
 .carrito-section {
-  padding: 30px;
   flex: 1;
+  padding: 20px;
+  overflow-y: auto;
 }
 
 .carrito-vacio {
@@ -235,16 +217,26 @@
   background-color: #1b355b;
 }
 
+.cantidad-display {
+  font-size: 16px;
+  color: #333;
+  min-width: 30px;
+  text-align: center;
+}
+
 .producto-acciones {
   display: flex;
   flex-direction: column;
   gap: 15px;
-  align-items: flex-end;
+  align-items: center;
+  justify-content: center;
+  width: 100%;
 }
 
 .subtotal {
   color: #666;
   margin: 0;
+  text-align: center;
 }
 
 .eliminar-btn {
@@ -255,6 +247,7 @@
   border-radius: 6px;
   cursor: pointer;
   transition: all 0.2s;
+  margin: 0 auto;
 }
 
 .eliminar-btn:hover {
@@ -364,5 +357,20 @@
 
   .header {
     padding: 15px;
+  }
+}
+
+@media (max-width: 480px) {
+  .carrito-section {
+    padding: 20px;
+  }
+
+  .producto-imagen-container {
+    width: 100px;
+    height: 100px;
+  }
+
+  .cantidad-control {
+    justify-content: center;
   }
 } 

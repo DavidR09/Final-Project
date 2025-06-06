@@ -7,7 +7,6 @@ const CheckoutForm = ({ amount, onSuccess }) => {
   const stripe = useStripe();
   const elements = useElements();
   const [loading, setLoading] = useState(false);
-  const [metodoPago, setMetodoPago] = useState('tarjeta');
 
   const handleSubmit = async (event) => {
     event.preventDefault();
@@ -62,7 +61,6 @@ const CheckoutForm = ({ amount, onSuccess }) => {
         });
         onSuccess({
           estado_pago: 1,
-          metodo_pago: metodoPago,
           monto_pago: amount,
         });
       }
@@ -81,18 +79,6 @@ const CheckoutForm = ({ amount, onSuccess }) => {
   return (
     <form onSubmit={handleSubmit} className="checkout-form">
       <div className="form-group">
-        <label>Método de Pago</label>
-        <select
-          value={metodoPago}
-          onChange={(e) => setMetodoPago(e.target.value)}
-          className="select-metodo-pago"
-        >
-          <option value="tarjeta">Tarjeta de Crédito/Débito</option>
-        </select>
-      </div>
-
-      <div className="form-group">
-        <label>Detalles de la Tarjeta</label>
         <CardElement
           options={{
             style: {

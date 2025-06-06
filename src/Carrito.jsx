@@ -4,12 +4,14 @@ import Swal from 'sweetalert2';
 import axios from 'axios';
 import PaymentModal from './components/PaymentModal';
 import './Carrito.css';
+import './styles/global.css';
 
 export default function Carrito() {
   const navigate = useNavigate();
   const [productos, setProductos] = useState([]);
   const [userRole, setUserRole] = useState(null);
   const [isPaymentModalOpen, setIsPaymentModalOpen] = useState(false);
+  const [paymentDetails, setPaymentDetails] = useState({ method: 'tarjeta' });
 
   useEffect(() => {
     // Verificar la autenticación del usuario
@@ -38,6 +40,32 @@ export default function Carrito() {
 
     checkAuth();
   }, [navigate]);
+
+  // Función para verificar el stock disponible
+  const verificarStock = async () => {
+    try {
+      // Obtener los productos actualizados de la base de datos
+      const response = await axios.get('http://localhost:3000/api/productos');
+      const productosDB = response.data;
+
+      // Verificar el stock para cada producto en el carrito
+      for (const productoCarrito of productos) {
+        const productoDB = productosDB.find(p => p.id_repuesto === productoCarrito.id_repuesto);
+        
+        if (!productoDB) {
+          throw new Error(`El producto ${productoCarrito.nombre_pieza} ya no está disponible.`);
+        }
+
+        if (productoDB.cantidad_pieza < productoCarrito.cantidad) {
+          throw new Error(`Stock insuficiente para ${productoCarrito.nombre_pieza}. Stock disponible: ${productoDB.cantidad_pieza}`);
+        }
+      }
+
+      return true;
+    } catch (error) {
+      throw error;
+    }
+  };
 
   const handleNavigate = (path) => {
     // Si es administrador, usar las rutas de admin, si no, usar las rutas normales
@@ -126,7 +154,8 @@ export default function Carrito() {
         total: total * 1.18, // Total con ITBIS
         estado: "pendiente",
         id_usuario: parseInt(userId),
-        direccion_envio_pedido: "Pendiente" // Valor por defecto temporal
+        direccion_envio_pedido: "Pendiente", // Valor por defecto temporal
+        metodo_pago: paymentDetails.method // Usamos el método seleccionado
       };
 
       console.log('Datos del pedido a enviar:', pedidoData);
@@ -171,7 +200,7 @@ export default function Carrito() {
     }
   };
 
-  const confirmarPedido = () => {
+  const confirmarPedido = async () => {
     if (productos.length === 0) {
       Swal.fire({
         icon: 'error',
@@ -181,7 +210,20 @@ export default function Carrito() {
       });
       return;
     }
-    setIsPaymentModalOpen(true);
+
+    try {
+      // Verificar stock antes de abrir el modal de pago
+      await verificarStock();
+      setIsPaymentModalOpen(true);
+    } catch (error) {
+      Swal.fire({
+        icon: 'error',
+        title: 'Error de stock',
+        text: error.message,
+        confirmButtonColor: '#24487f'
+      });
+    }
+    
   };
 
   if (!userRole) {
@@ -211,17 +253,15 @@ export default function Carrito() {
           <div className="header-title">
             <h1>Mi Carrito</h1>
           </div>
-          <div className="header-icons">
+          <div className="iconos-header">
             <img
               src="/carrito.png"
               alt="Carrito"
-              className="cart-img"
               onClick={() => handleNavigate('carrito')}
             />
             <img
               src="/perfil.png"
               alt="Perfil"
-              className="perfil-img"
               onClick={() => handleNavigate('perfil')}
             />
           </div>
@@ -247,7 +287,7 @@ export default function Carrito() {
                     </div>
                     <div className="producto-detalles">
                       <h3>{p.nombre_pieza}</h3>
-                      <p className="precio">${p.precio_pieza}</p>
+                      <p className="precio">RD$ {p.precio_pieza}</p>
                       <div className="cantidad-control">
                         <button 
                           className="cantidad-btn"
@@ -255,7 +295,7 @@ export default function Carrito() {
                         >
                           -
                         </button>
-                        <span>{p.cantidad}</span>
+                        <span className="cantidad-display">{p.cantidad}</span>
                         <button 
                           className="cantidad-btn"
                           onClick={() => actualizarCantidad(p.id_repuesto, p.cantidad + 1)}
@@ -265,7 +305,7 @@ export default function Carrito() {
                       </div>
                     </div>
                     <div className="producto-acciones">
-                      <p className="subtotal">Subtotal: ${p.precio_pieza * p.cantidad}</p>
+                      <p className="subtotal">Subtotal: RD$ {p.precio_pieza * p.cantidad}</p>
                       <button 
                         className="eliminar-btn"
                         onClick={() => eliminarProducto(p.id_repuesto)}

@@ -28,9 +28,9 @@ const TallerSelector = ({ onSelect }) => {
         const data = await response.json();
         setTalleres(data);
 
-        // Si no hay talleres, mostrar mensaje informativo
+        // Si no hay talleres, mostrar el mensaje una sola vez
         if (data.length === 0) {
-          Swal.fire({
+          await Swal.fire({
             icon: 'info',
             title: 'Sin talleres registrados',
             text: 'No tienes talleres registrados en el sistema. Puedes continuar sin seleccionar un taller.',
@@ -39,7 +39,7 @@ const TallerSelector = ({ onSelect }) => {
         }
       } catch (error) {
         console.error('Error:', error);
-        Swal.fire({
+        await Swal.fire({
           icon: 'error',
           title: 'Error',
           text: 'No se pudieron cargar los talleres',
@@ -52,7 +52,7 @@ const TallerSelector = ({ onSelect }) => {
     };
 
     fetchTalleres();
-  }, []);
+  }, []); // Solo se ejecuta una vez al montar el componente
 
   const handleChange = (event) => {
     const tallerId = event.target.value;
@@ -69,6 +69,17 @@ const TallerSelector = ({ onSelect }) => {
     return <div className="taller-selector loading">Cargando talleres...</div>;
   }
 
+  // Si no hay talleres, no mostramos el selector pero permitimos continuar
+  if (talleres.length === 0) {
+    return (
+      <div className="taller-selector">
+        <p className="no-talleres-mensaje">
+          No tienes talleres registrados. Puedes continuar sin seleccionar un taller.
+        </p>
+      </div>
+    );
+  }
+
   return (
     <div className="taller-selector">
       <label htmlFor="taller">Taller (opcional)</label>
@@ -76,7 +87,6 @@ const TallerSelector = ({ onSelect }) => {
         id="taller"
         value={selectedTaller}
         onChange={handleChange}
-        className={talleres.length === 0 ? 'no-talleres' : ''}
       >
         <option value="">Seleccione un taller</option>
         {talleres.map(taller => (
@@ -85,11 +95,6 @@ const TallerSelector = ({ onSelect }) => {
           </option>
         ))}
       </select>
-      {talleres.length === 0 && (
-        <p className="no-talleres-mensaje">
-          No tienes talleres registrados. Puedes continuar sin seleccionar un taller.
-        </p>
-      )}
     </div>
   );
 };

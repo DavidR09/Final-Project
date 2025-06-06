@@ -16,11 +16,17 @@
   border-radius: 4px;
   font-size: 16px;
   color: #333;
+  background-color: #f8f9fa;
 }
 
 .taller-selector select:focus {
   outline: none;
   border-color: #24487f;
+  background-color: white;
+}
+
+.taller-selector select:hover {
+  background-color: #f0f0f0;
 }
 
 .taller-selector select:disabled {

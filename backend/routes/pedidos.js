@@ -126,13 +126,19 @@ router.post('/', async (req, res) => {
 
     const pedidoId = pedidoResult.insertId;
 
+    // Insertar el pago
+    await connection.execute(
+      'INSERT INTO pago (estado_pago, metodo_pago, monto_pago, id_pedido) VALUES (?, ?, ?, ?)',
+      [1, req.body.metodo_pago, total, pedidoId]
+    );
+    
     // Insertar los detalles del pedido
     for (const producto of productos) {
       const importe_total = producto.cantidad * producto.precio;
       
       await connection.execute(
-        'INSERT INTO detalle_pedido (id_pedido, id_pieza, precio_unitario_pieza, importe_total_pedido) VALUES (?, ?, ?, ?)',
-        [pedidoId, producto.id_repuesto, producto.precio, importe_total]
+        'INSERT INTO detalle_pedido (id_pedido, id_pieza, cantidad, precio_unitario_pieza, importe_total_pedido) VALUES (?, ?, ?, ?, ?)',
+        [pedidoId, producto.id_repuesto, producto.cantidad, producto.precio, importe_total]
       );
 
       // Actualizar el stock
@@ -193,9 +199,11 @@ router.get('/', async (req, res) => {
     }
 
     const [pedidos] = await connection.execute(
-      `SELECT p.*, e.estado_pedido as nombre_estado 
+      `SELECT p.*, e.estado_pedido as nombre_estado,
+        COALESCE(t.direccion_taller, p.direccion_envio_pedido) as direccion_envio_pedido
        FROM pedido p 
        JOIN estado_pedido e ON p.id_estado_pedido = e.id_estado_pedido
+       LEFT JOIN taller t ON p.id_taller = t.id_taller
        WHERE p.id_usuario = ? 
        ORDER BY p.fecha_pedido DESC`,
       [usuario_id]
@@ -208,7 +216,9 @@ router.get('/', async (req, res) => {
       console.log('Obteniendo detalles para pedido:', pedido.id_pedido);
       
       const [detalles] = await connection.execute(
-        `SELECT d.*, r.nombre_pieza, r.imagen_pieza, r.cantidad_pieza as stock_actual
+        `SELECT d.id_detalle_pedido, d.id_pieza, d.precio_unitario_pieza, d.importe_total_pedido, 
+         r.nombre_pieza, r.imagen_pieza, r.cantidad_pieza as stock_actual,
+         d.cantidad
          FROM detalle_pedido d 
          JOIN pieza r ON d.id_pieza = r.id_repuesto 
          WHERE d.id_pedido = ?`,
@@ -217,10 +227,10 @@ router.get('/', async (req, res) => {
 
       console.log('Detalles encontrados:', detalles.length);
 
-      // Calcular la cantidad para cada detalle
+      // Ya no necesitamos calcular la cantidad, la obtenemos directamente de la base de datos
       for (let detalle of detalles) {
-        detalle.cantidad = Math.round(detalle.importe_total_pedido / detalle.precio_unitario_pieza);
         console.log('Detalle procesado:', {
+          id_detalle: detalle.id_detalle_pedido,
           id_pieza: detalle.id_pieza,
           nombre: detalle.nombre_pieza,
           cantidad: detalle.cantidad,
