@@ -10,8 +10,7 @@ export default defineConfig({
       '/api': {
         target: 'http://localhost:3000',
         changeOrigin: true,
-        secure: false,
-        credentials: true // Añadido para permitir el envío de cookies
+        secure: false
       }
     }
   },

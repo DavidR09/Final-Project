@@ -1,5 +1,6 @@
 import React from 'react';
 import { useNavigate } from 'react-router-dom';
+import './styles/global.css';
 
 export default function Contacto() {
   const navigate = useNavigate();
@@ -24,18 +25,18 @@ export default function Contacto() {
 
       <main className="main-content">
         <header className="header">
-          <img
-            src="/carrito.png"
-            alt="Carrito"
-            className="cart-img"
-            onClick={() => navigate('/carrito')}
-          />
-          <img
-            src="/perfil.png"
-            alt="Perfil"
-            className="perfil-img"
-            onClick={() => navigate('/perfil')}
-          />
+          <div className="iconos-header">
+            <img
+              src="/carrito.png"
+              alt="Carrito"
+              onClick={() => navigate('/carrito')}
+            />
+            <img
+              src="/perfil.png"
+              alt="Perfil"
+              onClick={() => navigate('/perfil')}
+            />
+          </div>
         </header>
 
         <section className="content">
@@ -136,22 +137,14 @@ export default function Contacto() {
           background-color: #24487f;
         }
 
-        .cart-img,
-        .perfil-img {
+        .iconos-header {
+          display: flex;
+          gap: 15px;
+        }
+
+        .iconos-header img {
           width: 30px;
           height: 30px;
-          cursor: pointer;
-        }
-
-        .perfil-img {
-          margin-left: 15px;
-          border-radius: 50%;
-          object-fit: cover;
-        }
-
-        .cart-img:hover,
-        .perfil-img:hover {
-          filter: brightness(1.2);
         }
 
         .content {

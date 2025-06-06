@@ -1,0 +1,49 @@
+/* Estilos globales para el header */
+.header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 20px;
+  background-color: #24487f;
+  flex-wrap: wrap;
+}
+
+.buscador {
+  padding: 10px 15px;
+  width: 300px;
+  border: none;
+  border-radius: 25px;
+  font-size: 16px;
+  color: #24487f;
+  background-color: white;
+  outline: none;
+}
+
+.iconos-header {
+  display: flex;
+  align-items: center;
+  gap: 15px;
+}
+
+.cart-img,
+.perfil-img {
+  width: 30px;
+  height: 30px;
+}
+
+.perfil-img {
+  border-radius: 50%;
+  object-fit: cover;
+}
+
+.cart-img:hover,
+.perfil-img:hover {
+  filter: brightness(1.2);
+}
+
+/* Estilos globales para imágenes clickeables */
+.iconos-header img,
+.logo-wrapper img,
+img[onClick] {
+  cursor: pointer;
+} 

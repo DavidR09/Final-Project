@@ -1,14 +1,31 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import './Inicio_Client.css'; // Asegúrate de tener este archivo CSS para estilos
+import './styles/global.css';
 
 export default function Inicio_Client() {
   const navigate = useNavigate();
   const [busqueda, setBusqueda] = useState('');
   const [categorias, setCategorias] = useState([]);
   const [selectedCategory, setSelectedCategory] = useState(null);
+  const [userRole, setUserRole] = useState(null);
 
   useEffect(() => {
+    // Verificar el rol del usuario
+    const checkUserRole = async () => {
+      try {
+        const response = await fetch('http://localhost:3000/api/check-auth', {
+          credentials: 'include'
+        });
+        const data = await response.json();
+        setUserRole(data.rol);
+      } catch (error) {
+        console.error('Error al verificar el rol:', error);
+      }
+    };
+
+    checkUserRole();
+
     // Función para obtener las categorías desde el backend
     const fetchCategorias = async () => {
       try {
@@ -67,10 +84,22 @@ export default function Inicio_Client() {
           <img src="/Logo.png" alt="Logo" />
         </div>
         <ul>
-          <li onClick={() => navigate('/inicio_client')}>Inicio</li>
-          <li onClick={() => navigate('/productos')}>Piezas</li>
-          <li onClick={() => navigate('/pedidos')}>Pedidos</li>
-          <li onClick={() => navigate('/contacto')}>Sobre Nosotros</li>
+          {userRole === 'administrador' ? (
+            <>
+              <li onClick={() => navigate('/inicio_client')}>Inicio</li>
+              <li onClick={() => navigate('/productos')}>Piezas</li>
+              <li onClick={() => navigate('/pedidos')}>Pedidos</li>
+              <li onClick={() => navigate('/contacto')}>Sobre Nosotros</li>
+              <li onClick={() => navigate('/Inicio')}>Volver al Panel Admin</li>
+            </>
+          ) : (
+            <>
+              <li onClick={() => navigate('/inicio_client')}>Inicio</li>
+              <li onClick={() => navigate('/productos')}>Piezas</li>
+              <li onClick={() => navigate('/pedidos')}>Pedidos</li>
+              <li onClick={() => navigate('/contacto')}>Sobre Nosotros</li>
+            </>
+          )}
         </ul>
       </aside>
 
@@ -87,13 +116,11 @@ export default function Inicio_Client() {
             <img
               src="/carrito.png"
               alt="Carrito"
-              className="cart-img"
               onClick={() => navigate('/carrito')}
             />
             <img
               src="/perfil.png"
               alt="Perfil"
-              className="perfil-img"
               onClick={() => navigate('/perfil')}
             />
           </div>
@@ -103,7 +130,9 @@ export default function Inicio_Client() {
           <div className="productos-section">
             <h2>Categorías</h2>
             {categoriasFiltradas.length === 0 ? (
-              <p style={{ textAlign: 'center', marginTop: '3rem' }}><h3>Categoría no encontrada</h3></p>
+              <div style={{ textAlign: 'center', marginTop: '3rem' }}>
+                <h3>Categoría no encontrada</h3>
+              </div>
             ) : (
               <div className="productos-grid">
                 {categoriasFiltradas.map((cat) => (

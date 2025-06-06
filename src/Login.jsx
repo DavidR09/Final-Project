@@ -17,14 +17,19 @@ export default function Login() {
 
     try {
       const response = await axios.post('/api/login', {
-        correo_electronico_usuario: email,
-        contrasenia_usuario: password
+        correo: email,
+        contraseña: password
       }, {
         withCredentials: true,
         headers: { 'Content-Type': 'application/json' }
       });
 
-      if (response.data && response.data.userId) {
+      console.log('Respuesta del servidor:', response.data);
+
+      if (response.data && response.data.id) {
+        // Guardar el ID del usuario en localStorage
+        localStorage.setItem('userId', response.data.id);
+        
         setTipoMensaje('success');
         setMensaje('Inicio de sesión exitoso');
         

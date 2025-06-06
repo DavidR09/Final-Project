@@ -68,8 +68,8 @@ const response = await fetch('http://localhost:3000/api/insertar-usuario', {
         </div>
         <ul>
           <li onClick={() => navigate('/inicio')}>Panel de Administración</li>
-          <li onClick={() => navigate('/register')}>Register</li>
-          <li onClick={() => navigate('/inicio_client')}>Vista Cliente</li> 
+          <li onClick={() => navigate('/register')}>Registrar Usuario</li>
+          <li onClick={() => navigate('/inicio_client')}>Ver Vista Cliente</li>
           <li onClick={() => navigate('/')}>Cerrar sesión</li>
         </ul>
       </aside>
@@ -189,18 +189,6 @@ const response = await fetch('http://localhost:3000/api/insertar-usuario', {
         .perfil-img {
           width: 30px;
           height: 30px;
-          cursor: pointer;
-        }
-
-        .perfil-img {
-          margin-left: 15px;
-          border-radius: 50%;
-          object-fit: cover;
-        }
-
-        .cart-img:hover,
-        .perfil-img:hover {
-          filter: brightness(1.2);
         }
 
         .content {

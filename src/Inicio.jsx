@@ -1,5 +1,6 @@
 import React from 'react';
 import { useNavigate } from 'react-router-dom';
+import './styles/global.css';
 
 export default function Inicio() {
   const navigate = useNavigate();
@@ -121,25 +122,12 @@ export default function Inicio() {
 
         .iconos-header {
           display: flex;
-          align-items: center;
           gap: 15px;
         }
 
-        .cart-img,
-        .perfil-img {
+        .iconos-header img {
           width: 30px;
           height: 30px;
-          cursor: pointer;
-        }
-
-        .perfil-img {
-          border-radius: 50%;
-          object-fit: cover;
-        }
-
-        .cart-img:hover,
-        .perfil-img:hover {
-          filter: brightness(1.2);
         }
 
         .content {
