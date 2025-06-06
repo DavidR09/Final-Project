@@ -96,10 +96,10 @@ export default function Pedidos() {
         </div>
 
         <ul>
-          <li key="inicio" onClick={() => navigate('/inicio_client')}>Inicio</li>
-          <li key="piezas" onClick={() => navigate('/productos')}>Piezas</li>
-          <li key="pedidos" onClick={() => navigate('/pedidos')}>Pedidos</li>
-          <li key="contacto" onClick={() => navigate('/contacto')}>Sobre Nosotros</li>
+          <li onClick={() => navigate('/inicio_client')}>Inicio</li>
+          <li onClick={() => navigate('/productos')}>Piezas</li>
+          <li onClick={() => navigate('/pedidos')}>Pedidos</li>
+          <li onClick={() => navigate('/contacto')}>Sobre Nosotros</li>
         </ul>
       </aside>
 
@@ -159,7 +159,7 @@ export default function Pedidos() {
                       <>
                         <div className="pedido-detalles">
                           {pedido.detalles && pedido.detalles.map((detalle) => (
-                            <div key={`pedido-${pedido.id_pedido}-detalle-${detalle.id_detalle_pedido}`} className="producto-detalle">
+                            <div key={`${pedido.id_pedido}-${detalle.id_detalle_pedido}-${detalle.id_repuesto}`} className="producto-detalle">
                               <img 
                                 src={detalle.imagen_pieza} 
                                 alt={detalle.nombre_pieza} 

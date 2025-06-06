@@ -15,17 +15,58 @@ export default function Productos() {
     fetch('http://localhost:3000/api/productos')
       .then((res) => res.json())
       .then((data) => {
-        setProductos(data.map(prod => ({
+        // Log para debug
+        console.log('Datos de productos:', data.slice(0, 3)); // Mostramos solo los primeros 3 para no saturar la consola
+        
+        const productosUnicos = data.map((prod, index) => ({
           ...prod,
-          precio_pieza: parseFloat(prod.precio_pieza)
-        })));
+          precio_pieza: parseFloat(prod.precio_pieza),
+          uniqueKey: `${prod.id_repuesto}-${index}`
+        }));
+        setProductos(productosUnicos);
       })
       .catch((err) => console.error('Error al obtener productos:', err));
   }, []);
 
-  const productosFiltrados = productos.filter(prod =>
-    prod.nombre_pieza.toLowerCase().includes(busqueda.toLowerCase())
-  );
+  // Función de búsqueda mejorada
+  const buscarEnTexto = (texto, busqueda) => {
+    return texto?.toLowerCase().trim().includes(busqueda.toLowerCase().trim());
+  };
+
+  const productosFiltrados = productos.filter(prod => {
+    const terminoBusqueda = busqueda.toLowerCase().trim();
+    
+    // Si no hay término de búsqueda, mostrar todos los productos
+    if (!terminoBusqueda) return true;
+
+    // Búsqueda exacta en el nombre
+    const coincideNombre = buscarEnTexto(prod.nombre_pieza, terminoBusqueda);
+    
+    // Solo si no hay coincidencia exacta en el nombre, buscar en otros campos
+    if (coincideNombre) return true;
+
+    // Búsqueda en otros campos solo si la palabra tiene más de 3 caracteres
+    // para evitar coincidencias accidentales con palabras cortas
+    if (terminoBusqueda.length > 3) {
+      const coincideDescripcion = buscarEnTexto(prod.descripcion_pieza, terminoBusqueda);
+      const coincideCategoria = buscarEnTexto(prod.nombre_categoria_pieza, terminoBusqueda);
+      return coincideDescripcion || coincideCategoria;
+    }
+
+    return false;
+  });
+
+  // Log para debug de la búsqueda
+  useEffect(() => {
+    if (busqueda) {
+      console.log('Término de búsqueda:', busqueda);
+      console.log('Productos filtrados:', productosFiltrados.map(p => ({
+        nombre: p.nombre_pieza,
+        categoria: p.nombre_categoria_pieza,
+        descripcion: p.descripcion_pieza
+      })));
+    }
+  }, [busqueda, productosFiltrados]);
 
   const handleProductClick = (producto) => {
     setSelectedProduct(producto);
@@ -144,12 +185,12 @@ export default function Productos() {
             <h2>Piezas</h2>
             {productosFiltrados.length === 0 ? (
               <div style={{ textAlign: 'center', marginTop: '3rem' }}>
-                <h3>No se encontraron piezas</h3>
+                <h3>Pieza no encontrada</h3>
               </div>
             ) : (
               <div className="productos-grid">
                 {productosFiltrados.map((producto) => (
-                  <div key={producto.id_repuesto} className="producto-card">
+                  <div key={producto.uniqueKey} className="producto-card">
                     <img
                       src={producto.imagen_pieza}
                       alt={producto.nombre_pieza}
@@ -173,7 +214,7 @@ export default function Productos() {
       </main>
 
       {showModal && selectedProduct && (
-        <div className="modal-overlay">
+        <div className="modal-overlay" key={`modal-${selectedProduct.uniqueKey}`}>
           <div className="modal-content">
             <button className="close-modal" onClick={closeModal}>&times;</button>
             <h3>{selectedProduct.nombre_pieza}</h3>

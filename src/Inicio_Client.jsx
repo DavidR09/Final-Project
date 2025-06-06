@@ -14,7 +14,7 @@ export default function Inicio_Client() {
     // Verificar el rol del usuario
     const checkUserRole = async () => {
       try {
-        const response = await fetch('http://localhost:3000/api/check-auth', {
+        const response = await fetch('http://localhost:3000/api/auth/check-auth', {
           credentials: 'include'
         });
         const data = await response.json();
@@ -136,7 +136,7 @@ export default function Inicio_Client() {
             ) : (
               <div className="productos-grid">
                 {categoriasFiltradas.map((cat) => (
-                  <div key={cat.nombre_categoria_pieza} className="producto-card">
+                  <div key={cat.id_categoria_pieza} className="producto-card">
                     <img 
                       src={cat.imagen} 
                       alt={cat.nombre_categoria_pieza} 
