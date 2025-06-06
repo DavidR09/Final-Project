@@ -61,7 +61,6 @@ const CheckoutForm = ({ amount, onSuccess }) => {
         });
         onSuccess({
           estado_pago: 1,
-          metodo_pago: 'tarjeta',
           monto_pago: amount,
         });
       }

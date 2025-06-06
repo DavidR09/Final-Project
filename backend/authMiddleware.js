@@ -6,7 +6,7 @@ export const authenticate = (rolesPermitidos = []) => {
     const token = req.cookies.token;
     
     if (!token) {
-      return res.status(401).json({ error: 'Acceso no autorizado - No hay token' });
+      return res.status(401).json({ error: 'Acceso no autorizado' });
     }
 
     try {

@@ -71,6 +71,7 @@
   display: flex;
   justify-content: space-between;
   align-items: center;
+  box-shadow: 0 2px 4px rgba(0,0,0,0.1);
 }
 
 .header-title h1 {
@@ -94,11 +95,13 @@
   width: 30px;
   height: 30px;
   cursor: pointer;
+  transition: transform 0.2s;
 }
 
 .cart-img:hover,
 .perfil-img:hover {
   filter: brightness(1.2);
+  transform: scale(1.1);
 }
 
 .perfil-img {

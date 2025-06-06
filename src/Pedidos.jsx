@@ -108,6 +108,7 @@ export default function Pedidos() {
           <div className="header-title">
             <h1>Mis Pedidos</h1>
           </div>
+
           <div className="iconos-header">
             <img
               src="/carrito.png"
@@ -117,6 +118,7 @@ export default function Pedidos() {
             <img
               src="/perfil.png"
               alt="Perfil"
+              className="perfil-img"
               onClick={() => navigate('/perfil')}
             />
           </div>
@@ -265,6 +267,7 @@ export default function Pedidos() {
         .header-title h1 {
           margin: 0;
           color: white;
+          feat/backend
         }
 
         .iconos-header {

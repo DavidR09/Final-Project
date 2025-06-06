@@ -131,7 +131,7 @@ router.post('/', async (req, res) => {
       'INSERT INTO pago (estado_pago, metodo_pago, monto_pago, id_pedido) VALUES (?, ?, ?, ?)',
       [1, req.body.metodo_pago, total, pedidoId]
     );
-
+    
     // Insertar los detalles del pedido
     for (const producto of productos) {
       const importe_total = producto.cantidad * producto.precio;

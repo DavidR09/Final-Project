@@ -3,7 +3,7 @@ import { Navigate } from 'react-router-dom';
 import { useAuth } from '../hooks/useAuth';
 
 export const ProtectedRoute = ({ children, allowedRoles = [] }) => {
-  const { userRole, isLoading, isAuthenticated, hasRole } = useAuth();
+  const { userRole, isLoading, isAuthenticated } = useAuth();
 
   if (isLoading) {
     return (
@@ -40,26 +40,13 @@ export const ProtectedRoute = ({ children, allowedRoles = [] }) => {
   }
 
   if (!isAuthenticated) {
-    console.log('Usuario no autenticado, redirigiendo a login');
     return <Navigate to="/login" replace />;
   }
 
-  if (userRole === 'administrador') {
-    console.log('Acceso permitido - Usuario es administrador');
-    return children;
-  }
-
-  if (allowedRoles.length > 0 && !allowedRoles.some(role => hasRole(role))) {
-    console.log('Acceso denegado - Rol requerido no coincide', {
-      userRole,
-      allowedRoles,
-    });
+  if (allowedRoles.length > 0 && !allowedRoles.includes(userRole)) {
+    // Si el usuario no tiene el rol requerido, redirigir a una página de acceso denegado
     return <Navigate to="/acceso-denegado" replace />;
   }
 
-  console.log('Acceso permitido - Rol autorizado', {
-    userRole,
-    allowedRoles,
-  });
   return children;
 }; 
