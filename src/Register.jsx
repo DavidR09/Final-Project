@@ -113,7 +113,7 @@ const response = await fetch('http://localhost:3000/api/insertar-usuario', {
         </section>
       </main>
 
-      <style jsx>{`
+      <style>{`
         .inicio-container {
           display: flex;
           height: 100vh;

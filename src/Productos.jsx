@@ -119,9 +119,13 @@ export default function Productos() {
   };
 
   const formatearPrecio = (precio) => {
-    return precio.toFixed(2).replace(/\B(?=(\d{3})+(?!\d))/g, ",");
+    const precioNum = Number(precio);
+    if (isNaN(precioNum)) {
+      return '0.00'; // valor por defecto o mensaje alternativo
+    }
+    return precioNum.toFixed(2).replace(/\B(?=(\d{3})+(?!\d))/g, ",");
   };
-
+  
   const agregarAlCarrito = (producto) => {
     if (producto.cantidad_pieza <= 0) {
       Swal.fire({

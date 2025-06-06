@@ -11,6 +11,8 @@ import usuarioRouter from './database/insertUser.js';
 import loginRouter from './database/comprobarRol.js';
 import productosRouter from './productos.js';
 import categoriasRoute from './categoriasRoute.js'; 
+//import bodyParser from 'body-parser';
+import session from 'express-session';
 
 const app = express();
 const port = 3000;
@@ -19,19 +21,41 @@ const port = 3000;
 console.log("Entorno: Desarrollo Local (Node.js)");
 console.log("JWT_SECRET:", process.env.JWT_SECRET || "No configurado");
 
-// Middlewares esenciales
-app.use(cookieParser());
+// Body parsers (importante que vayan antes que las rutas)
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 
-// CORS ajustado para desarrollo local
+// CORS debe ir ANTES de session
 app.use(cors({
   origin: 'http://localhost:5173',
   credentials: true,
   methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
-  allowedHeaders: ['Content-Type', 'Authorization', 'Cookie'],
+  allowedHeaders: ['Content-Type', 'Authorization'],
   exposedHeaders: ['set-cookie']
 }));
+
+app.use(cookieParser());
+
+// Debe venir después de CORS
+app.use(session({
+  secret: process.env.SESSION_SECRET || 'clave_secreta_segura',
+  resave: false,
+  saveUninitialized: false,
+  cookie: {
+    httpOnly: true,
+    secure: false,
+    sameSite: 'lax',
+    maxAge: 1000 * 60 * 60 * 24 // 1 día
+  }
+}));
+
+app.use((req, res, next) => {
+  console.log(`${req.method} ${req.path}`);
+  console.log('req.body:', req.body);
+  console.log('req.cookies:', req.cookies);
+  console.log('req.session:', req.session);
+  next();
+});
 
 // Rutas API
 app.use('/api', usuarioRouter);

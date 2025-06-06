@@ -33,7 +33,7 @@ export default function Contactanos() {
         </div>
       </div>
 
-      <style jsx>{`
+      <style>{`
         .welcome-container {
           display: flex;
           height: 100vh;

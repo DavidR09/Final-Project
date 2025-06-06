@@ -22,7 +22,7 @@ export default function AccesoDenegado() {
       <p>Lo sentimos, no tienes permisos para acceder a esta página.</p>
       <button onClick={handleRedirect}>Volver al Inicio</button>
 
-      <style jsx>{`
+      <style>{`
         .acceso-denegado {
           display: flex;
           flex-direction: column;

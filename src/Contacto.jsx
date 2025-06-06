@@ -73,7 +73,7 @@ export default function Contacto() {
         </section>
       </main>
 
-      <style jsx>{`
+      <style>{`
         .contacto-container {
           display: flex;
           height: 100vh;

@@ -72,7 +72,7 @@ export default function Neumaticos() {
         </section>
       </main>
 
-      <style jsx>{`
+      <style>{`
         .productos-container {
           display: flex;
           height: 100vh;
