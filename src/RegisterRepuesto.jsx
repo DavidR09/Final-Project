@@ -1,37 +1,51 @@
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 
-export default function Register() {
+export default function RegisterRepuesto() {
   const navigate = useNavigate();
-  const [nombre, setNombre] = useState('');
-  const [apellido, setApellido] = useState('');
-  const [correo, setCorreo] = useState('');
-  const [rol, setRol] = useState('');
-  const [contrasenia, setContrasenia] = useState('');
-  const [telefono, setTelefono] = useState('');
+  const [nombre_repuesto, setNombreRepuesto] = useState('');
+  const [direccion_repuesto, setDireccionRepuesto] = useState('');
+  const [telefono_repuesto, setTelefonoRepuesto] = useState('');
   const [mensaje, setMensaje] = useState(null);
   const [tipoMensaje, setTipoMensaje] = useState('');
+
+  const formatPhoneNumber = (value) => {
+    // Remove all non-digit characters
+    const numbers = value.replace(/\D/g, '');
+    
+    // Format the number as XXX-XXX-XXXX
+    if (numbers.length <= 3) {
+      return numbers;
+    } else if (numbers.length <= 6) {
+      return `${numbers.slice(0, 3)}-${numbers.slice(3)}`;
+    } else {
+      return `${numbers.slice(0, 3)}-${numbers.slice(3, 6)}-${numbers.slice(6, 10)}`;
+    }
+  };
+
+  const handlePhoneChange = (e) => {
+    const formattedNumber = formatPhoneNumber(e.target.value);
+    if (formattedNumber.length <= 12) { // 10 digits + 2 hyphens
+      setTelefonoRepuesto(formattedNumber);
+    }
+  };
 
   const handleRegister = async (e) => {
     e.preventDefault();
 
-    const nuevoUsuario = {
-      nombre_usuario: nombre,
-      apellido_usuario: apellido,
-      correo_electronico_usuario: correo,
-      rol_usuario: rol,
-      contrasenia_usuario: contrasenia,
-      telefono_usuario: telefono,
-      fecha_registro_usuario: new Date().toISOString()
+    const nuevoRepuesto = {
+      nombre_repuesto: nombre_repuesto,
+      direccion_repuesto: direccion_repuesto,
+      telefono_repuesto: telefono_repuesto
     };
 
     try {
-const response = await fetch('http://localhost:3000/api/insertar-usuario', {
+      const response = await fetch('http://localhost:3000/api/repuestos/registrar', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json'
         },
-        body: JSON.stringify(nuevoUsuario)
+        body: JSON.stringify(nuevoRepuesto)
       });
 
       if (!response.ok) {
@@ -45,16 +59,13 @@ const response = await fetch('http://localhost:3000/api/insertar-usuario', {
       setMensaje('Registro exitoso.');
 
       // Limpiar campos
-      setNombre('');
-      setApellido('');
-      setCorreo('');
-      setRol('');
-      setContrasenia('');
-      setTelefono('');
+      setNombreRepuesto('');
+      setDireccionRepuesto('');
+      setTelefonoRepuesto('');
     } catch (error) {
       console.error('Error:', error);
       setTipoMensaje('error');
-      setMensaje('Hubo un problema al registrar el usuario.');
+      setMensaje('Hubo un problema al registrar el repuesto.');
     }
   };
 
@@ -78,34 +89,45 @@ const response = await fetch('http://localhost:3000/api/insertar-usuario', {
 
       <main className="main-content">
         <header className="header">
-          
         </header>
 
         <section className="content">
           <div className="welcome">
-            <h1>Registro de Usuario</h1>
+            <h1>Registro de Repuesto</h1>
           </div>
 
           <form className="perfil-form" onSubmit={handleRegister}>
-            <label>Nombre:</label>
-            <input type="text" value={nombre} onChange={(e) => setNombre(e.target.value)} required />
+            <label>Nombre del Repuesto:</label>
+            <input 
+              type="text" 
+              value={nombre_repuesto} 
+              onChange={(e) => setNombreRepuesto(e.target.value)} 
+              required 
+              maxLength="50"
+            />
 
-            <label>Apellido:</label>
-            <input type="text" value={apellido} onChange={(e) => setApellido(e.target.value)} required />
+            <label>Dirección del Repuesto:</label>
+            <input 
+              type="text" 
+              value={direccion_repuesto} 
+              onChange={(e) => setDireccionRepuesto(e.target.value)} 
+              required 
+              maxLength="70"
+            />
 
-            <label>Correo Electrónico:</label>
-            <input type="email" value={correo} onChange={(e) => setCorreo(e.target.value)} required />
+            <label>Teléfono del Repuesto:</label>
+            <input 
+              type="tel" 
+              value={telefono_repuesto} 
+              onChange={handlePhoneChange}
+              required 
+              maxLength="12"
+              pattern="[0-9]{3}-[0-9]{3}-[0-9]{4}"
+              title="El teléfono debe tener el formato: XXX-XXX-XXXX (ejemplo: 809-099-0398)"
+              placeholder="809-099-0398"
+            />
 
-            <label>Rol:</label>
-            <input type="text" value={rol} onChange={(e) => setRol(e.target.value)} required />
-
-            <label>Contraseña:</label>
-            <input type="password" value={contrasenia} onChange={(e) => setContrasenia(e.target.value)} required />
-
-            <label>Teléfono:</label>
-            <input type="tel" value={telefono} onChange={(e) => setTelefono(e.target.value)} required />
-
-            <button className="guardar-btn" type="submit">Registrarse</button>
+            <button className="guardar-btn" type="submit">Registrar Repuesto</button>
             {mensaje && (
               <p style={{ color: tipoMensaje === 'error' ? 'red' : 'green', marginTop: '10px', textAlign: 'center' }}>
                 {mensaje}
@@ -115,7 +137,7 @@ const response = await fetch('http://localhost:3000/api/insertar-usuario', {
         </section>
       </main>
 
-      <style jsx>{`
+      <style>{`
         .inicio-container {
           display: flex;
           height: 100vh;
@@ -168,11 +190,6 @@ const response = await fetch('http://localhost:3000/api/insertar-usuario', {
           background-color: #333;
         }
 
-        .icon-img {
-          width: 18px;
-          height: 18px;
-        }
-
         .main-content {
           flex: 1;
           display: flex;
@@ -185,24 +202,6 @@ const response = await fetch('http://localhost:3000/api/insertar-usuario', {
           align-items: center;
           padding: 20px;
           background-color: #24487f;
-        }
-
-        .cart-img,
-        .perfil-img {
-          width: 30px;
-          height: 30px;
-          cursor: pointer;
-        }
-
-        .perfil-img {
-          margin-left: 15px;
-          border-radius: 50%;
-          object-fit: cover;
-        }
-
-        .cart-img:hover,
-        .perfil-img:hover {
-          filter: brightness(1.2);
         }
 
         .content {
@@ -249,12 +248,13 @@ const response = await fetch('http://localhost:3000/api/insertar-usuario', {
           font-size: 16px;
           border-radius: 5px;
           cursor: pointer;
+          margin-top: 20px;
         }
 
         .guardar-btn:hover {
-          background-color: #1b3560;
+          background-color: #1a365d;
         }
       `}</style>
     </div>
   );
-}
+} 

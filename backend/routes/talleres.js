@@ -51,4 +51,37 @@ router.get('/usuario/:userId', async (req, res) => {
   }
 });
 
+// Registrar nuevo taller
+router.post('/registrar', async (req, res) => {
+  let connection;
+  try {
+    connection = await connectToDatabase();
+    const { nombre_taller, direccion_taller, id_usuario } = req.body;
+    
+    const [result] = await connection.execute(
+      'INSERT INTO taller (nombre_taller, direccion_taller, id_usuario) VALUES (?, ?, ?)',
+      [nombre_taller, direccion_taller, id_usuario]
+    );
+    
+    res.status(201).json({ 
+      message: 'Taller registrado exitosamente',
+      id_taller: result.insertId 
+    });
+  } catch (error) {
+    console.error('Error al registrar taller:', error);
+    res.status(500).json({ 
+      error: 'Error al registrar el taller',
+      details: error.message 
+    });
+  } finally {
+    if (connection) {
+      try {
+        await connection.end();
+      } catch (err) {
+        console.error('Error al cerrar la conexión:', err);
+      }
+    }
+  }
+});
+
 export default router; 

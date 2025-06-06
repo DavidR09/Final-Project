@@ -7,6 +7,7 @@ import pedidosRoutes from './routes/pedidos.js';
 import authRoutes from './routes/auth.js';
 import categoriasRoutes from './categoriasRoute.js';
 import productosRoutes from './productos.js';
+import repuestosRoutes from './routes/repuestos.js';
 
 const app = express();
 
@@ -45,6 +46,9 @@ app.use('/api/categorias', categoriasRoutes);
 
 // Rutas de productos
 app.use('/api/productos', productosRoutes);
+
+// Rutas de repuestos
+app.use('/api/repuestos', repuestosRoutes);
 
 // Manejo de errores
 app.use((err, req, res, next) => {

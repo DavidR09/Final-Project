@@ -1,37 +1,30 @@
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 
-export default function Register() {
+export default function RegisterTaller() {
   const navigate = useNavigate();
-  const [nombre, setNombre] = useState('');
-  const [apellido, setApellido] = useState('');
-  const [correo, setCorreo] = useState('');
-  const [rol, setRol] = useState('');
-  const [contrasenia, setContrasenia] = useState('');
-  const [telefono, setTelefono] = useState('');
+  const [nombre_taller, setNombreTaller] = useState('');
+  const [direccion_taller, setDireccionTaller] = useState('');
+  const [id_usuario, setIdUsuario] = useState('');
   const [mensaje, setMensaje] = useState(null);
   const [tipoMensaje, setTipoMensaje] = useState('');
 
   const handleRegister = async (e) => {
     e.preventDefault();
 
-    const nuevoUsuario = {
-      nombre_usuario: nombre,
-      apellido_usuario: apellido,
-      correo_electronico_usuario: correo,
-      rol_usuario: rol,
-      contrasenia_usuario: contrasenia,
-      telefono_usuario: telefono,
-      fecha_registro_usuario: new Date().toISOString()
+    const nuevoTaller = {
+      nombre_taller: nombre_taller,
+      direccion_taller: direccion_taller,
+      id_usuario: id_usuario
     };
 
     try {
-const response = await fetch('http://localhost:3000/api/insertar-usuario', {
+      const response = await fetch('http://localhost:3000/api/insertar-taller', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json'
         },
-        body: JSON.stringify(nuevoUsuario)
+        body: JSON.stringify(nuevoTaller)
       });
 
       if (!response.ok) {
@@ -45,27 +38,23 @@ const response = await fetch('http://localhost:3000/api/insertar-usuario', {
       setMensaje('Registro exitoso.');
 
       // Limpiar campos
-      setNombre('');
-      setApellido('');
-      setCorreo('');
-      setRol('');
-      setContrasenia('');
-      setTelefono('');
+      setNombreTaller('');
+      setDireccionTaller('');
+      setIdUsuario('');
     } catch (error) {
       console.error('Error:', error);
       setTipoMensaje('error');
-      setMensaje('Hubo un problema al registrar el usuario.');
+      setMensaje('Hubo un problema al registrar el taller.');
     }
   };
 
   return (
     <div className="inicio-container">
       <aside className="sidebar">
-        <div className="logo-container" onClick={() => navigate('/inicio')}>
-          <div className="logo-circle">
-            <img src="/Logo.png" alt="Logo" />
-          </div>
+        <div className="logo-wrapper" onClick={() => navigate('/inicio')}>
+          <img src="/Logo.png" alt="Logo" />
         </div>
+
         <ul>
           <li onClick={() => navigate('/Inicio')}>Panel de Administración</li>
           <li onClick={() => navigate('/register')}>Registrar Usuario</li>
@@ -77,35 +66,39 @@ const response = await fetch('http://localhost:3000/api/insertar-usuario', {
       </aside>
 
       <main className="main-content">
-        <header className="header">
-          
-        </header>
-
         <section className="content">
           <div className="welcome">
-            <h1>Registro de Usuario</h1>
+            <h1>Registro de Taller</h1>
           </div>
 
           <form className="perfil-form" onSubmit={handleRegister}>
-            <label>Nombre:</label>
-            <input type="text" value={nombre} onChange={(e) => setNombre(e.target.value)} required />
+            <label>Nombre del Taller:</label>
+            <input 
+              type="text" 
+              value={nombre_taller} 
+              onChange={(e) => setNombreTaller(e.target.value)} 
+              required 
+              maxLength="30"
+            />
 
-            <label>Apellido:</label>
-            <input type="text" value={apellido} onChange={(e) => setApellido(e.target.value)} required />
+            <label>Dirección del Taller:</label>
+            <input 
+              type="text" 
+              value={direccion_taller} 
+              onChange={(e) => setDireccionTaller(e.target.value)} 
+              required 
+              maxLength="70"
+            />
 
-            <label>Correo Electrónico:</label>
-            <input type="email" value={correo} onChange={(e) => setCorreo(e.target.value)} required />
+            <label>ID de Usuario:</label>
+            <input 
+              type="text" 
+              value={id_usuario} 
+              onChange={(e) => setIdUsuario(e.target.value)} 
+              required 
+            />
 
-            <label>Rol:</label>
-            <input type="text" value={rol} onChange={(e) => setRol(e.target.value)} required />
-
-            <label>Contraseña:</label>
-            <input type="password" value={contrasenia} onChange={(e) => setContrasenia(e.target.value)} required />
-
-            <label>Teléfono:</label>
-            <input type="tel" value={telefono} onChange={(e) => setTelefono(e.target.value)} required />
-
-            <button className="guardar-btn" type="submit">Registrarse</button>
+            <button className="guardar-btn" type="submit">Registrar Taller</button>
             {mensaje && (
               <p style={{ color: tipoMensaje === 'error' ? 'red' : 'green', marginTop: '10px', textAlign: 'center' }}>
                 {mensaje}
@@ -130,22 +123,22 @@ const response = await fetch('http://localhost:3000/api/insertar-usuario', {
           padding: 20px;
         }
 
-        .logo-container {
-          cursor: pointer;
-          text-align: center;
-          margin-bottom: 20px;
-        }
-
-        .logo-circle {
+        .logo-wrapper {
+          width: 120px;
+          height: 120px;
           background-color: white;
           border-radius: 50%;
-          padding: 10px;
-          display: inline-block;
+          overflow: hidden;
+          margin: 0 auto 20px auto;
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          cursor: pointer;
         }
 
-        .logo-circle img {
-          width: 100px;
-          height: 100px;
+        .logo-wrapper img {
+          width: 90%;
+          height: 90%;
           object-fit: contain;
         }
 
@@ -157,52 +150,23 @@ const response = await fetch('http://localhost:3000/api/insertar-usuario', {
         .sidebar li {
           margin-bottom: 15px;
           cursor: pointer;
-          display: flex;
-          align-items: center;
-          gap: 10px;
           padding: 8px;
           border-radius: 5px;
+          transition: background-color 0.3s ease;
         }
 
         .sidebar li:hover {
           background-color: #333;
         }
 
-        .icon-img {
-          width: 18px;
-          height: 18px;
+        .sidebar li:active {
+          background-color: #1b355b;
         }
 
         .main-content {
           flex: 1;
           display: flex;
           flex-direction: column;
-        }
-
-        .header {
-          display: flex;
-          justify-content: flex-end;
-          align-items: center;
-          padding: 20px;
-          background-color: #24487f;
-        }
-
-        .cart-img,
-        .perfil-img {
-          width: 30px;
-          height: 30px;
-          cursor: pointer;
-        }
-
-        .perfil-img {
-          margin-left: 15px;
-          border-radius: 50%;
-          object-fit: cover;
-        }
-
-        .cart-img:hover,
-        .perfil-img:hover {
-          filter: brightness(1.2);
         }
 
         .content {
@@ -249,12 +213,13 @@ const response = await fetch('http://localhost:3000/api/insertar-usuario', {
           font-size: 16px;
           border-radius: 5px;
           cursor: pointer;
+          margin-top: 20px;
         }
 
         .guardar-btn:hover {
-          background-color: #1b3560;
+          background-color: #1a365d;
         }
       `}</style>
     </div>
   );
-}
+} 

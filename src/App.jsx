@@ -15,6 +15,8 @@ import Pedidos from './Pedidos';
 import Contactanos from './Contactanos';
 import Perfil from './Perfil';
 import Register from './Register';
+import RegisterTaller from './RegisterTaller';
+import RegisterRepuesto from './RegisterRepuesto';
 
 export default function App() {
   return (
@@ -91,6 +93,22 @@ export default function App() {
             element={
               <ProtectedRoute allowedRoles={['administrador']}>
                 <Register />
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/register-taller"
+            element={
+              <ProtectedRoute allowedRoles={['administrador']}>
+                <RegisterTaller />
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/register-repuesto"
+            element={
+              <ProtectedRoute allowedRoles={['administrador']}>
+                <RegisterRepuesto />
               </ProtectedRoute>
             }
           />
