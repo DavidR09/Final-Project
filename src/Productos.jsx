@@ -10,25 +10,10 @@ export default function Productos() {
   const [busqueda, setBusqueda] = useState('');
   const [showModal, setShowModal] = useState(false);
   const [selectedProduct, setSelectedProduct] = useState(null);
+  const [categorias, setCategorias] = useState([]);
+  const [categoriaFiltro, setCategoriaFiltro] = useState('');
 
   useEffect(() => {
-    cargarProductos();
-  }, []);
-
-  const cargarProductos = async () => {
-    try {
-      const response = await axios.get('http://localhost:3000/api/productos');
-      setProductos(response.data);
-    } catch (error) {
-      console.error('Error al cargar productos:', error);
-      Swal.fire({
-        icon: 'error',
-        title: 'Error',
-        text: 'No se pudieron cargar los productos'
-      });
-    }
-  };
-
     // Obtener las categorías
     fetch('http://localhost:3000/api/categorias')
       .then((res) => res.json())
@@ -94,7 +79,7 @@ export default function Productos() {
         setProductos(productosConPreciosNumericos);
       })
       .catch((err) => console.error('Error al obtener productos:', err));
-  }, [categorias]);
+  }, []);
 
   const productosFiltrados = productos.filter((prod) => {
     const coincideBusqueda = prod.nombre_pieza?.toLowerCase().includes(busqueda.toLowerCase());

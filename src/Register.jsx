@@ -67,9 +67,11 @@ const response = await fetch('http://localhost:3000/api/insertar-usuario', {
           </div>
         </div>
         <ul>
-          <li onClick={() => navigate('/inicio')}>Panel de Administración</li>
+          <li onClick={() => navigate('/Inicio')}>Panel de Administración</li>
           <li onClick={() => navigate('/register')}>Registrar Usuario</li>
-          <li onClick={() => navigate('/inicio_client')}>Ver Vista Cliente</li>
+          <li onClick={() => navigate('/register-taller')}>Registrar Taller</li>
+          <li onClick={() => navigate('/register-repuesto')}>Registrar Repuesto</li>
+          <li onClick={() => navigate('/Inicio_Client')}>Ver Vista Cliente</li>
           <li onClick={() => navigate('/')}>Cerrar sesión</li>
         </ul>
       </aside>
