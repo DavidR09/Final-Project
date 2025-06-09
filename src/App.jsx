@@ -20,15 +20,15 @@ import RegisterRepuesto from './RegisterRepuesto';
 
 export default function App() {
   return (
-    <Elements stripe={stripePromise}>
-      <BrowserRouter>
+    <BrowserRouter>
+      <Elements stripe={stripePromise}>
         <Routes>
           {/* Rutas públicas */}
           <Route path="/" element={<Welcome />} />
           <Route path="/login" element={<Login />} />
           <Route path="/acceso-denegado" element={<AccesoDenegado />} />
           <Route path="/Contactanos" element={<Contactanos />} />
-          
+
           {/* Rutas protegidas para usuarios normales */}
           <Route
             path="/Inicio_Client"
@@ -116,7 +116,7 @@ export default function App() {
           {/* Ruta para manejar rutas no encontradas */}
           <Route path="*" element={<Navigate to="/" replace />} />
         </Routes>
-      </BrowserRouter>
-    </Elements>
+      </Elements>
+    </BrowserRouter>
   );
 }

@@ -1,23 +1,26 @@
 import express from 'express';
 import bcrypt from 'bcrypt';
 import connectToDatabase from '../database/connectionMySQL.js';
+//import cors from 'cors';
 
 const router = express.Router();
 
-router.post('/login', async (req, res) => {
+router.post('/', async (req, res) => {
   console.log('Recibida petición de login:', req.body);
-  const { correo, contraseña } = req.body;
+  const { email, password } = req.body;
+  console.log('Email recibido:', email);
+  console.log('Password recibido:', password);
 
-  if (!correo || !contraseña) {
-    console.log('Faltan credenciales:', { correo: !!correo, contraseña: !!contraseña });
-    return res.status(400).json({ error: 'Se requiere correo y contraseña' });
+  if (!email || !password) {
+    console.log('Faltan credenciales:', { email: !!email, password: !!password });
+    return res.status(400).json({ error: 'Se requiere email y contraseña' });
   }
 
   let connection;
   try {
     connection = await connectToDatabase();
     console.log('Conexión a base de datos establecida');
-    console.log('Buscando usuario con correo:', correo);
+    console.log('Buscando usuario con email:', email);
 
     const [users] = await connection.execute(
       'SELECT id_usuario, nombre_usuario, apellido_usuario, correo_electronico_usuario, contrasenia_usuario, rol_usuario FROM usuario WHERE correo_electronico_usuario = ?',
@@ -27,26 +30,27 @@ router.post('/login', async (req, res) => {
     console.log('Resultado de la búsqueda:', { usuariosEncontrados: users.length });
 
     if (users.length === 0) {
-      console.log('Usuario no encontrado:', correo);
+      console.log('Usuario no encontrado:', email);
       return res.status(401).json({ error: 'Credenciales inválidas' });
     }
 
     const user = users[0];
     console.log('Verificando contraseña para usuario:', user.correo_electronico_usuario);
 
-    const validPassword = await bcrypt.compare(contraseña, user.contrasenia_usuario);
+    const validPassword = await bcrypt.compare(password, user.contrasenia_usuario);
     console.log('Resultado de verificación de contraseña:', validPassword);
 
     if (!validPassword) {
-      console.log('Contraseña inválida para usuario:', correo);
+      console.log('Contraseña inválida para usuario:', email);
       return res.status(401).json({ error: 'Credenciales inválidas' });
     }
 
     // Establecer la sesión
     req.session.userId = user.id_usuario;
     req.session.userRole = user.rol_usuario;
+    console.log('Session antes de enviar respuesta:', req.session);
 
-    console.log('Login exitoso para:', correo, 'con rol:', user.rol_usuario);
+    console.log('Login exitoso para:', email, 'con rol:', user.rol_usuario);
     
     // Cerrar la conexión antes de enviar la respuesta
     await connection.end();

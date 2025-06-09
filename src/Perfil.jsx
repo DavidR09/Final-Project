@@ -84,7 +84,7 @@ export default function Perfil() {
         </section>
       </main>
 
-      <style jsx>{`
+      <style>{`
         .inicio-container {
           display: flex;
           height: 100vh;

@@ -36,7 +36,7 @@ export default function Inicio() {
         </section>
       </main>
 
-      <style jsx>{`
+      <style>{`
         .inicio-container {
           display: flex;
           height: 100vh;
