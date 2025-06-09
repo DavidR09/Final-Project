@@ -2,26 +2,19 @@ import React, { useState } from 'react';
 import CheckoutForm from './CheckoutForm';
 import './PaymentModal.css';
 
-const PaymentModal = ({ isOpen, onClose, amount, onPaymentSuccess }) => {
+const PaymentModal = ({ isOpen, onClose, amount, onConfirm, onPaymentDetailsChange }) => {
   const [paymentMethod, setPaymentMethod] = useState(null);
   const [showPaymentForm, setShowPaymentForm] = useState(false);
 
   const handlePaymentMethodSelect = (method) => {
     setPaymentMethod(method);
-    if (method === 'card') {
+    onPaymentDetailsChange({ method });
+    if (method === 'efectivo') {
+      onConfirm();
+      onClose();
+    } else if (method === 'tarjeta') {
       setShowPaymentForm(true);
-    } else if (method === 'cash') {
-      // Para pago en efectivo, proceder directamente
-      handlePaymentSuccess({ method: 'efectivo' });
     }
-  };
-
-  const handlePaymentSuccess = (paymentDetails) => {
-    onPaymentSuccess({
-      ...paymentDetails,
-      method: paymentDetails.method || 'tarjeta'
-    });
-    onClose();
   };
 
   if (!isOpen) return null;
@@ -43,24 +36,27 @@ const PaymentModal = ({ isOpen, onClose, amount, onPaymentSuccess }) => {
             
             <div className="payment-methods">
               <button 
-                className={`payment-method-btn ${paymentMethod === 'cash' ? 'selected' : ''}`}
-                onClick={() => handlePaymentMethodSelect('cash')}
+                className={`payment-method-btn ${paymentMethod === 'efectivo' ? 'selected' : ''}`}
+                onClick={() => handlePaymentMethodSelect('efectivo')}
               >
                 Pago en Efectivo
               </button>
               <button 
-                className={`payment-method-btn ${paymentMethod === 'card' ? 'selected' : ''}`}
-                onClick={() => handlePaymentMethodSelect('card')}
+                className={`payment-method-btn ${paymentMethod === 'tarjeta' ? 'selected' : ''}`}
+                onClick={() => handlePaymentMethodSelect('tarjeta')}
               >
                 Pago con Tarjeta
               </button>
             </div>
 
-            {showPaymentForm && paymentMethod === 'card' && (
+            {showPaymentForm && paymentMethod === 'tarjeta' && (
               <div className="card-payment-form">
                 <CheckoutForm 
                   amount={amount * 1.18} 
-                  onSuccess={handlePaymentSuccess}
+                  onSuccess={() => {
+                    onConfirm();
+                    onClose();
+                  }}
                 />
               </div>
             )}

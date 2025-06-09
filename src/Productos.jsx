@@ -1,97 +1,123 @@
-import React, { useState, useEffect } from 'react';
-import { useNavigate } from 'react-router-dom';
+import React, { useState, useEffect, useMemo } from 'react';
+import { useNavigate, useLocation } from 'react-router-dom';
 import axios from 'axios';
 import Swal from 'sweetalert2';
 import './Productos.css';
 
 export default function Productos() {
   const navigate = useNavigate();
+  const location = useLocation();
   const [productos, setProductos] = useState([]);
   const [busqueda, setBusqueda] = useState('');
   const [showModal, setShowModal] = useState(false);
   const [selectedProduct, setSelectedProduct] = useState(null);
-  const [categorias, setCategorias] = useState([]);
-  const [categoriaFiltro, setCategoriaFiltro] = useState('');
+  const [isLoading, setIsLoading] = useState(true);
+
+  // Obtener parámetros de la URL
+  const params = new URLSearchParams(location.search);
+  const categoriaId = params.get('categoriaId');
+  const categoriaNombre = params.get('nombre');
 
   useEffect(() => {
-    // Obtener las categorías
-    fetch('http://localhost:3000/api/categorias')
-      .then((res) => res.json())
-      .then((data) => {
-        console.log('Categorías cargadas (detallado):', data.map(cat => ({
-          id: cat.id_categoria_pieza,
-          nombre: cat.nombre_categoria_pieza
-        })));
-        setCategorias(data);
-      })
-      .catch((err) => console.error('Error al obtener categorías:', err));
-
-    // Obtener los productos
+    setIsLoading(true);
     fetch('http://localhost:3000/api/productos')
       .then((res) => res.json())
       .then((data) => {
-        console.log('Productos originales:', data.map(prod => ({
-          id: prod.id_repuesto,
-          nombre: prod.nombre_pieza,
-          categoria_actual: prod.id_categoria_pieza
-        })));
-
-        // Convertir los precios a números y asegurar que las categorías estén correctamente asignadas
-        const productosConPreciosNumericos = data.map(prod => {
-          const nuevaCategoria = 
-            prod.nombre_pieza.includes('Batería') ? 3 :
-            prod.nombre_pieza.includes('Neumático') ? 2 :
-            prod.nombre_pieza.includes('Farol') ? 4 :
-            prod.nombre_pieza.includes('Pantalla') ? 4 :
-            prod.nombre_pieza.includes('Aro') ? 5 :
-            prod.nombre_pieza.includes('Gato') ? 6 :
-            prod.nombre_pieza.includes('Aceite') ? 7 :
-            prod.nombre_pieza.includes('Parachoques') ? 8 :
-            prod.nombre_pieza.includes('Sensor') ? 9 :
-            prod.nombre_pieza.includes('Amortiguador') ? 10 :
-            prod.nombre_pieza.includes('Filtro') ? 11 :
-            prod.id_categoria_pieza;
-
-          // Encontrar el nombre de la nueva categoría
-          const nombreNuevaCategoria = categorias.find(
-            cat => cat.id_categoria_pieza === nuevaCategoria
-          )?.nombre_categoria_pieza || '';
-
-          const productoActualizado = {
-            ...prod,
-            precio_pieza: parseFloat(prod.precio_pieza),
-            id_categoria_pieza: nuevaCategoria,
-            nombre_categoria_pieza: nombreNuevaCategoria
-          };
-
-          console.log(`Producto "${prod.nombre_pieza}": categoría original=${prod.id_categoria_pieza}, nueva categoría=${nuevaCategoria}, nombre categoría=${nombreNuevaCategoria}`);
-          
-          return productoActualizado;
-        });
-
-        console.log('Productos procesados (detallado):', productosConPreciosNumericos.map(prod => ({
-          id: prod.id_repuesto,
-          nombre: prod.nombre_pieza,
-          categoria_final: prod.id_categoria_pieza,
-          nombre_categoria: prod.nombre_categoria_pieza
-        })));
-
-        setProductos(productosConPreciosNumericos);
+        const productosUnicos = data.map((prod, index) => ({
+          ...prod,
+          precio_pieza: parseFloat(prod.precio_pieza),
+          uniqueKey: `${prod.id_repuesto}-${index}`
+        }));
+        setProductos(productosUnicos);
+        setIsLoading(false);
       })
-      .catch((err) => console.error('Error al obtener productos:', err));
+      .catch((err) => {
+        console.error('Error al obtener productos:', err);
+        setIsLoading(false);
+      });
   }, []);
 
-  const productosFiltrados = productos.filter((prod) => {
-    const coincideBusqueda = prod.nombre_pieza?.toLowerCase().includes(busqueda.toLowerCase());
-    
-    // Si no hay categoría seleccionada, solo filtra por búsqueda
-    if (!categoriaFiltro) {
-      return coincideBusqueda;
-    }
+  // Usar useMemo para el filtrado de productos
+  const productosFiltrados = useMemo(() => {
+    // Log inicial para depuración
+    console.log('Iniciando filtrado:', {
+      totalProductos: productos.length,
+      categoriaId,
+      productos: productos.map(p => ({
+        nombre: p.nombre_pieza,
+        categoriaId: p.id_categoria_pieza
+      }))
+    });
 
-    // Si hay categoría seleccionada, filtra por búsqueda y categoría
-    return coincideBusqueda && prod.nombre_categoria_pieza === categoriaFiltro;
-  });
+    return productos.filter(prod => {
+      // Primero filtrar por categoría si existe en la URL
+      if (categoriaId) {
+        // Asegurarnos de que ambos valores son números
+        const idCategoriaProducto = Number(prod.id_categoria_pieza);
+        const idCategoriaFiltro = Number(categoriaId);
+
+        // Log para depuración
+        console.log('Comparando producto:', {
+          nombre: prod.nombre_pieza,
+          idProducto: idCategoriaProducto,
+          idFiltro: idCategoriaFiltro,
+          coincide: idCategoriaProducto === idCategoriaFiltro
+        });
+
+        if (idCategoriaProducto !== idCategoriaFiltro) {
+          return false;
+        }
+      }
+
+      // Luego aplicar el filtro de búsqueda
+      const terminoBusqueda = busqueda.toLowerCase().trim();
+      if (!terminoBusqueda) return true;
+
+      const coincideNombre = prod.nombre_pieza.toLowerCase().trim().includes(terminoBusqueda);
+      if (coincideNombre) return true;
+
+      if (terminoBusqueda.length > 3) {
+        const coincideDescripcion = prod.descripcion_pieza?.toLowerCase().trim().includes(terminoBusqueda);
+        return coincideDescripcion;
+      }
+
+      return false;
+    });
+  }, [productos, categoriaId, busqueda]);
+
+  // Log los parámetros de la URL cuando cambien
+  useEffect(() => {
+    console.log('Parámetros de URL:', {
+      categoriaId,
+      categoriaNombre: categoriaNombre ? decodeURIComponent(categoriaNombre) : null
+    });
+  }, [categoriaId, categoriaNombre]);
+
+  // Log el resultado del filtrado
+  useEffect(() => {
+    if (categoriaId) {
+      console.log('Productos filtrados:', {
+        totalProductos: productos.length,
+        productosFiltrados: productosFiltrados.length,
+        productos: productosFiltrados.map(p => ({
+          nombre: p.nombre_pieza,
+          idCategoria: p.id_categoria_pieza
+        }))
+      });
+    }
+  }, [categoriaId, productos, productosFiltrados]);
+
+  // Log para debug de la búsqueda
+  useEffect(() => {
+    if (busqueda) {
+      console.log('Término de búsqueda:', busqueda);
+      console.log('Productos filtrados:', productosFiltrados.map(p => ({
+        nombre: p.nombre_pieza,
+        categoria: p.nombre_categoria_pieza,
+        descripcion: p.descripcion_pieza
+      })));
+    }
+  }, [busqueda, productosFiltrados]);
 
   const handleProductClick = (producto) => {
     setSelectedProduct(producto);
@@ -106,7 +132,7 @@ export default function Productos() {
   const formatearPrecio = (precio) => {
     const precioNum = Number(precio);
     if (isNaN(precioNum)) {
-      return '0.00'; // valor por defecto o mensaje alternativo
+      return '0.00';
     }
     return precioNum.toFixed(2).replace(/\B(?=(\d{3})+(?!\d))/g, ",");
   };
@@ -207,37 +233,44 @@ export default function Productos() {
 
         <section className="content">
           <div className="productos-section">
-            <div className="productos-grid">
-              {productos
-                .filter(prod => 
-                  prod.nombre_pieza?.toLowerCase().includes(busqueda.toLowerCase()) ||
-                  prod.descripcion_pieza?.toLowerCase().includes(busqueda.toLowerCase())
-                )
-                .map((producto) => (
-                  <div key={producto.id_repuesto} className="producto-card">
+            <h2>{categoriaNombre ? `Piezas - ${decodeURIComponent(categoriaNombre)}` : 'Todas las Piezas'}</h2>
+            {isLoading ? (
+              <div style={{ textAlign: 'center', marginTop: '3rem' }}>
+                <h3>Cargando productos...</h3>
+              </div>
+            ) : productosFiltrados.length === 0 ? (
+              <div style={{ textAlign: 'center', marginTop: '3rem' }}>
+                <h3>Pieza no encontrada</h3>
+                {categoriaId && (
+                  <button 
+                    onClick={() => navigate('/productos')} 
+                    className="btn-agregar"
+                    style={{ marginTop: '1rem' }}
+                  >
+                    Ver todas las piezas
+                  </button>
+                )}
+              </div>
+            ) : (
+              <div className="productos-grid">
+                {productosFiltrados.map((producto) => (
+                  <div key={producto.uniqueKey} className="producto-card">
                     <img
                       src={producto.imagen_pieza}
                       alt={producto.nombre_pieza}
                       onClick={() => handleProductClick(producto)}
                     />
                     <p>{producto.nombre_pieza}</p>
-                    <p className="precio">RD$ {formatearPrecio(producto.precio_pieza)}</p>
-                    <button
-                      onClick={() => agregarAlCarrito(producto)}
-                      className="btn-agregar"
-                      disabled={producto.cantidad_pieza <= 0}
-                    >
-                      {producto.cantidad_pieza <= 0 ? 'Sin stock' : 'Agregar al carrito'}
-                    </button>
                   </div>
                 ))}
-            </div>
+              </div>
+            )}
           </div>
         </section>
       </main>
 
       {showModal && selectedProduct && (
-        <div className="modal-overlay">
+        <div className="modal-overlay" key={`modal-${selectedProduct.uniqueKey}`}>
           <div className="modal-content">
             <button className="close-modal" onClick={closeModal}>&times;</button>
             <h3>{selectedProduct.nombre_pieza}</h3>

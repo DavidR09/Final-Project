@@ -49,7 +49,7 @@ export default function App() {
           <Route
             path="/carrito"
             element={
-              <ProtectedRoute allowedRoles={['usuario']}>
+              <ProtectedRoute allowedRoles={['usuario', 'administrador']}>
                 <Carrito />
               </ProtectedRoute>
             }

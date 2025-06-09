@@ -34,6 +34,19 @@ export default function Pedidos() {
       });
 
       console.log('Pedidos recibidos:', response.data);
+      
+      // Log detallado de la estructura de cada pedido
+      response.data.forEach((pedido, idx) => {
+        console.log(`Pedido ${idx + 1}:`, {
+          id_pedido: pedido.id_pedido,
+          detalles: pedido.detalles?.map(d => ({
+            id_detalle_pedido: d.id_detalle_pedido,
+            id_pieza: d.id_pieza,
+            nombre_pieza: d.nombre_pieza
+          }))
+        });
+      });
+
       setPedidos(response.data);
     } catch (error) {
       console.error('Error al cargar los pedidos:', error);
@@ -82,7 +95,69 @@ export default function Pedidos() {
   };
 
   const handleClickPedido = (pedido) => {
+    console.log('Pedido seleccionado:', {
+      id_pedido: pedido.id_pedido,
+      detalles: pedido.detalles?.map(d => ({
+        id_detalle: d.id_detalle_pedido,
+        id_pieza: d.id_pieza,
+        nombre_pieza: d.nombre_pieza,
+        cantidad: d.cantidad_detalle,
+        precio: d.precio_unitario_pieza,
+        total: d.importe_total_pedido
+      }))
+    });
     setPedidoSeleccionado(pedidoSeleccionado?.id_pedido === pedido.id_pedido ? null : pedido);
+  };
+
+  // Función para verificar si han pasado 5 minutos
+  const puedeSerCancelado = (fechaPedido) => {
+    const tiempoLimite = 5 * 60 * 1000; // 5 minutos en milisegundos
+    const fechaCreacion = new Date(fechaPedido).getTime();
+    const ahora = new Date().getTime();
+    return (ahora - fechaCreacion) <= tiempoLimite;
+  };
+
+  // Función para cancelar pedido
+  const cancelarPedido = async (pedidoId, event) => {
+    // Evitar que el click se propague al div del pedido
+    event.stopPropagation();
+
+    try {
+      // Confirmar con el usuario
+      const confirmacion = await Swal.fire({
+        title: '¿Estás seguro?',
+        text: "¿Deseas cancelar este pedido? Esta acción no se puede deshacer.",
+        icon: 'warning',
+        showCancelButton: true,
+        confirmButtonColor: '#d33',
+        cancelButtonColor: '#3085d6',
+        confirmButtonText: 'Sí, cancelar pedido',
+        cancelButtonText: 'No, mantener pedido'
+      });
+
+      if (confirmacion.isConfirmed) {
+        // Realizar la actualización en la base de datos
+        await axios.put(`http://localhost:3000/api/pedidos/${pedidoId}/cancelar`, {}, {
+          withCredentials: true
+        });
+
+        // Actualizar la lista de pedidos
+        await cargarPedidos();
+
+        Swal.fire(
+          '¡Cancelado!',
+          'El pedido ha sido cancelado exitosamente.',
+          'success'
+        );
+      }
+    } catch (error) {
+      console.error('Error al cancelar el pedido:', error);
+      Swal.fire({
+        icon: 'error',
+        title: 'Error',
+        text: 'No se pudo cancelar el pedido. Por favor, intenta nuevamente.'
+      });
+    }
   };
 
   return (
@@ -96,10 +171,10 @@ export default function Pedidos() {
         </div>
 
         <ul>
-          <li key="inicio" onClick={() => navigate('/inicio_client')}>Inicio</li>
-          <li key="piezas" onClick={() => navigate('/productos')}>Piezas</li>
-          <li key="pedidos" onClick={() => navigate('/pedidos')}>Pedidos</li>
-          <li key="contacto" onClick={() => navigate('/contacto')}>Sobre Nosotros</li>
+          <li onClick={() => navigate('/inicio_client')}>Inicio</li>
+          <li onClick={() => navigate('/productos')}>Piezas</li>
+          <li onClick={() => navigate('/pedidos')}>Pedidos</li>
+          <li onClick={() => navigate('/contacto')}>Sobre Nosotros</li>
         </ul>
       </aside>
 
@@ -108,7 +183,6 @@ export default function Pedidos() {
           <div className="header-title">
             <h1>Mis Pedidos</h1>
           </div>
-
           <div className="iconos-header">
             <img
               src="/carrito.png"
@@ -118,7 +192,6 @@ export default function Pedidos() {
             <img
               src="/perfil.png"
               alt="Perfil"
-              className="perfil-img"
               onClick={() => navigate('/perfil')}
             />
           </div>
@@ -139,60 +212,109 @@ export default function Pedidos() {
               </div>
             ) : (
               <div className="pedidos-lista">
-                {pedidos.map((pedido) => (
-                  <div 
-                    key={`pedido-${pedido.id_pedido}`} 
-                    className={`pedido-card ${pedidoSeleccionado?.id_pedido === pedido.id_pedido ? 'seleccionado' : ''}`}
-                    onClick={() => handleClickPedido(pedido)}
-                  >
-                    <div className="pedido-header">
-                      <div className="pedido-info">
-                        <h3>Pedido</h3>
-                        <p className="fecha">{formatearFecha(pedido.fecha_pedido)}</p>
-                      </div>
-                      <div className="pedido-estado">
-                        <span className={`estado-badge ${pedido.nombre_estado.toLowerCase()}`}>
-                          {pedido.nombre_estado}
-                        </span>
-                      </div>
-                    </div>
+                {pedidos.map((pedido) => {
+                  // Log detallado de cada pedido y sus detalles
+                  console.log('Detalles completos del pedido:', {
+                    id_pedido: pedido.id_pedido,
+                    detalles: pedido.detalles?.map(d => ({
+                      id_detalle_pedido: d.id_detalle_pedido,
+                      id_pieza: d.id_pieza,
+                      nombre_pieza: d.nombre_pieza,
+                      cantidad: d.cantidad
+                    }))
+                  });
 
-                    {(pedidoSeleccionado?.id_pedido === pedido.id_pedido) && (
-                      <>
-                        <div className="pedido-detalles">
-                          {pedido.detalles && pedido.detalles.map((detalle) => (
-                            <div key={`detalle-${detalle.id_detalle_pedido}`} className="producto-detalle">
-                              <img 
-                                src={detalle.imagen_pieza} 
-                                alt={detalle.nombre_pieza} 
-                                className="producto-imagen"
-                              />
-                              <div className="producto-info">
-                                <h4>{detalle.nombre_pieza}</h4>
-                                <p>Precio unitario: RD$ {formatearPrecio(detalle.precio_unitario_pieza)}</p>
-                                <p>Cantidad: {detalle.cantidad || 0}</p>
-                              </div>
-                              <div className="producto-total">
-                                <p>Total: RD$ {formatearPrecio(detalle.importe_total_pedido)}</p>
-                              </div>
+                  return (
+                    <div 
+                      key={`pedido-${pedido.id_pedido}`} 
+                      className={`pedido-card ${pedidoSeleccionado?.id_pedido === pedido.id_pedido ? 'seleccionado' : ''}`}
+                      onClick={() => handleClickPedido(pedido)}
+                    >
+                      <div className="pedido-header">
+                        <div className="pedido-info">
+                          <h3>Pedido</h3>
+                          <p className="fecha">{formatearFecha(pedido.fecha_pedido)}</p>
+                        </div>
+                        <div className="pedido-estado">
+                          <span className={`estado-badge ${pedido.nombre_estado.toLowerCase()}`}>
+                            {pedido.nombre_estado}
+                          </span>
+                          {pedido.nombre_estado === 'pendiente' && puedeSerCancelado(pedido.fecha_pedido) && (
+                            <button
+                              className="btn-cancelar"
+                              onClick={(e) => cancelarPedido(pedido.id_pedido, e)}
+                            >
+                              Cancelar
+                            </button>
+                          )}
+                        </div>
+                      </div>
+
+                      {(pedidoSeleccionado?.id_pedido === pedido.id_pedido) && (
+                        <>
+                          <div className="pedido-detalles">
+                            {pedido.detalles && pedido.detalles.map((detalle, index) => {
+                              // Create a truly unique key using multiple identifiers
+                              const detalleKey = `pedido-${pedido.id_pedido}-detalle-${detalle.id_detalle_pedido}-pieza-${detalle.id_pieza}-${index}`;
+                              
+                              return (
+                                <div 
+                                  key={detalleKey}
+                                  className="producto-detalle"
+                                >
+                                  <img 
+                                    src={detalle.imagen_pieza || '/default-part.png'} 
+                                    alt={detalle.nombre_pieza} 
+                                    className="producto-imagen"
+                                  />
+                                  <div className="producto-info">
+                                    <h4>{detalle.nombre_pieza}</h4>
+                                    <p>Precio unitario: RD$ {formatearPrecio(detalle.precio_unitario_pieza)}</p>
+                                    <p>Cantidad: {detalle.cantidad_detalle}</p>
+                                  </div>
+                                  <div className="producto-total">
+                                    <p>Total: RD$ {formatearPrecio(detalle.importe_total_pedido)}</p>
+                                  </div>
+                                </div>
+                              );
+                            })}
+                          </div>
+
+                          <div className="pedido-footer">
+                            <div className="pedido-direccion">
+                              <strong>Taller asignado:</strong>
+                              {pedido.nombre_taller ? (
+                                <>
+                                  <p className="taller-nombre">{pedido.nombre_taller}</p>
+                                  <p className="taller-direccion">{pedido.direccion_taller}</p>
+                                </>
+                              ) : (
+                                <p>Taller por asignar</p>
+                              )}
                             </div>
-                          ))}
-                        </div>
+                            <div className="pedido-total">
+                              <strong>Total del pedido:</strong>
+                              <p>RD$ {formatearPrecio(calcularTotalPedido(pedido.detalles))}</p>
+                            </div>
+                          </div>
 
-                        <div className="pedido-footer">
-                          <div className="pedido-direccion">
-                            <strong>Dirección de envío:</strong>
-                            <p>{pedido.direccion_envio_pedido || 'Por confirmar'}</p>
-                          </div>
-                          <div className="pedido-total">
-                            <strong>Total del pedido:</strong>
-                            <p>RD$ {formatearPrecio(calcularTotalPedido(pedido.detalles))}</p>
-                          </div>
-                        </div>
-                      </>
-                    )}
-                  </div>
-                ))}
+                          <style jsx>{`
+                            .taller-nombre {
+                              font-weight: 500;
+                              color: #24487f;
+                              margin: 5px 0;
+                            }
+
+                            .taller-direccion {
+                              color: #666;
+                              font-size: 0.9em;
+                            }
+                          `}</style>
+                        </>
+                      )}
+                    </div>
+                  );
+                })}
               </div>
             )}
           </div>
@@ -346,6 +468,10 @@ export default function Pedidos() {
           color: white;
         }
 
+        .pedido-detalles {
+          margin-bottom: 15px;
+        }
+
         .producto-detalle {
           display: flex;
           align-items: center;
@@ -414,6 +540,27 @@ export default function Pedidos() {
 
         .explorar-btn:hover {
           background-color: #1a365d;
+        }
+
+        .btn-cancelar {
+          margin-left: 10px;
+          padding: 5px 15px;
+          background-color: #dc3545;
+          color: white;
+          border: none;
+          border-radius: 5px;
+          cursor: pointer;
+          font-size: 0.9em;
+          transition: background-color 0.3s ease;
+        }
+
+        .btn-cancelar:hover {
+          background-color: #c82333;
+        }
+
+        .btn-cancelar:disabled {
+          background-color: #6c757d;
+          cursor: not-allowed;
         }
       `}</style>
     </div>

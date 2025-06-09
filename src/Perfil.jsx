@@ -1,36 +1,168 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
+import Swal from 'sweetalert2';
+//import './Perfil.css';
 
 export default function Perfil() {
   const navigate = useNavigate();
-  const [nombre, setNombre] = useState('');
-  const [ubicacion, setUbicacion] = useState('');
-  const [descripcion, setDescripcion] = useState('');
+  const [formData, setFormData] = useState({
+    nombre_usuario: '',
+    apellido_usuario: '',
+    correo_electronico_usuario: '',
+    contrasenia_usuario: '',
+    telefono_usuario: ''
+  });
 
-  const handleGuardar = () => {
-    alert('Cambios guardados correctamente');
+  // Cargar datos del usuario al montar el componente
+  useEffect(() => {
+    const userId = localStorage.getItem('userId');
+    if (!userId) {
+      navigate('/login');
+      return;
+    }
+
+    fetch(`http://localhost:3000/api/auth/usuario/${userId}`, {
+      credentials: 'include' // Incluir cookies en la petición
+    })
+      .then(async res => {
+        const contentType = res.headers.get('content-type');
+        if (!contentType || !contentType.includes('application/json')) {
+          throw new Error('La respuesta del servidor no es JSON válido');
+        }
+
+        const data = await res.json();
+        
+        if (!res.ok) {
+          throw new Error(data.error || 'Error al obtener los datos del usuario');
+        }
+        
+        return data;
+      })
+      .then(data => {
+        console.log('Datos recibidos del servidor:', data);
+        
+        if (data && data.usuario) {
+          setFormData({
+            nombre_usuario: data.usuario.nombre_usuario || '',
+            apellido_usuario: data.usuario.apellido_usuario || '',
+            correo_electronico_usuario: data.usuario.correo_electronico_usuario || '',
+            contrasenia_usuario: '', // No mostrar la contraseña actual
+            telefono_usuario: data.usuario.telefono_usuario || ''
+          });
+        } else {
+          console.error('Estructura de datos inesperada:', data);
+          throw new Error('Datos de usuario no encontrados o en formato incorrecto');
+        }
+      })
+      .catch(error => {
+        console.error('Error detallado al cargar datos del usuario:', {
+          message: error.message,
+          stack: error.stack
+        });
+        Swal.fire({
+          icon: 'error',
+          title: 'Error',
+          text: error.message || 'No se pudieron cargar los datos del usuario',
+          confirmButtonColor: '#24487f'
+        });
+      });
+  }, [navigate]);
+
+  const handleInputChange = (e) => {
+    const { name, value } = e.target;
+    setFormData(prev => ({
+      ...prev,
+      [name]: value
+    }));
+  };
+
+  const handleSubmit = async (e) => {
+    e.preventDefault();
+
+    // Validaciones
+    if (formData.nombre_usuario.length > 30 || formData.apellido_usuario.length > 30) {
+      Swal.fire({
+        icon: 'error',
+        title: 'Error',
+        text: 'El nombre y apellido no pueden exceder 30 caracteres',
+        confirmButtonColor: '#24487f'
+      });
+      return;
+    }
+
+    if (formData.correo_electronico_usuario.length > 50) {
+      Swal.fire({
+        icon: 'error',
+        title: 'Error',
+        text: 'El correo no puede exceder 50 caracteres',
+        confirmButtonColor: '#24487f'
+      });
+      return;
+    }
+
+    if (formData.telefono_usuario && formData.telefono_usuario.length !== 12) {
+      Swal.fire({
+        icon: 'error',
+        title: 'Error',
+        text: 'El teléfono debe tener exactamente 12 caracteres',
+        confirmButtonColor: '#24487f'
+      });
+      return;
+    }
+
+    const userId = localStorage.getItem('userId');
+    if (!userId) {
+      navigate('/login');
+      return;
+    }
+
+    try {
+      const response = await fetch(`http://localhost:3000/api/auth/usuario/${userId}`, {
+        method: 'PUT',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        credentials: 'include',
+        body: JSON.stringify(formData)
+      });
+
+      const data = await response.json();
+      
+      if (response.ok && data.success) {
+        Swal.fire({
+          icon: 'success',
+          title: '¡Éxito!',
+          text: 'Perfil actualizado correctamente',
+          confirmButtonColor: '#24487f'
+        });
+      } else {
+        throw new Error(data.error || 'Error al actualizar el perfil');
+      }
+    } catch (error) {
+      console.error('Error:', error);
+      Swal.fire({
+        icon: 'error',
+        title: 'Error',
+        text: error.message || 'No se pudo actualizar el perfil',
+        confirmButtonColor: '#24487f'
+      });
+    }
   };
 
   return (
     <div className="inicio-container">
-      <aside className="sidebar">
-        <div
-          className="logo-container"
-          onClick={() => navigate('/inicio_client')}
-        >
-          <div className="logo-circle">
-            <img src="/Logo.png" alt="Logo" />
-          </div>
+      <div className="sidebar">
+        <div className="logo-wrapper" onClick={() => navigate('/inicio_client')}>
+          <img src="/Logo.png" alt="Logo" />
         </div>
-
         <ul>
           <li onClick={() => navigate('/inicio_client')}>Inicio</li>
           <li onClick={() => navigate('/productos')}>Piezas</li>
           <li onClick={() => navigate('/pedidos')}>Pedidos</li>
           <li onClick={() => navigate('/contacto')}>Sobre Nosotros</li>
-          <li onClick={() => navigate('/')}>Cerrar sesión</li>
+          <li onClick={() => navigate('/')}>Cerrar Sesión</li>
         </ul>
-      </aside>
+      </div>
 
       <main className="main-content">
         <header className="header">
@@ -53,34 +185,65 @@ export default function Perfil() {
             <h1>Editar Perfil</h1>
           </div>
 
-          <div className="perfil-form">
+          <form className="perfil-form" onSubmit={handleSubmit}>
             <label>Nombre:</label>
             <input
               type="text"
-              value={nombre}
-              onChange={(e) => setNombre(e.target.value)}
+              name="nombre_usuario"
+              value={formData.nombre_usuario}
+              onChange={handleInputChange}
               placeholder="Tu nombre"
+              maxLength={30}
+              required
             />
 
-            <label>Ubicación:</label>
+            <label>Apellido:</label>
             <input
               type="text"
-              value={ubicacion}
-              onChange={(e) => setUbicacion(e.target.value)}
-              placeholder="Ciudad o país"
+              name="apellido_usuario"
+              value={formData.apellido_usuario}
+              onChange={handleInputChange}
+              placeholder="Tu apellido"
+              maxLength={30}
+              required
             />
 
-            <label>Descripción:</label>
-            <textarea
-              value={descripcion}
-              onChange={(e) => setDescripcion(e.target.value)}
-              placeholder="Cuéntanos algo sobre ti"
+            <label>Correo electrónico:</label>
+            <input
+              type="email"
+              name="correo_electronico_usuario"
+              value={formData.correo_electronico_usuario}
+              onChange={handleInputChange}
+              placeholder="tu@correo.com"
+              maxLength={50}
+              required
             />
 
-            <button className="guardar-btn" onClick={handleGuardar}>
+            <label>Nueva contraseña:</label>
+            <input
+              type="password"
+              name="contrasenia_usuario"
+              value={formData.contrasenia_usuario}
+              onChange={handleInputChange}
+              placeholder="Nueva contraseña"
+              maxLength={100}
+            />
+
+            <label>Teléfono:</label>
+            <input
+              type="tel"
+              name="telefono_usuario"
+              value={formData.telefono_usuario}
+              onChange={handleInputChange}
+              placeholder="XXX-XXX-XXXX"
+              maxLength={12}
+              required
+            />
+
+            <button type="submit" className="guardar-btn">
               Guardar Cambios
             </button>
-          </div>
+          </form>
         </section>
       </main>
 
@@ -99,20 +262,13 @@ export default function Perfil() {
           padding: 20px;
         }
 
-        .logo-container {
+        .logo-wrapper {
           cursor: pointer;
           text-align: center;
           margin-bottom: 20px;
         }
 
-        .logo-circle {
-          background-color: white;
-          border-radius: 50%;
-          padding: 10px;
-          display: inline-block;
-        }
-
-        .logo-circle img {
+        .logo-wrapper img {
           width: 100px;
           height: 100px;
           object-fit: contain;
@@ -137,11 +293,6 @@ export default function Perfil() {
           background-color: #333;
         }
 
-        .icon-img {
-          width: 18px;
-          height: 18px;
-        }
-
         .main-content {
           flex: 1;
           display: flex;
@@ -158,12 +309,18 @@ export default function Perfil() {
 
         .iconos-header {
           display: flex;
-          gap: 15px;
+          gap: 20px;
         }
 
         .iconos-header img {
           width: 30px;
           height: 30px;
+          cursor: pointer;
+          transition: transform 0.2s;
+        }
+
+        .iconos-header img:hover {
+          transform: scale(1.1);
         }
 
         .content {
@@ -194,8 +351,7 @@ export default function Perfil() {
           color: #333;
         }
 
-        .perfil-form input,
-        .perfil-form textarea {
+        .perfil-form input {
           padding: 10px;
           border: 1px solid #ccc;
           border-radius: 5px;
@@ -203,19 +359,22 @@ export default function Perfil() {
           width: 100%;
         }
 
-        .perfil-form textarea {
-          resize: vertical;
-          min-height: 80px;
+        .perfil-form input:focus {
+          outline: none;
+          border-color: #24487f;
+          box-shadow: 0 0 5px rgba(36, 72, 127, 0.2);
         }
 
         .guardar-btn {
           background-color: #24487f;
           color: white;
           border: none;
-          padding: 10px;
+          padding: 12px;
           font-size: 16px;
           border-radius: 5px;
           cursor: pointer;
+          transition: background-color 0.2s;
+          margin-top: 20px;
         }
 
         .guardar-btn:hover {
