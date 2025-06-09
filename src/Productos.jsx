@@ -1,60 +1,111 @@
-import React, { useState, useEffect } from 'react';
-import { useNavigate } from 'react-router-dom';
+import React, { useState, useEffect, useMemo } from 'react';
+import { useNavigate, useLocation } from 'react-router-dom';
 import axios from 'axios';
 import Swal from 'sweetalert2';
 import './Productos.css';
 
 export default function Productos() {
   const navigate = useNavigate();
+  const location = useLocation();
   const [productos, setProductos] = useState([]);
   const [busqueda, setBusqueda] = useState('');
   const [showModal, setShowModal] = useState(false);
   const [selectedProduct, setSelectedProduct] = useState(null);
+  const [isLoading, setIsLoading] = useState(true);
+
+  // Obtener parámetros de la URL
+  const params = new URLSearchParams(location.search);
+  const categoriaId = params.get('categoriaId');
+  const categoriaNombre = params.get('nombre');
 
   useEffect(() => {
+    setIsLoading(true);
     fetch('http://localhost:3000/api/productos')
       .then((res) => res.json())
       .then((data) => {
-        // Log para debug
-        console.log('Datos de productos:', data.slice(0, 3)); // Mostramos solo los primeros 3 para no saturar la consola
-        
         const productosUnicos = data.map((prod, index) => ({
           ...prod,
           precio_pieza: parseFloat(prod.precio_pieza),
           uniqueKey: `${prod.id_repuesto}-${index}`
         }));
         setProductos(productosUnicos);
+        setIsLoading(false);
       })
-      .catch((err) => console.error('Error al obtener productos:', err));
+      .catch((err) => {
+        console.error('Error al obtener productos:', err);
+        setIsLoading(false);
+      });
   }, []);
 
-  // Función de búsqueda mejorada
-  const buscarEnTexto = (texto, busqueda) => {
-    return texto?.toLowerCase().trim().includes(busqueda.toLowerCase().trim());
-  };
+  // Usar useMemo para el filtrado de productos
+  const productosFiltrados = useMemo(() => {
+    // Log inicial para depuración
+    console.log('Iniciando filtrado:', {
+      totalProductos: productos.length,
+      categoriaId,
+      productos: productos.map(p => ({
+        nombre: p.nombre_pieza,
+        categoriaId: p.id_categoria_pieza
+      }))
+    });
 
-  const productosFiltrados = productos.filter(prod => {
-    const terminoBusqueda = busqueda.toLowerCase().trim();
-    
-    // Si no hay término de búsqueda, mostrar todos los productos
-    if (!terminoBusqueda) return true;
+    return productos.filter(prod => {
+      // Primero filtrar por categoría si existe en la URL
+      if (categoriaId) {
+        // Asegurarnos de que ambos valores son números
+        const idCategoriaProducto = Number(prod.id_categoria_pieza);
+        const idCategoriaFiltro = Number(categoriaId);
 
-    // Búsqueda exacta en el nombre
-    const coincideNombre = buscarEnTexto(prod.nombre_pieza, terminoBusqueda);
-    
-    // Solo si no hay coincidencia exacta en el nombre, buscar en otros campos
-    if (coincideNombre) return true;
+        // Log para depuración
+        console.log('Comparando producto:', {
+          nombre: prod.nombre_pieza,
+          idProducto: idCategoriaProducto,
+          idFiltro: idCategoriaFiltro,
+          coincide: idCategoriaProducto === idCategoriaFiltro
+        });
 
-    // Búsqueda en otros campos solo si la palabra tiene más de 3 caracteres
-    // para evitar coincidencias accidentales con palabras cortas
-    if (terminoBusqueda.length > 3) {
-      const coincideDescripcion = buscarEnTexto(prod.descripcion_pieza, terminoBusqueda);
-      const coincideCategoria = buscarEnTexto(prod.nombre_categoria_pieza, terminoBusqueda);
-      return coincideDescripcion || coincideCategoria;
+        if (idCategoriaProducto !== idCategoriaFiltro) {
+          return false;
+        }
+      }
+
+      // Luego aplicar el filtro de búsqueda
+      const terminoBusqueda = busqueda.toLowerCase().trim();
+      if (!terminoBusqueda) return true;
+
+      const coincideNombre = prod.nombre_pieza.toLowerCase().trim().includes(terminoBusqueda);
+      if (coincideNombre) return true;
+
+      if (terminoBusqueda.length > 3) {
+        const coincideDescripcion = prod.descripcion_pieza?.toLowerCase().trim().includes(terminoBusqueda);
+        return coincideDescripcion;
+      }
+
+      return false;
+    });
+  }, [productos, categoriaId, busqueda]);
+
+  // Log los parámetros de la URL cuando cambien
+  useEffect(() => {
+    console.log('Parámetros de URL:', {
+      categoriaId,
+      categoriaNombre: categoriaNombre ? decodeURIComponent(categoriaNombre) : null
+    });
+  }, [categoriaId, categoriaNombre]);
+
+  // Log el resultado del filtrado
+  useEffect(() => {
+    if (categoriaId) {
+      console.log('Productos filtrados:', {
+        totalProductos: productos.length,
+        productosFiltrados: productosFiltrados.length,
+        productos: productosFiltrados.map(p => ({
+          nombre: p.nombre_pieza,
+          idCategoria: p.id_categoria_pieza
+        }))
+      });
     }
-
-    return false;
-  });
+  }, [categoriaId, productos, productosFiltrados]);
 
   // Log para debug de la búsqueda
   useEffect(() => {
@@ -182,10 +233,23 @@ export default function Productos() {
 
         <section className="content">
           <div className="productos-section">
-            <h2>Piezas</h2>
-            {productosFiltrados.length === 0 ? (
+            <h2>{categoriaNombre ? `Piezas - ${decodeURIComponent(categoriaNombre)}` : 'Todas las Piezas'}</h2>
+            {isLoading ? (
+              <div style={{ textAlign: 'center', marginTop: '3rem' }}>
+                <h3>Cargando productos...</h3>
+              </div>
+            ) : productosFiltrados.length === 0 ? (
               <div style={{ textAlign: 'center', marginTop: '3rem' }}>
                 <h3>Pieza no encontrada</h3>
+                {categoriaId && (
+                  <button 
+                    onClick={() => navigate('/productos')} 
+                    className="btn-agregar"
+                    style={{ marginTop: '1rem' }}
+                  >
+                    Ver todas las piezas
+                  </button>
+                )}
               </div>
             ) : (
               <div className="productos-grid">
@@ -197,14 +261,6 @@ export default function Productos() {
                       onClick={() => handleProductClick(producto)}
                     />
                     <p>{producto.nombre_pieza}</p>
-                    <p className="precio">RD$ {formatearPrecio(producto.precio_pieza)}</p>
-                    <button
-                      onClick={() => agregarAlCarrito(producto)}
-                      className="btn-agregar"
-                      disabled={producto.cantidad_pieza <= 0}
-                    >
-                      {producto.cantidad_pieza <= 0 ? 'Sin stock' : 'Agregar al carrito'}
-                    </button>
                   </div>
                 ))}
               </div>

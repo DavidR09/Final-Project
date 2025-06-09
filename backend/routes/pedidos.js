@@ -200,9 +200,10 @@ router.get('/', async (req, res) => {
 
     const [pedidos] = await connection.execute(
       `SELECT p.*, e.estado_pedido as nombre_estado,
-        p.direccion_envio_pedido
+        t.nombre_taller, t.direccion_taller
        FROM pedido p 
        JOIN estado_pedido e ON p.id_estado_pedido = e.id_estado_pedido
+       LEFT JOIN taller t ON t.id_usuario = p.id_usuario
        WHERE p.id_usuario = ? 
        ORDER BY p.fecha_pedido DESC`,
       [usuario_id]
@@ -215,28 +216,32 @@ router.get('/', async (req, res) => {
       console.log('Obteniendo detalles para pedido:', pedido.id_pedido);
       
       const [detalles] = await connection.execute(
-        `SELECT d.id_detalle_pedido, d.id_pieza, d.precio_unitario_pieza, d.importe_total_pedido, 
-         r.nombre_pieza, r.imagen_pieza, r.cantidad_pieza as stock_actual,
-         d.cantidad_detalle as cantidad
+        `SELECT 
+          d.id_detalle_pedido,
+          d.id_pieza,
+          d.cantidad_detalle,
+          d.precio_unitario_pieza,
+          d.importe_total_pedido,
+          r.nombre_pieza,
+          r.imagen_pieza,
+          r.descripcion_pieza
          FROM detalle_pedido d 
          JOIN pieza r ON d.id_pieza = r.id_repuesto 
          WHERE d.id_pedido = ?`,
         [pedido.id_pedido]
       );
 
-      console.log('Detalles encontrados:', detalles.length);
-
-      // Ya no necesitamos calcular la cantidad, la obtenemos directamente de la base de datos
-      for (let detalle of detalles) {
-        console.log('Detalle procesado:', {
-          id_detalle: detalle.id_detalle_pedido,
-          id_pieza: detalle.id_pieza,
-          nombre: detalle.nombre_pieza,
-          cantidad: detalle.cantidad,
-          precio: detalle.precio_unitario_pieza,
-          total: detalle.importe_total_pedido
-        });
-      }
+      console.log('Detalles encontrados:', {
+        id_pedido: pedido.id_pedido,
+        cantidad_detalles: detalles.length,
+        detalles: detalles.map(d => ({
+          id_detalle: d.id_detalle_pedido,
+          pieza: d.nombre_pieza,
+          cantidad: d.cantidad_detalle,
+          precio: d.precio_unitario_pieza,
+          total: d.importe_total_pedido
+        }))
+      });
 
       pedido.detalles = detalles;
     }
@@ -256,6 +261,64 @@ router.get('/', async (req, res) => {
       } catch (closeError) {
         console.error('Error al cerrar la conexión:', closeError);
       }
+    }
+  }
+});
+
+// Cancelar un pedido
+router.put('/:id/cancelar', async (req, res) => {
+  let connection;
+  try {
+    const pedidoId = req.params.id;
+    const usuarioId = req.session.userId;
+
+    if (!usuarioId) {
+      return res.status(401).json({ error: 'Usuario no autenticado' });
+    }
+
+    connection = await connectToDatabase();
+
+    // Verificar que el pedido existe y pertenece al usuario
+    const [pedido] = await connection.execute(
+      'SELECT fecha_pedido, id_estado_pedido FROM pedido WHERE id_pedido = ? AND id_usuario = ?',
+      [pedidoId, usuarioId]
+    );
+
+    if (pedido.length === 0) {
+      return res.status(404).json({ error: 'Pedido no encontrado' });
+    }
+
+    // Verificar que el pedido está dentro del límite de 5 minutos
+    const tiempoLimite = 5 * 60 * 1000; // 5 minutos en milisegundos
+    const fechaCreacion = new Date(pedido[0].fecha_pedido).getTime();
+    const ahora = new Date().getTime();
+
+    if ((ahora - fechaCreacion) > tiempoLimite) {
+      return res.status(400).json({ 
+        error: 'No se puede cancelar el pedido después de 5 minutos de su creación' 
+      });
+    }
+
+    // Verificar que el pedido está en estado pendiente
+    if (pedido[0].id_estado_pedido !== 1) { // Asumiendo que 1 es el ID del estado "pendiente"
+      return res.status(400).json({ 
+        error: 'Solo se pueden cancelar pedidos en estado pendiente' 
+      });
+    }
+
+    // Actualizar el estado del pedido a cancelado
+    await connection.execute(
+      'UPDATE pedido SET id_estado_pedido = 5 WHERE id_pedido = ?', // 5 es el ID del estado "cancelado"
+      [pedidoId]
+    );
+
+    res.json({ mensaje: 'Pedido cancelado exitosamente' });
+  } catch (error) {
+    console.error('Error al cancelar el pedido:', error);
+    res.status(500).json({ error: 'Error al cancelar el pedido' });
+  } finally {
+    if (connection) {
+      connection.end();
     }
   }
 });

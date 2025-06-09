@@ -15,12 +15,13 @@ export default function Contactanos() {
         </div>
         <h1>Contáctanos en <span className="highlight">Repuestos G.R.A</span></h1>
         <p className="intro-text">
-          Si necesitas asistencia, información sobre nuestras piezas o tienes alguna consulta,
+          Para registrarte y por si necesitas asistencia, información sobre nuestras piezas o tienes alguna consulta,
           no dudes en comunicarte con nosotros. Estamos disponibles para ayudarte en todo momento.
+          A través de nuestro correo electrónico o teléfono, por el cual puedes contactarnosñ:
         </p>
         <p className="intro-text"><strong>Teléfono:</strong> +1 (809) 605-7725</p>
         <p className="intro-text"><strong>Correo electrónico:</strong> contacto@repuestosgra.com</p>
-        <p className="intro-text"><strong>Dirección:</strong> Av. Principal #45, Santiago de los Caballeros, R.D.</p>
+        <p className="intro-text"><strong>Dirección:</strong> No tenemos una dirección fija, pero puedes contactarnos a través de los medios de comunicación que te ofrecemos.</p>
         <p className="intro-text"><strong>Horario:</strong> Lunes a Viernes de 8:00 a.m. a 6:00 p.m.</p>
 
         <div className="button-group">
