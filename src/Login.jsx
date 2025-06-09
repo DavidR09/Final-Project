@@ -16,17 +16,18 @@ export default function Login() {
     setMensaje(null);
 
     try {
-      const response = await axios.post('http://localhost:3000/api/login', {
+      const response = await axios.post('http://localhost:3000/api/auth/login', {
         correo_electronico_usuario: email,
         contrasenia_usuario: password
       }, {
-        withCredentials: true
+        withCredentials: true,
+        headers: {
+          'Content-Type': 'application/json'
+        }
       });
 
-      //console.log('Respuesta del servidor:', response.data);
-
       if (response.data && response.data.userId) {
-        // ...
+        localStorage.setItem('userId', response.data.userId);
         setTipoMensaje('success');
         setMensaje('Inicio de sesión exitoso');
         

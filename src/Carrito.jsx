@@ -17,7 +17,7 @@ export default function Carrito() {
     // Verificar la autenticación del usuario
     const checkAuth = async () => {
       try {
-        const response = await axios.get('/api/check-auth', {
+        const response = await axios.get('http://localhost:3000/api/auth/check-auth', {
           withCredentials: true
         });
         
@@ -232,21 +232,17 @@ export default function Carrito() {
 
   return (
     <div className="carrito-container">
-      <aside className="sidebar">
-        <div 
-          className="logo-wrapper" 
-          onClick={() => handleNavigate('inicio')}
-        >
+      <div className="sidebar">
+        <div className="logo-wrapper" onClick={() => navigate('/inicio_client')}>
           <img src="/Logo.png" alt="Logo" />
         </div>
-
         <ul>
-          <li onClick={() => handleNavigate('inicio')}>Inicio</li>
-          <li onClick={() => handleNavigate('productos')}>Piezas</li>
-          <li onClick={() => handleNavigate('pedidos')}>Pedidos</li>
-          <li onClick={() => handleNavigate('contacto')}>Sobre Nosotros</li>
+          <li onClick={() => navigate('/inicio_client')}>Inicio</li>
+          <li onClick={() => navigate('/productos')}>Piezas</li>
+          <li onClick={() => navigate('/pedidos')}>Pedidos</li>
+          <li onClick={() => navigate('/contacto')}>Sobre Nosotros</li>
         </ul>
-      </aside>
+      </div>
 
       <main className="main-content">
         <header className="header">
@@ -273,8 +269,8 @@ export default function Carrito() {
               <img src="/empty-cart.png" alt="Carrito vacío" className="empty-cart-img" />
               <h2>Tu carrito está vacío</h2>
               <p>¡Agrega algunos productos para comenzar!</p>
-              <button onClick={() => handleNavigate('productos')} className="continuar-comprando">
-                Explorar productos
+              <button className="continuar-comprando" onClick={() => navigate('/productos')}>
+                Continuar comprando
               </button>
             </div>
           ) : (
@@ -352,8 +348,9 @@ export default function Carrito() {
       <PaymentModal
         isOpen={isPaymentModalOpen}
         onClose={() => setIsPaymentModalOpen(false)}
+        onConfirm={handlePaymentSuccess}
         amount={total}
-        onPaymentSuccess={handlePaymentSuccess}
+        onPaymentDetailsChange={setPaymentDetails}
       />
     </div>
   );

@@ -270,41 +270,6 @@
   margin: 0;
 }
 
-.pedido-footer {
-  display: flex;
-  justify-content: space-between;
-  padding-top: 15px;
-  border-top: 1px solid #eee;
-}
-
-.pedido-direccion {
-  flex: 1;
-  padding-right: 20px;
-}
-
-.pedido-direccion strong,
-.pedido-total strong {
-  display: block;
-  margin-bottom: 5px;
-  color: #24487f;
-}
-
-.pedido-direccion p,
-.pedido-total p {
-  margin: 0;
-  color: #666;
-}
-
-.pedido-total {
-  text-align: right;
-}
-
-.pedido-total p {
-  font-size: 18px;
-  color: #24487f;
-  font-weight: bold;
-}
-
 @media (max-width: 768px) {
   .sidebar {
     display: none;
@@ -315,6 +280,11 @@
   }
 
   .pedido-card {
+    padding: 15px;
+  }
+
+  .pedido-card {
+    margin: 10px;
     padding: 15px;
   }
 
@@ -329,20 +299,6 @@
   }
 
   .producto-total {
-    text-align: center;
-  }
-
-  .pedido-footer {
-    flex-direction: column;
-    gap: 15px;
-  }
-
-  .pedido-direccion {
-    padding-right: 0;
-    text-align: center;
-  }
-
-  .pedido-total {
     text-align: center;
   }
 } 

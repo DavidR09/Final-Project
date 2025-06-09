@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import './Inicio_Client.css'; // Asegúrate de tener este archivo CSS para estilos
+import './Inicio_Client.css';
 import './styles/global.css';
 
 export default function Inicio_Client() {
@@ -14,7 +14,7 @@ export default function Inicio_Client() {
     // Verificar el rol del usuario
     const checkUserRole = async () => {
       try {
-        const response = await fetch('http://localhost:3000/api/check-auth', {
+        const response = await fetch('http://localhost:3000/api/auth/check-auth', {
           credentials: 'include'
         });
         const data = await response.json();
@@ -32,30 +32,33 @@ export default function Inicio_Client() {
         const response = await fetch('http://localhost:3000/api/categorias');
         const data = await response.json();
         
-        console.log('Datos originales de categorías:', data);
-        
         // Mapeamos los datos de la base de datos con las imágenes locales
-        const categoriasConImagenes = data.map((cat, index) => ({
-          ...cat,
-          id_categoria_pieza: index + 1, // ID secuencial empezando en 1
-          imagen: [
-            '/Neumatico.png',
-            '/bateria.jpg',
-            '/pantallasmicas.png',
-            '/aros.png',
-            '/gato.png',
-            '/lubricante.png',
-            '/carroceria.png',
-            '/electricas.png',
-            '/amortiguadores.png',
-            '/filtros.png'
-          ][index % 10]
-        }));
+        const categoriasConImagenes = data.map((cat) => {
+          // Asegurarnos de que estamos usando el ID correcto de la base de datos
+          const imagenes = {
+            2: '/Neumatico.png',    // Neumáticos
+            3: '/bateria.jpg',      // Baterías
+            4: '/pantallasmicas.png', // Faroles y pantallas
+            5: '/aros.png',         // Aros
+            6: '/gato.png',         // Gatos
+            7: '/lubricante.png',   // Lubricantes
+            8: '/carroceria.png',   // Carrocerías
+            9: '/electricas.png',   // Eléctricos
+            10: '/amortiguadores.png', // Amortiguadores
+            11: '/filtros.png'      // Filtros
+          };
+
+          return {
+            ...cat,
+            imagen: imagenes[cat.id_categoria_pieza] || '/default.png'
+          };
+        });
         
-        console.log('Categorías con IDs asignados:', categoriasConImagenes.map(cat => ({
+        console.log('Categorías cargadas:', categoriasConImagenes.map(cat => ({
           id: cat.id_categoria_pieza,
           nombre: cat.nombre_categoria_pieza
         })));
+        
         setCategorias(categoriasConImagenes);
       } catch (error) {
         console.error('Error al obtener categorías:', error);
@@ -136,7 +139,7 @@ export default function Inicio_Client() {
             ) : (
               <div className="productos-grid">
                 {categoriasFiltradas.map((cat) => (
-                  <div key={cat.nombre_categoria_pieza} className="producto-card">
+                  <div key={cat.id_categoria_pieza} className="producto-card">
                     <img 
                       src={cat.imagen} 
                       alt={cat.nombre_categoria_pieza} 
@@ -146,12 +149,15 @@ export default function Inicio_Client() {
                     <button 
                       className="btn-agregar"
                       onClick={() => {
-                        console.log('Navegando a categoría (datos completos):', {
-                          categoria: cat,
-                          nombre: cat.nombre_categoria_pieza,
-                          id: cat.id_categoria_pieza
+                        // Asegurarnos de que estamos usando el ID correcto
+                        const idCategoria = cat.id_categoria_pieza;
+                        console.log('Datos de navegación:', {
+                          categoriaCompleta: cat,
+                          id_categoria_pieza: idCategoria,
+                          nombre_categoria: cat.nombre_categoria_pieza,
+                          url: `/productos?categoriaId=${idCategoria}&nombre=${encodeURIComponent(cat.nombre_categoria_pieza)}`
                         });
-                        navigate(`/productos?categoria=${encodeURIComponent(cat.nombre_categoria_pieza)}`);
+                        navigate(`/productos?categoriaId=${idCategoria}&nombre=${encodeURIComponent(cat.nombre_categoria_pieza)}`);
                       }}
                     >
                       Ver productos
