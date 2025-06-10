@@ -1,5 +1,7 @@
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
+import axios from 'axios';
+import Swal from 'sweetalert2';
 
 export default function Register() {
   const navigate = useNavigate();
@@ -9,12 +11,12 @@ export default function Register() {
   const [rol, setRol] = useState('');
   const [contrasenia, setContrasenia] = useState('');
   const [telefono, setTelefono] = useState('');
-  const [mensaje, setMensaje] = useState(null);
-  const [tipoMensaje, setTipoMensaje] = useState('');
+  const [isLoading, setIsLoading] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
 
   const handleRegister = async (e) => {
     e.preventDefault();
+    setIsLoading(true);
 
     const nuevoUsuario = {
       nombre_usuario: nombre,
@@ -27,23 +29,20 @@ export default function Register() {
     };
 
     try {
-const response = await fetch('http://localhost:3000/api/insertar-usuario', {
-        method: 'POST',
+      const response = await axios.post('http://localhost:3000/api/usuarios/insertar-usuario', nuevoUsuario, {
         headers: {
           'Content-Type': 'application/json'
-        },
-        body: JSON.stringify(nuevoUsuario)
+        }
       });
 
-      if (!response.ok) {
-        throw new Error('Error en el registro');
-      }
+      console.log('Respuesta del servidor:', response.data);
 
-      const data = await response.json();
-      console.log('Respuesta del servidor:', data);
-
-      setTipoMensaje('success');
-      setMensaje('Registro exitoso.');
+      await Swal.fire({
+        icon: 'success',
+        title: '¡Registro exitoso!',
+        text: 'El usuario ha sido registrado correctamente.',
+        confirmButtonColor: '#24487f'
+      });
 
       // Limpiar campos
       setNombre('');
@@ -54,8 +53,14 @@ const response = await fetch('http://localhost:3000/api/insertar-usuario', {
       setTelefono('');
     } catch (error) {
       console.error('Error:', error);
-      setTipoMensaje('error');
-      setMensaje('Hubo un problema al registrar el usuario.');
+      await Swal.fire({
+        icon: 'error',
+        title: 'Error',
+        text: error.response?.data?.error || 'Hubo un problema al registrar el usuario.',
+        confirmButtonColor: '#24487f'
+      });
+    } finally {
+      setIsLoading(false);
     }
   };
 
@@ -66,7 +71,7 @@ const response = await fetch('http://localhost:3000/api/insertar-usuario', {
           <img src="/Logo.png" alt="Logo" />
         </div>
         <ul>
-        <li onClick={() => navigate('/Inicio')}>Panel de Administración</li>
+          <li onClick={() => navigate('/Inicio')}>Panel de Administración</li>
           <li onClick={() => navigate('/register')}>Registrar Usuario</li>
           <li onClick={() => navigate('/register-taller')}>Registrar Taller</li>
           <li onClick={() => navigate('/register-repuesto')}>Registrar Repuesto</li>
@@ -79,10 +84,6 @@ const response = await fetch('http://localhost:3000/api/insertar-usuario', {
       </aside>
 
       <main className="main-content">
-        <header className="header">
-          
-        </header>
-
         <section className="content">
           <div className="welcome">
             <h1>Registro de Usuario</h1>
@@ -90,25 +91,52 @@ const response = await fetch('http://localhost:3000/api/insertar-usuario', {
 
           <form className="perfil-form" onSubmit={handleRegister}>
             <label>Nombre:</label>
-            <input type="text" value={nombre} onChange={(e) => setNombre(e.target.value)} required />
+            <input 
+              type="text" 
+              value={nombre} 
+              onChange={(e) => setNombre(e.target.value)} 
+              required 
+              disabled={isLoading}
+            />
 
             <label>Apellido:</label>
-            <input type="text" value={apellido} onChange={(e) => setApellido(e.target.value)} required />
+            <input 
+              type="text" 
+              value={apellido} 
+              onChange={(e) => setApellido(e.target.value)} 
+              required 
+              disabled={isLoading}
+            />
 
             <label>Correo Electrónico:</label>
-            <input type="email" value={correo} onChange={(e) => setCorreo(e.target.value)} required />
+            <input 
+              type="email" 
+              value={correo} 
+              onChange={(e) => setCorreo(e.target.value)} 
+              required 
+              disabled={isLoading}
+            />
 
             <label>Rol:</label>
-            <input type="text" value={rol} onChange={(e) => setRol(e.target.value)} required />
+            <select 
+              value={rol} 
+              onChange={(e) => setRol(e.target.value)} 
+              required 
+              disabled={isLoading}
+            >
+              <option value="">Seleccione un rol</option>
+              <option value="administrador">Administrador</option>
+              <option value="usuario">Usuario</option>
+            </select>
 
             <label>Contraseña:</label>
-            <div className="password-container">
-              <input 
-                type={showPassword ? "text" : "password"} 
-                value={contrasenia} 
-                onChange={(e) => setContrasenia(e.target.value)} 
-                required 
-                className="password-input"
+            <div style={{ position: 'relative' }}>
+              <input
+                type={showPassword ? "text" : "password"}
+                value={contrasenia}
+                onChange={(e) => setContrasenia(e.target.value)}
+                required
+                disabled={isLoading}
               />
               <span 
                 onClick={() => setShowPassword(!showPassword)}
@@ -119,14 +147,23 @@ const response = await fetch('http://localhost:3000/api/insertar-usuario', {
             </div>
 
             <label>Teléfono:</label>
-            <input type="tel" value={telefono} onChange={(e) => setTelefono(e.target.value)} required />
+            <input 
+              type="tel" 
+              value={telefono} 
+              onChange={(e) => setTelefono(e.target.value)} 
+              required 
+              pattern="[0-9]{3}-[0-9]{3}-[0-9]{4}"
+              placeholder="123-456-7890"
+              disabled={isLoading}
+            />
 
-            <button className="guardar-btn" type="submit">Registrar Usuario</button>
-            {mensaje && (
-              <p style={{ color: tipoMensaje === 'error' ? 'red' : 'green', marginTop: '10px', textAlign: 'center' }}>
-                {mensaje}
-              </p>
-            )}
+            <button 
+              type="submit" 
+              className="submit-button"
+              disabled={isLoading}
+            >
+              {isLoading ? 'Registrando...' : 'Registrar Usuario'}
+            </button>
           </form>
         </section>
       </main>
@@ -283,7 +320,7 @@ const response = await fetch('http://localhost:3000/api/insertar-usuario', {
         }
 
         .guardar-btn {
-          background-color: #24487f;
+          background-color:rgb(34, 94, 184);
           color: white;
           border: none;
           padding: 12px 20px;
@@ -296,7 +333,7 @@ const response = await fetch('http://localhost:3000/api/insertar-usuario', {
         }
 
         .guardar-btn:hover {
-          background-color: #1b3560;
+          background-color:rgb(23, 82, 177);
         }
       `}</style>
     </div>

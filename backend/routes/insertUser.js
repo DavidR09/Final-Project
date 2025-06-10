@@ -1,5 +1,5 @@
 import express from 'express';
-import connectToDatabase from './connectionMySQL.js';
+import connectToDatabase from '../database/connectionMySQL.js';
 import bcrypt from 'bcrypt';
 
 const router = express.Router();
