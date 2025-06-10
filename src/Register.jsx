@@ -102,32 +102,26 @@ const response = await fetch('http://localhost:3000/api/insertar-usuario', {
             <input type="text" value={rol} onChange={(e) => setRol(e.target.value)} required />
 
             <label>Contraseña:</label>
-            <div style={{ position: 'relative' }}>
+            <div className="password-container">
               <input 
                 type={showPassword ? "text" : "password"} 
                 value={contrasenia} 
                 onChange={(e) => setContrasenia(e.target.value)} 
                 required 
+                className="password-input"
               />
               <span 
                 onClick={() => setShowPassword(!showPassword)}
-                style={{
-                  position: 'absolute',
-                  right: '10px',
-                  top: '50%',
-                  transform: 'translateY(-50%)',
-                  cursor: 'pointer',
-                  fontSize: '20px'
-                }}
+                className="password-toggle"
               >
-                {showPassword ? '👁️' : '👁️‍🗨️'}
+                {showPassword ? '👁️' : '🙈'}
               </span>
             </div>
 
             <label>Teléfono:</label>
             <input type="tel" value={telefono} onChange={(e) => setTelefono(e.target.value)} required />
 
-            <button className="guardar-btn" type="submit">Registrarse</button>
+            <button className="guardar-btn" type="submit">Registrar Usuario</button>
             {mensaje && (
               <p style={{ color: tipoMensaje === 'error' ? 'red' : 'green', marginTop: '10px', textAlign: 'center' }}>
                 {mensaje}
@@ -249,16 +243,56 @@ const response = await fetch('http://localhost:3000/api/insertar-usuario', {
           border-radius: 5px;
           font-size: 16px;
           width: 100%;
+          box-sizing: border-box;
+        }
+
+        .password-container {
+          position: relative;
+          width: 100%;
+        }
+
+        .password-input {
+          padding: 10px 40px 10px 10px !important;
+          border: 1px solid #ccc;
+          border-radius: 5px;
+          font-size: 16px;
+          width: 100%;
+          box-sizing: border-box;
+        }
+
+        .password-toggle {
+          position: absolute;
+          right: 10px;
+          top: 50%;
+          transform: translateY(-50%);
+          cursor: pointer;
+          font-size: 18px;
+          user-select: none;
+          background: white;
+          padding: 2px;
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          width: 24px;
+          height: 24px;
+        }
+
+        .password-toggle:hover {
+          background-color: #f0f0f0;
+          border-radius: 3px;
         }
 
         .guardar-btn {
           background-color: #24487f;
           color: white;
           border: none;
-          padding: 10px;
+          padding: 12px 20px;
           font-size: 16px;
           border-radius: 5px;
           cursor: pointer;
+          width: 100%;
+          margin-top: 10px;
+          box-sizing: border-box;
         }
 
         .guardar-btn:hover {
