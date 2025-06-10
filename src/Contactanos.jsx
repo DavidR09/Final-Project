@@ -22,7 +22,7 @@ export default function Contactanos() {
         <p className="intro-text"><strong>Teléfono:</strong> +1 (809) 605-7725</p>
         <p className="intro-text"><strong>Correo electrónico:</strong> contacto@repuestosgra.com</p>
         <p className="intro-text"><strong>Dirección:</strong> No tenemos una dirección fija, pero puedes contactarnos a través de los medios de comunicación que te ofrecemos.</p>
-        <p className="intro-text"><strong>Horario:</strong> Lunes a Viernes de 8:00 a.m. a 6:00 p.m.</p>
+        <p className="intro-text"><strong>Horario:</strong> Lunes a Viernes de 8:00 AM a 6:00 PM</p>
 
         <div className="button-group">
           <button onClick={() => navigate('/')} className="primary-btn">

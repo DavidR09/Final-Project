@@ -2,7 +2,9 @@ import React, { useState, useEffect, useMemo } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
 import axios from 'axios';
 import Swal from 'sweetalert2';
-import './Productos.css';
+import Sidebar from './components/Sidebar';
+import HeaderIcons from './components/HeaderIcons';
+import './styles/global.css';
 
 export default function Productos() {
   const navigate = useNavigate();
@@ -12,13 +14,29 @@ export default function Productos() {
   const [showModal, setShowModal] = useState(false);
   const [selectedProduct, setSelectedProduct] = useState(null);
   const [isLoading, setIsLoading] = useState(true);
+  const [userRole, setUserRole] = useState(null);
 
   // Obtener parámetros de la URL
-  const params = new URLSearchParams(location.search);
-  const categoriaId = params.get('categoriaId');
-  const categoriaNombre = params.get('nombre');
+  const searchParams = new URLSearchParams(location.search);
+  const categoriaId = searchParams.get('categoriaId');
+  const categoriaNombre = searchParams.get('nombre');
 
   useEffect(() => {
+    // Verificar el rol del usuario
+    const checkUserRole = async () => {
+      try {
+        const response = await fetch('http://localhost:3000/api/auth/check-auth', {
+          credentials: 'include'
+        });
+        const data = await response.json();
+        setUserRole(data.rol);
+      } catch (error) {
+        console.error('Error al verificar el rol:', error);
+      }
+    };
+
+    checkUserRole();
+
     setIsLoading(true);
     fetch('http://localhost:3000/api/productos')
       .then((res) => res.json())
@@ -137,77 +155,92 @@ export default function Productos() {
     return precioNum.toFixed(2).replace(/\B(?=(\d{3})+(?!\d))/g, ",");
   };
   
-  const agregarAlCarrito = (producto) => {
-    if (producto.cantidad_pieza <= 0) {
+  const agregarAlCarrito = async (producto) => {
+    const userId = localStorage.getItem('userId');
+    if (!userId) {
       Swal.fire({
         icon: 'error',
-        title: 'Sin stock',
-        text: 'Este producto no está disponible actualmente',
+        title: 'Error',
+        text: 'Debe iniciar sesión para agregar productos al carrito',
         confirmButtonColor: '#24487f'
       });
       return;
     }
 
-    const userId = localStorage.getItem('userId');
-    if (!userId) {
-      navigate('/login');
-      return;
-    }
+    try {
+      // Verificar stock actualizado antes de agregar
+      const response = await axios.get(`${import.meta.env.VITE_API_URL}/api/productos`);
+      const productoActualizado = response.data.find(p => p.id_repuesto === producto.id_repuesto);
 
-    const carritoKey = `carrito_${userId}`;
-    const carritoActual = JSON.parse(localStorage.getItem(carritoKey)) || [];
-    
-    const productoExistente = carritoActual.find(p => p.id_repuesto === producto.id_repuesto);
-    
-    if (productoExistente) {
-      if (productoExistente.cantidad >= producto.cantidad_pieza) {
-        Swal.fire({
-          icon: 'error',
-          title: 'Stock insuficiente',
-          text: 'No hay suficiente stock disponible',
-          confirmButtonColor: '#24487f'
-        });
-        return;
+      if (!productoActualizado) {
+        throw new Error('Producto no encontrado');
       }
-      productoExistente.cantidad += 1;
-    } else {
-      carritoActual.push({
-        ...producto,
-        cantidad: 1
+
+      if (productoActualizado.cantidad_pieza <= 0) {
+        throw new Error('Este producto no está disponible actualmente');
+      }
+
+      const carritoKey = `carrito_${userId}`;
+      let carrito = JSON.parse(localStorage.getItem(carritoKey)) || [];
+
+      // Verificar si el producto ya está en el carrito
+      const productoExistente = carrito.find(item => item.id_repuesto === producto.id_repuesto);
+
+      if (productoExistente) {
+        // Verificar si hay suficiente stock
+        if (productoExistente.cantidad >= productoActualizado.cantidad_pieza) {
+          throw new Error(`No hay suficiente stock disponible. Stock actual: ${productoActualizado.cantidad_pieza}`);
+        }
+        // Actualizar cantidad y precio
+        productoExistente.cantidad += 1;
+        productoExistente.precio_pieza = parseFloat(productoActualizado.precio_pieza);
+      } else {
+        // Agregar nuevo producto
+        carrito.push({
+          id_repuesto: productoActualizado.id_repuesto,
+          nombre_pieza: productoActualizado.nombre_pieza,
+          precio_pieza: parseFloat(productoActualizado.precio_pieza),
+          cantidad: 1,
+          imagen_pieza: productoActualizado.imagen_pieza
+        });
+      }
+
+      // Guardar carrito actualizado
+      localStorage.setItem(carritoKey, JSON.stringify(carrito));
+
+      // Disparar evento para actualizar el contador del carrito
+      window.dispatchEvent(new Event('carritoActualizado'));
+
+      // Mostrar mensaje de éxito
+      await Swal.fire({
+        icon: 'success',
+        title: '¡Agregado!',
+        text: 'El producto se agregó al carrito',
+        confirmButtonColor: '#24487f',
+        showCancelButton: true,
+        confirmButtonText: 'Ir al carrito',
+        cancelButtonText: 'Seguir comprando'
+      }).then((result) => {
+        if (result.isConfirmed) {
+          navigate('/carrito');
+        } else {
+          navigate('/productos');
+        }
+      });
+    } catch (error) {
+      console.error('Error al agregar al carrito:', error);
+      await Swal.fire({
+        icon: 'error',
+        title: 'Error',
+        text: error.message || 'Error al agregar el producto al carrito',
+        confirmButtonColor: '#24487f'
       });
     }
-
-    localStorage.setItem(carritoKey, JSON.stringify(carritoActual));
-
-    Swal.fire({
-      icon: 'success',
-      title: '¡Agregado!',
-      text: 'El producto se agregó al carrito',
-      confirmButtonColor: '#24487f',
-      showCancelButton: true,
-      confirmButtonText: 'Ir al carrito',
-      cancelButtonText: 'Seguir comprando'
-    }).then((result) => {
-      if (result.isConfirmed) {
-        navigate('/carrito');
-      }
-    });
   };
 
   return (
     <div className="inicio-container">
-      <div className="sidebar">
-        <div className="logo-wrapper" onClick={() => navigate('/inicio_client')}>
-          <img src="/Logo.png" alt="Logo" />
-        </div>
-        <ul>
-          <li onClick={() => navigate('/inicio_client')}>Inicio</li>
-          <li onClick={() => navigate('/productos')}>Piezas</li>
-          <li onClick={() => navigate('/pedidos')}>Pedidos</li>
-          <li onClick={() => navigate('/contacto')}>Sobre Nosotros</li>
-        </ul>
-      </div>
-
+      <Sidebar userRole={userRole} />
       <main className="main-content">
         <header className="header">
           <input
@@ -217,18 +250,7 @@ export default function Productos() {
             onChange={(e) => setBusqueda(e.target.value)}
             className="buscador"
           />
-          <div className="iconos-header">
-            <img
-              src="/carrito.png"
-              alt="Carrito"
-              onClick={() => navigate('/carrito')}
-            />
-            <img
-              src="/perfil.png"
-              alt="Perfil"
-              onClick={() => navigate('/perfil')}
-            />
-          </div>
+          <HeaderIcons />
         </header>
 
         <section className="content">
@@ -254,13 +276,50 @@ export default function Productos() {
             ) : (
               <div className="productos-grid">
                 {productosFiltrados.map((producto) => (
-                  <div key={producto.uniqueKey} className="producto-card">
+                  <div 
+                    key={producto.uniqueKey} 
+                    className="producto-card"
+                    onClick={() => producto.cantidad_pieza > 0 && handleProductClick(producto)}
+                    style={{
+                      opacity: producto.cantidad_pieza <= 0 ? '0.5' : '1',
+                      cursor: producto.cantidad_pieza <= 0 ? 'not-allowed' : 'pointer',
+                      filter: producto.cantidad_pieza <= 0 ? 'grayscale(100%)' : 'none',
+                      position: 'relative'
+                    }}
+                    title={producto.cantidad_pieza <= 0 ? 'Sin piezas' : ''}
+                  >
                     <img
                       src={producto.imagen_pieza}
                       alt={producto.nombre_pieza}
-                      onClick={() => handleProductClick(producto)}
+                      style={{
+                        cursor: producto.cantidad_pieza <= 0 ? 'not-allowed' : 'pointer'
+                      }}
                     />
                     <p>{producto.nombre_pieza}</p>
+                    <p className="vehiculo-info" style={{ fontSize: '0.9em', color: '#666' }}>
+                      {producto.nombre_marca} {producto.nombre_modelo} {producto.anio_vehiculo}
+                    </p>
+                    <button
+                      onClick={(e) => {
+                        e.stopPropagation(); // Evita que se active el onClick del div padre
+                        producto.cantidad_pieza > 0 && handleProductClick(producto);
+                      }}
+                      className="btn-ver-pieza"
+                      style={{
+                        backgroundColor: producto.cantidad_pieza <= 0 ? '#cccccc' : '#24487f',
+                        color: '#ffffff',
+                        border: 'none',
+                        padding: '8px 16px',
+                        borderRadius: '4px',
+                        cursor: producto.cantidad_pieza <= 0 ? 'not-allowed' : 'pointer',
+                        marginTop: '10px',
+                        width: '100%',
+                        opacity: producto.cantidad_pieza <= 0 ? '0.6' : '1'
+                      }}
+                      disabled={producto.cantidad_pieza <= 0}
+                    >
+                      {producto.cantidad_pieza <= 0 ? 'Sin Stock' : 'Ver Pieza'}
+                    </button>
                   </div>
                 ))}
               </div>
@@ -272,14 +331,35 @@ export default function Productos() {
       {showModal && selectedProduct && (
         <div className="modal-overlay" key={`modal-${selectedProduct.uniqueKey}`}>
           <div className="modal-content">
-            <button className="close-modal" onClick={closeModal}>&times;</button>
+            <button className="close-modal" onClick={closeModal} style={{ 
+              position: 'absolute', 
+              top: '10px', 
+              right: '10px', 
+              background: 'none', 
+              border: 'none', 
+              fontSize: '24px', 
+              cursor: 'pointer',
+              color: '#FF0000',
+              fontWeight: 'bold'
+            }}>&times;</button>
             <h3>{selectedProduct.nombre_pieza}</h3>
-            <img src={selectedProduct.imagen_pieza} alt={selectedProduct.nombre_pieza} />
+            <img 
+              src={selectedProduct.imagen_pieza} 
+              alt={selectedProduct.nombre_pieza} 
+              style={{ 
+                maxWidth: '200px', 
+                width: '100%', 
+                height: 'auto', 
+                objectFit: 'contain',
+                margin: '10px auto'
+              }} 
+            />
             <p className="precio">RD$ {formatearPrecio(selectedProduct.precio_pieza)}</p>
             <p className="descripcion">{selectedProduct.descripcion_pieza}</p>
             <p className="categoria">Categoría: {selectedProduct.nombre_categoria_pieza}</p>
+            <p className="vehiculo">Vehículo: {selectedProduct.nombre_marca} {selectedProduct.nombre_modelo} {selectedProduct.anio_vehiculo}</p>
             <p className="anios">Años: {selectedProduct.desde_anio_pieza} - {selectedProduct.hasta_anio_pieza}</p>
-            <p className="stock">Stock disponible: {selectedProduct.cantidad_pieza}</p>
+            <p className="stock" style={{ color: '#666666', cursor: 'default' }}>Stock disponible: {selectedProduct.cantidad_pieza}</p>
             <button
               onClick={() => {
                 agregarAlCarrito(selectedProduct);
@@ -287,8 +367,13 @@ export default function Productos() {
               }}
               className="btn-agregar"
               disabled={selectedProduct.cantidad_pieza <= 0}
+              style={{
+                backgroundColor: selectedProduct.cantidad_pieza <= 0 ? '#cccccc' : '#007bff',
+                cursor: selectedProduct.cantidad_pieza <= 0 ? 'not-allowed' : 'pointer',
+                opacity: selectedProduct.cantidad_pieza <= 0 ? '0.6' : '1'
+              }}
             >
-              {selectedProduct.cantidad_pieza <= 0 ? 'Sin stock' : 'Agregar al carrito'}
+              {selectedProduct.cantidad_pieza <= 0 ? 'Sin Stock' : 'Agregar al Carrito'}
             </button>
           </div>
         </div>

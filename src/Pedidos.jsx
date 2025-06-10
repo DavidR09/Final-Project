@@ -2,15 +2,32 @@ import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import axios from 'axios';
 import Swal from 'sweetalert2';
-import './Pedidos.css';
+import Sidebar from './components/Sidebar';
+import HeaderIcons from './components/HeaderIcons';
+import './styles/global.css';
 
 export default function Pedidos() {
   const navigate = useNavigate();
+  const [userRole, setUserRole] = useState(null);
   const [pedidos, setPedidos] = useState([]);
   const [loading, setLoading] = useState(true);
   const [pedidoSeleccionado, setPedidoSeleccionado] = useState(null);
+  const [busqueda, setBusqueda] = useState('');
 
   useEffect(() => {
+    const checkUserRole = async () => {
+      try {
+        const response = await fetch('http://localhost:3000/api/auth/check-auth', {
+          credentials: 'include'
+        });
+        const data = await response.json();
+        setUserRole(data.rol);
+      } catch (error) {
+        console.error('Error al verificar el rol:', error);
+      }
+    };
+
+    checkUserRole();
     cargarPedidos();
   }, []);
 
@@ -87,11 +104,9 @@ export default function Pedidos() {
   };
 
   const calcularTotalPedido = (detalles) => {
-    if (!detalles) return 0;
-    return detalles.reduce((total, detalle) => {
-      const importe = parseFloat(detalle.importe_total_pedido) || 0;
-      return total + importe;
-    }, 0);
+    if (!detalles || detalles.length === 0) return 0;
+    // Tomamos el primer detalle que contiene el total del pedido
+    return parseFloat(detalles[0].importe_total_pedido || 0);
   };
 
   const handleClickPedido = (pedido) => {
@@ -106,7 +121,17 @@ export default function Pedidos() {
         total: d.importe_total_pedido
       }))
     });
-    setPedidoSeleccionado(pedidoSeleccionado?.id_pedido === pedido.id_pedido ? null : pedido);
+    
+    // Verificar que los detalles sean únicos por id_detalle_pedido
+    const detallesUnicos = pedido.detalles ? 
+      Array.from(new Map(pedido.detalles.map(d => [d.id_detalle_pedido, d])).values()) 
+      : [];
+    
+    setPedidoSeleccionado(
+      pedidoSeleccionado?.id_pedido === pedido.id_pedido 
+        ? null 
+        : { ...pedido, detalles: detallesUnicos }
+    );
   };
 
   // Función para verificar si han pasado 5 minutos
@@ -162,42 +187,19 @@ export default function Pedidos() {
 
   return (
     <div className="pedidos-container">
-      <aside className="sidebar">
-        <div
-          className="logo-wrapper"
-          onClick={() => navigate('/inicio_client')}
-        >
-          <img src="/Logo.png" alt="Logo" />
-        </div>
-
-        <ul>
-          <li onClick={() => navigate('/inicio_client')}>Inicio</li>
-          <li onClick={() => navigate('/productos')}>Piezas</li>
-          <li onClick={() => navigate('/pedidos')}>Pedidos</li>
-          <li onClick={() => navigate('/contacto')}>Sobre Nosotros</li>
-        </ul>
-      </aside>
-
+      <Sidebar userRole={userRole} />
       <main className="main-content">
         <header className="header">
           <div className="header-title">
-            <h1>Mis Pedidos</h1>
+            <h1 style={{ fontSize: '23px' }}>Mis Pedidos</h1>
           </div>
-          <div className="iconos-header">
-            <img
-              src="/carrito.png"
-              alt="Carrito"
-              onClick={() => navigate('/carrito')}
-            />
-            <img
-              src="/perfil.png"
-              alt="Perfil"
-              onClick={() => navigate('/perfil')}
-            />
-          </div>
+          <HeaderIcons />
         </header>
 
         <section className="content">
+          <div className="welcome">
+            <h1 style={{ fontSize: '24px', marginBottom: '20px' }}>Mis Pedidos</h1>
+          </div>
           <div className="pedidos-section">
             {loading ? (
               <div className="loading">Cargando pedidos...</div>
@@ -253,13 +255,13 @@ export default function Pedidos() {
                       {(pedidoSeleccionado?.id_pedido === pedido.id_pedido) && (
                         <>
                           <div className="pedido-detalles">
-                            {pedido.detalles && pedido.detalles.map((detalle, index) => {
-                              // Create a truly unique key using multiple identifiers
-                              const detalleKey = `pedido-${pedido.id_pedido}-detalle-${detalle.id_detalle_pedido}-pieza-${detalle.id_pieza}-${index}`;
+                            {pedido.detalles && Array.from(new Set(pedido.detalles.map(d => d.id_detalle_pedido))).map(detalleId => {
+                              const detalle = pedido.detalles.find(d => d.id_detalle_pedido === detalleId);
+                              if (!detalle) return null;
                               
                               return (
                                 <div 
-                                  key={detalleKey}
+                                  key={`pedido-${pedido.id_pedido}-detalle-${detalle.id_detalle_pedido}`}
                                   className="producto-detalle"
                                 >
                                   <img 
@@ -269,11 +271,11 @@ export default function Pedidos() {
                                   />
                                   <div className="producto-info">
                                     <h4>{detalle.nombre_pieza}</h4>
-                                    <p>Precio unitario: RD$ {formatearPrecio(detalle.precio_unitario_pieza)}</p>
+                                    <p>Precio sin ITBIS: RD$ {formatearPrecio(detalle.precio_unitario_pieza)}</p>
                                     <p>Cantidad: {detalle.cantidad_detalle}</p>
                                   </div>
                                   <div className="producto-total">
-                                    <p>Total: RD$ {formatearPrecio(detalle.importe_total_pedido)}</p>
+                                    <p>Total (con ITBIS): RD$ {formatearPrecio(detalle.importe_total_pedido)}</p>
                                   </div>
                                 </div>
                               );
@@ -294,7 +296,7 @@ export default function Pedidos() {
                             </div>
                             <div className="pedido-total">
                               <strong>Total del pedido:</strong>
-                              <p>RD$ {formatearPrecio(calcularTotalPedido(pedido.detalles))}</p>
+                              <p>RD$ {formatearPrecio(pedido.total_pedido || calcularTotalPedido(pedido.detalles))}</p>
                             </div>
                           </div>
 
@@ -474,9 +476,10 @@ export default function Pedidos() {
 
         .producto-detalle {
           display: flex;
-          align-items: center;
-          padding: 10px;
+          align-items: flex-start;
+          padding: 15px;
           border-bottom: 1px solid #eee;
+          gap: 15px;
         }
 
         .producto-imagen {
@@ -484,7 +487,6 @@ export default function Pedidos() {
           height: 80px;
           object-fit: cover;
           border-radius: 4px;
-          margin-right: 15px;
         }
 
         .producto-info {
@@ -492,13 +494,33 @@ export default function Pedidos() {
         }
 
         .producto-info h4 {
-          margin: 0 0 5px 0;
+          margin: 0 0 8px 0;
           color: #333;
+          font-size: 1.1em;
         }
 
         .producto-info p {
-          margin: 3px 0;
+          margin: 4px 0;
           color: #666;
+        }
+
+        .producto-total {
+          min-width: 200px;
+          text-align: right;
+          padding-left: 15px;
+          border-left: 1px solid #eee;
+        }
+
+        .producto-total p {
+          margin: 4px 0;
+          color: #24487f;
+          font-weight: 500;
+        }
+
+        .producto-total p:last-child {
+          margin-top: 10px;
+          font-weight: bold;
+          font-size: 1.1em;
         }
 
         .pedido-footer {

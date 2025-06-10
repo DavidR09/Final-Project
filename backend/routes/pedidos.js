@@ -134,7 +134,7 @@ router.post('/', async (req, res) => {
     
     // Insertar los detalles del pedido
     for (const producto of productos) {
-      const importe_total = producto.cantidad * producto.precio;
+      const importe_total = producto.cantidad * producto.precio * 1.18;  // Aplicamos el ITBIS al importe total
       
       await connection.execute(
         'INSERT INTO detalle_pedido (id_pedido, id_pieza, cantidad_detalle, precio_unitario_pieza, importe_total_pedido) VALUES (?, ?, ?, ?, ?)',
@@ -198,16 +198,47 @@ router.get('/', async (req, res) => {
       return res.status(401).json({ error: 'Usuario no autenticado' });
     }
 
-    const [pedidos] = await connection.execute(
-      `SELECT p.*, e.estado_pedido as nombre_estado,
-        t.nombre_taller, t.direccion_taller
-       FROM pedido p 
-       JOIN estado_pedido e ON p.id_estado_pedido = e.id_estado_pedido
-       LEFT JOIN taller t ON t.id_usuario = p.id_usuario
-       WHERE p.id_usuario = ? 
-       ORDER BY p.fecha_pedido DESC`,
+    // Verificar si el usuario es administrador
+    const [userRole] = await connection.execute(
+      'SELECT rol_usuario FROM usuario WHERE id_usuario = ?',
       [usuario_id]
     );
+
+    console.log('Rol del usuario:', userRole[0]?.rol_usuario);
+
+    let query;
+    let queryParams;
+
+    if (userRole[0]?.rol_usuario === 'administrador') {
+      // Si es administrador, obtener todos los pedidos con información de usuarios
+      query = `
+        SELECT p.*, e.estado_pedido as nombre_estado,
+          u.nombre_usuario, u.apellido_usuario,
+          t.nombre_taller, t.direccion_taller,
+          p.total_pedido
+        FROM pedido p 
+        JOIN estado_pedido e ON p.id_estado_pedido = e.id_estado_pedido
+        JOIN usuario u ON p.id_usuario = u.id_usuario
+        LEFT JOIN taller t ON t.id_usuario = p.id_usuario
+        ORDER BY p.fecha_pedido DESC
+      `;
+      queryParams = [];
+    } else {
+      // Si es usuario normal, obtener solo sus pedidos
+      query = `
+        SELECT p.*, e.estado_pedido as nombre_estado,
+          t.nombre_taller, t.direccion_taller,
+          p.total_pedido
+        FROM pedido p 
+        JOIN estado_pedido e ON p.id_estado_pedido = e.id_estado_pedido
+        LEFT JOIN taller t ON t.id_usuario = p.id_usuario
+        WHERE p.id_usuario = ? 
+        ORDER BY p.fecha_pedido DESC
+      `;
+      queryParams = [usuario_id];
+    }
+
+    const [pedidos] = await connection.execute(query, queryParams);
 
     console.log('Pedidos encontrados:', pedidos.length);
 
@@ -216,9 +247,9 @@ router.get('/', async (req, res) => {
       console.log('Obteniendo detalles para pedido:', pedido.id_pedido);
       
       const [detalles] = await connection.execute(
-        `SELECT 
+        `SELECT DISTINCT
           d.id_detalle_pedido,
-          d.id_pieza,
+          r.id_repuesto,
           d.cantidad_detalle,
           d.precio_unitario_pieza,
           d.importe_total_pedido,
@@ -236,10 +267,13 @@ router.get('/', async (req, res) => {
         cantidad_detalles: detalles.length,
         detalles: detalles.map(d => ({
           id_detalle: d.id_detalle_pedido,
-          pieza: d.nombre_pieza,
+          id_repuesto: d.id_repuesto,
+          nombre_pieza: d.nombre_pieza,
           cantidad: d.cantidad_detalle,
           precio: d.precio_unitario_pieza,
-          total: d.importe_total_pedido
+          total: d.importe_total_pedido,
+          imagen_pieza: d.imagen_pieza,
+          descripcion_pieza: d.descripcion_pieza
         }))
       });
 

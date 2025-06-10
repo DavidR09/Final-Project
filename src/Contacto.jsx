@@ -1,42 +1,35 @@
-import React from 'react';
+import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
+import Sidebar from './components/Sidebar';
+import HeaderIcons from './components/HeaderIcons';
 import './styles/global.css';
 
 export default function Contacto() {
   const navigate = useNavigate();
+  const [userRole, setUserRole] = useState(null);
+
+  useEffect(() => {
+    const checkUserRole = async () => {
+      try {
+        const response = await fetch('http://localhost:3000/api/auth/check-auth', {
+          credentials: 'include'
+        });
+        const data = await response.json();
+        setUserRole(data.rol);
+      } catch (error) {
+        console.error('Error al verificar el rol:', error);
+      }
+    };
+
+    checkUserRole();
+  }, []);
 
   return (
     <div className="contacto-container">
-      <aside className="sidebar">
-        <div
-          className="logo-wrapper"
-          onClick={() => navigate('/inicio_client')}
-        >
-          <img src="/Logo.png" alt="Logo" />
-        </div>
-
-        <ul>
-          <li onClick={() => navigate('/inicio_client')}>Inicio</li>
-          <li onClick={() => navigate('/productos')}>Piezas</li>
-           <li onClick={() => navigate('/pedidos')}>Pedidos</li>
-          <li onClick={() => navigate('/contacto')}>Sobre Nosotros</li>
-        </ul>
-      </aside>
-
+      <Sidebar userRole={userRole} />
       <main className="main-content">
         <header className="header">
-          <div className="iconos-header">
-            <img
-              src="/carrito.png"
-              alt="Carrito"
-              onClick={() => navigate('/carrito')}
-            />
-            <img
-              src="/perfil.png"
-              alt="Perfil"
-              onClick={() => navigate('/perfil')}
-            />
-          </div>
+          <HeaderIcons />
         </header>
 
         <section className="content">
@@ -53,8 +46,8 @@ export default function Contacto() {
               <li><strong>Teléfono:</strong> +1 (809) 605-7725</li>
               <li><strong>Correo general:</strong> contacto@repuestosgra.com</li>
               <li><strong>Soporte técnico:</strong> soporte@repuestosgra.com</li>
-              <li><strong>Dirección:</strong> Av. Principal #45, Santiago de los Caballeros, R.D.</li>
-              <li><strong>Horario:</strong> Lunes a Viernes de 8:00 a.m. - 6:00 p.m.</li>
+              <li><strong>Dirección:</strong> No tenemos una dirección fija, pero puedes contactarnos a través de los medios de comunicación que te ofrecemos.</li>
+              <li><strong>Horario:</strong> Lunes a Viernes de 8:00 AM - 6:00 PM</li>
             </ul>
 
             <div className="whatsapp-section">
@@ -79,48 +72,6 @@ export default function Contacto() {
           height: 100vh;
           font-family: 'Segoe UI', sans-serif;
           background-color: #ffffff;
-        }
-
-        .sidebar {
-          width: 250px;
-          background-color: #24487f;
-          color: white;
-          padding: 20px;
-        }
-
-        .logo-wrapper {
-          width: 120px;
-          height: 120px;
-          background-color: white;
-          border-radius: 50%;
-          overflow: hidden;
-          margin: 0 auto 20px auto;
-          display: flex;
-          align-items: center;
-          justify-content: center;
-          cursor: pointer;
-        }
-
-        .logo-wrapper img {
-          width: 90%;
-          height: 90%;
-          object-fit: contain;
-        }
-
-        .sidebar ul {
-          list-style: none;
-          padding: 0;
-        }
-
-        .sidebar li {
-          margin-bottom: 15px;
-          cursor: pointer;
-          padding: 8px;
-          border-radius: 5px;
-        }
-
-        .sidebar li:hover {
-          background-color: #333;
         }
 
         .main-content {

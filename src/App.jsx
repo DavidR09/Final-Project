@@ -12,11 +12,14 @@ import InicioClient from './Inicio_Client';
 import Productos from './Productos';
 import Contacto from './Contacto';
 import Pedidos from './Pedidos';
+import AdminPedidos from './AdminPedidos';
 import Contactanos from './Contactanos';
 import Perfil from './Perfil';
 import Register from './Register';
 import RegisterTaller from './RegisterTaller';
 import RegisterRepuesto from './RegisterRepuesto';
+import AdminRepuestosPiezas from './admin/AdminRepuestosPiezas';
+import AdminUsuarios from './admin/AdminUsuarios';
 
 export default function App() {
   return (
@@ -41,7 +44,7 @@ export default function App() {
           <Route
             path="/productos"
             element={
-              <ProtectedRoute allowedRoles={['usuario']}>
+              <ProtectedRoute allowedRoles={['usuario', 'administrador']}>
                 <Productos />
               </ProtectedRoute>
             }
@@ -57,7 +60,7 @@ export default function App() {
           <Route
             path="/pedidos"
             element={
-              <ProtectedRoute allowedRoles={['usuario']}>
+              <ProtectedRoute allowedRoles={['usuario', 'administrador']}>
                 <Pedidos />
               </ProtectedRoute>
             }
@@ -65,7 +68,7 @@ export default function App() {
           <Route
             path="/contacto"
             element={
-              <ProtectedRoute allowedRoles={['usuario']}>
+              <ProtectedRoute allowedRoles={['usuario', 'administrador']}>
                 <Contacto />
               </ProtectedRoute>
             }
@@ -73,7 +76,7 @@ export default function App() {
           <Route
             path="/perfil"
             element={
-              <ProtectedRoute allowedRoles={['usuario']}>
+              <ProtectedRoute allowedRoles={['usuario', 'administrador']}>
                 <Perfil />
               </ProtectedRoute>
             }
@@ -96,7 +99,6 @@ export default function App() {
               </ProtectedRoute>
             }
           />
-
           <Route
             path="/register-taller"
             element={
@@ -110,6 +112,30 @@ export default function App() {
             element={
               <ProtectedRoute allowedRoles={['administrador']}>
                 <RegisterRepuesto />
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/admin-pedidos"
+            element={
+              <ProtectedRoute allowedRoles={['administrador']}>
+                <AdminPedidos />
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/admin-repuestos-piezas"
+            element={
+              <ProtectedRoute allowedRoles={['administrador']}>
+                <AdminRepuestosPiezas />
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/admin-usuarios"
+            element={
+              <ProtectedRoute allowedRoles={['administrador']}>
+                <AdminUsuarios />
               </ProtectedRoute>
             }
           />

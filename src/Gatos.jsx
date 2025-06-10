@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
+import HeaderIcons from './components/HeaderIcons';
 
 export default function Gatos() {
   const navigate = useNavigate();
@@ -33,25 +34,12 @@ export default function Gatos() {
         <header className="header">
           <input
             type="text"
-            placeholder="Buscar gato..."
+            placeholder="Buscar gato hidráulico..."
             value={busqueda}
             onChange={(e) => setBusqueda(e.target.value)}
             className="buscador"
           />
-          <div className="iconos-header">
-            <img
-              src="/carrito.png"
-              alt="Carrito"
-              className="cart-img"
-              onClick={() => navigate('/carrito')}
-            />
-            <img
-              src="/perfil.png"
-              alt="Perfil"
-              className="perfil-img"
-              onClick={() => navigate('/perfil')}
-            />
-          </div>
+          <HeaderIcons />
         </header>
 
         <section className="content">

@@ -20,6 +20,9 @@ export default function Inicio() {
           <li onClick={() => navigate('/register')}>Registrar Usuario</li>
           <li onClick={() => navigate('/register-taller')}>Registrar Taller</li>
           <li onClick={() => navigate('/register-repuesto')}>Registrar Repuesto</li>
+          <li onClick={() => navigate('/admin-pedidos')}>Ver Pedidos Clientes</li>
+          <li onClick={() => navigate('/admin-repuestos-piezas')}>Gestionar Repuestos y Piezas</li>
+          <li onClick={() => navigate('/admin-usuarios')}>Gestionar Usuarios</li>
           <li onClick={() => navigate('/Inicio_Client')}>Ver Vista Cliente</li>
           <li onClick={() => navigate('/')}>Cerrar sesión</li>
         </ul>

@@ -1,9 +1,13 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
+import CategorySidebar from './components/CategorySidebar';
+import HeaderIcons from './components/HeaderIcons';
+import './styles/global.css';
 
 export default function Faroles() {
   const navigate = useNavigate();
   const [busqueda, setBusqueda] = useState('');
+  const [userRole, setUserRole] = useState(null);
 
   const faroles = [
     { nombre: 'Farol LED Philips', imagen: '/farol_philips.png' },
@@ -12,23 +16,29 @@ export default function Faroles() {
     { nombre: 'Farol Universal', imagen: '/farol_universal.png' },
   ];
 
+  useEffect(() => {
+    const checkUserRole = async () => {
+      try {
+        const response = await fetch('http://localhost:3000/api/auth/check-auth', {
+          credentials: 'include'
+        });
+        const data = await response.json();
+        setUserRole(data.rol);
+      } catch (error) {
+        console.error('Error al verificar el rol:', error);
+      }
+    };
+
+    checkUserRole();
+  }, []);
+
   const farolesFiltrados = faroles.filter((f) =>
     f.nombre.toLowerCase().includes(busqueda.toLowerCase())
   );
 
   return (
     <div className="productos-container">
-      <aside className="sidebar">
-        <div className="logo-wrapper" onClick={() => navigate('/inicio_client')}>
-          <img src="/Logo.png" alt="Logo" />
-        </div>
-        <ul>
-          <li onClick={() => navigate('/inicio_client')}>Inicio</li>
-          <li onClick={() => navigate('/productos')}>Piezas</li>
-          <li onClick={() => navigate('/contacto')}>Sobre Nosotros</li>
-        </ul>
-      </aside>
-
+      <CategorySidebar userRole={userRole} />
       <main className="main-content">
         <header className="header">
           <input
@@ -38,20 +48,7 @@ export default function Faroles() {
             onChange={(e) => setBusqueda(e.target.value)}
             className="buscador"
           />
-          <div className="iconos-header">
-            <img
-              src="/carrito.png"
-              alt="Carrito"
-              className="cart-img"
-              onClick={() => navigate('/carrito')}
-            />
-            <img
-              src="/perfil.png"
-              alt="Perfil"
-              className="perfil-img"
-              onClick={() => navigate('/perfil')}
-            />
-          </div>
+          <HeaderIcons />
         </header>
 
         <section className="content">

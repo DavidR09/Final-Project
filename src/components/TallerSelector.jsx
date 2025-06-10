@@ -82,11 +82,11 @@ const TallerSelector = ({ onSelect }) => {
 
   return (
     <div className="taller-selector">
-      <label htmlFor="taller">Taller (opcional)</label>
       <select
         id="taller"
         value={selectedTaller}
         onChange={handleChange}
+        required
       >
         <option value="">Seleccione un taller</option>
         {talleres.map(taller => (

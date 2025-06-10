@@ -1,9 +1,12 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
+import CategorySidebar from './components/CategorySidebar';
+import './styles/global.css';
 
 export default function Neumaticos() {
   const navigate = useNavigate();
   const [busqueda, setBusqueda] = useState('');
+  const [userRole, setUserRole] = useState(null);
 
   const neumaticos = [
     { nombre: 'Neumático Goodyear', imagen: '/Neumatico.png' },
@@ -12,25 +15,29 @@ export default function Neumaticos() {
     { nombre: 'Neumático Bridgestone', imagen: '/bridgestone.png' },
   ];
 
+  useEffect(() => {
+    const checkUserRole = async () => {
+      try {
+        const response = await fetch('http://localhost:3000/api/auth/check-auth', {
+          credentials: 'include'
+        });
+        const data = await response.json();
+        setUserRole(data.rol);
+      } catch (error) {
+        console.error('Error al verificar el rol:', error);
+      }
+    };
+
+    checkUserRole();
+  }, []);
+
   const neumaticosFiltrados = neumaticos.filter((n) =>
     n.nombre.toLowerCase().includes(busqueda.toLowerCase())
   );
 
   return (
     <div className="productos-container">
-      <aside className="sidebar">
-        <div className="logo-wrapper" onClick={() => navigate('/inicio_client')}>
-          <img src="/Logo.png" alt="Logo" />
-        </div>
-
-        <ul>
-          <li onClick={() => navigate('/inicio_client')}>Inicio</li>
-          <li onClick={() => navigate('/productos')}>Piezas</li>
-          <li onClick={() => navigate('/pedidos')}>Pedidos</li>
-          <li onClick={() => navigate('/contacto')}>Sobre Nosotros</li>
-        </ul>
-      </aside>
-
+      <CategorySidebar userRole={userRole} />
       <main className="main-content">
         <header className="header">
           <input
