@@ -1,41 +1,46 @@
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
+import Swal from 'sweetalert2';
 
 export default function RegisterTaller() {
   const navigate = useNavigate();
   const [nombre_taller, setNombreTaller] = useState('');
   const [direccion_taller, setDireccionTaller] = useState('');
   const [id_usuario, setIdUsuario] = useState('');
-  const [mensaje, setMensaje] = useState(null);
-  const [tipoMensaje, setTipoMensaje] = useState('');
+  const [isLoading, setIsLoading] = useState(false);
 
   const handleRegister = async (e) => {
     e.preventDefault();
+    setIsLoading(true);
 
     const nuevoTaller = {
       nombre_taller: nombre_taller,
       direccion_taller: direccion_taller,
-      id_usuario: id_usuario
+      id_usuario: parseInt(id_usuario)
     };
 
     try {
-      const response = await fetch('http://localhost:3000/api/talleres/registrar', {
+      const response = await fetch(`${import.meta.env.VITE_API_URL}/api/talleres/registrar`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json'
         },
-        body: JSON.stringify(nuevoTaller)
+        body: JSON.stringify(nuevoTaller),
+        credentials: 'include'
       });
 
+      const data = await response.json();
+
       if (!response.ok) {
-        throw new Error('Error en el registro');
+        throw new Error(data.error || 'Error en el registro');
       }
 
-      const data = await response.json();
-      console.log('Respuesta del servidor:', data);
-
-      setTipoMensaje('success');
-      setMensaje('Registro exitoso.');
+      await Swal.fire({
+        icon: 'success',
+        title: '¡Registro exitoso!',
+        text: 'El taller ha sido registrado correctamente.',
+        confirmButtonColor: '#24487f'
+      });
 
       // Limpiar campos
       setNombreTaller('');
@@ -43,8 +48,14 @@ export default function RegisterTaller() {
       setIdUsuario('');
     } catch (error) {
       console.error('Error:', error);
-      setTipoMensaje('error');
-      setMensaje('Hubo un problema al registrar el taller.');
+      await Swal.fire({
+        icon: 'error',
+        title: 'Error',
+        text: error.message || 'Hubo un problema al registrar el taller.',
+        confirmButtonColor: '#24487f'
+      });
+    } finally {
+      setIsLoading(false);
     }
   };
 
@@ -55,22 +66,16 @@ export default function RegisterTaller() {
           <img src="/Logo.png" alt="Logo" />
         </div>
         <ul>
-        <li onClick={() => navigate('/Inicio')}>Panel de Administración</li>
+          <li onClick={() => navigate('/Inicio')}>Panel de Administración</li>
           <li onClick={() => navigate('/register')}>Registrar Usuario</li>
           <li onClick={() => navigate('/register-taller')}>Registrar Taller</li>
           <li onClick={() => navigate('/register-repuesto')}>Registrar Repuesto</li>
-          <li onClick={() => navigate('/admin-pedidos')}>Ver Pedidos Clientes</li>
-          <li onClick={() => navigate('/admin-repuestos-piezas')}>Gestionar Repuestos y Piezas</li>
-          <li onClick={() => navigate('/admin-usuarios')}>Gestionar Usuarios</li>
           <li onClick={() => navigate('/Inicio_Client')}>Ver Vista Cliente</li>
           <li onClick={() => navigate('/')}>Cerrar sesión</li>
         </ul>
       </aside>
 
       <main className="main-content">
-        <header className="header">
-        </header>
-
         <section className="content">
           <div className="welcome">
             <h1>Registro de Taller</h1>
@@ -84,6 +89,7 @@ export default function RegisterTaller() {
               onChange={(e) => setNombreTaller(e.target.value)} 
               required 
               maxLength="30"
+              disabled={isLoading}
             />
 
             <label>Dirección del Taller:</label>
@@ -93,27 +99,30 @@ export default function RegisterTaller() {
               onChange={(e) => setDireccionTaller(e.target.value)} 
               required 
               maxLength="70"
+              disabled={isLoading}
             />
 
             <label>ID de Usuario:</label>
             <input 
-              type="text" 
+              type="number" 
               value={id_usuario} 
               onChange={(e) => setIdUsuario(e.target.value)} 
-              required 
+              required
+              disabled={isLoading}
             />
 
-            <button className="guardar-btn" type="submit">Registrar Taller</button>
-            {mensaje && (
-              <p style={{ color: tipoMensaje === 'error' ? 'red' : 'green', marginTop: '10px', textAlign: 'center' }}>
-                {mensaje}
-              </p>
-            )}
+            <button 
+              className="guardar-btn" 
+              type="submit"
+              disabled={isLoading}
+            >
+              {isLoading ? 'Registrando...' : 'Registrar Taller'}
+            </button>
           </form>
         </section>
       </main>
 
-      <style>{`
+      <style jsx>{`
         .inicio-container {
           display: flex;
           height: 100vh;
@@ -155,29 +164,23 @@ export default function RegisterTaller() {
         .sidebar li {
           margin-bottom: 15px;
           cursor: pointer;
-          display: flex;
-          align-items: center;
-          gap: 10px;
           padding: 8px;
           border-radius: 5px;
+          transition: background-color 0.3s ease;
         }
 
         .sidebar li:hover {
           background-color: #333;
         }
 
+        .sidebar li:active {
+          background-color: #1b355b;
+        }
+
         .main-content {
           flex: 1;
           display: flex;
           flex-direction: column;
-        }
-
-        .header {
-          display: flex;
-          justify-content: flex-end;
-          align-items: center;
-          padding: 20px;
-          background-color: #24487f;
         }
 
         .content {
@@ -216,6 +219,11 @@ export default function RegisterTaller() {
           width: 100%;
         }
 
+        .perfil-form input:disabled {
+          background-color: #f5f5f5;
+          cursor: not-allowed;
+        }
+
         .guardar-btn {
           background-color: #24487f;
           color: white;
@@ -225,10 +233,16 @@ export default function RegisterTaller() {
           border-radius: 5px;
           cursor: pointer;
           margin-top: 20px;
+          transition: background-color 0.3s ease;
         }
 
-        .guardar-btn:hover {
+        .guardar-btn:hover:not(:disabled) {
           background-color: #1a365d;
+        }
+
+        .guardar-btn:disabled {
+          background-color: #cccccc;
+          cursor: not-allowed;
         }
       `}</style>
     </div>

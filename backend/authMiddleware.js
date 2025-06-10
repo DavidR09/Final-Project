@@ -6,7 +6,10 @@ export const authenticate = (rolesPermitidos = []) => {
     const token = req.cookies.token;
     
     if (!token) {
-      return res.status(401).json({ error: 'Acceso no autorizado' });
+      return res.status(401).json({ 
+        error: 'Acceso no autorizado',
+        message: 'No se encontró el token de autenticación'
+      });
     }
 
     try {
@@ -38,7 +41,8 @@ export const authenticate = (rolesPermitidos = []) => {
           rolesPermitidos: rolesPermitidos
         });
         return res.status(403).json({ 
-          error: 'No tienes permisos para esta acción',
+          error: 'Acceso denegado',
+          message: 'No tienes los permisos necesarios para esta acción',
           rol: decoded.rol,
           rolesPermitidos: rolesPermitidos
         });
@@ -47,9 +51,24 @@ export const authenticate = (rolesPermitidos = []) => {
       next();
     } catch (error) {
       console.error('Error de autenticación:', error);
+      
+      if (error.name === 'TokenExpiredError') {
+        return res.status(401).json({ 
+          error: 'Token expirado',
+          message: 'Tu sesión ha expirado. Por favor, inicia sesión nuevamente.'
+        });
+      }
+      
+      if (error.name === 'JsonWebTokenError') {
+        return res.status(401).json({ 
+          error: 'Token inválido',
+          message: 'Token de autenticación inválido'
+        });
+      }
+      
       res.status(401).json({ 
-        error: 'Token inválido o expirado',
-        details: process.env.NODE_ENV === 'development' ? error.message : undefined
+        error: 'Error de autenticación',
+        message: process.env.NODE_ENV === 'development' ? error.message : 'Error al verificar la autenticación'
       });
     }
   };

@@ -12,7 +12,7 @@ router.use(express.urlencoded({ extended: true }));
 router.post('/login', login);
 
 // Ruta para verificar autenticación
-router.get('/check-auth', authenticate(), checkAuth);
+router.get('/check-auth', checkAuth);
 
 // Ruta de prueba
 router.get('/login/test', (req, res) => {

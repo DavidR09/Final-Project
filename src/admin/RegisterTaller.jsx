@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
+import Swal from 'sweetalert2';
 
 export default function RegisterTaller() {
   const navigate = useNavigate();
@@ -19,30 +20,45 @@ export default function RegisterTaller() {
     };
 
     try {
-      const response = await fetch('http://localhost:3000/api/insertar-taller', {
+      const response = await fetch(`${import.meta.env.VITE_API_URL}/api/talleres/registrar`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json'
         },
-        body: JSON.stringify(nuevoTaller)
+        body: JSON.stringify(nuevoTaller),
+        credentials: 'include'
       });
 
       if (!response.ok) {
-        throw new Error('Error en el registro');
+        const errorData = await response.json();
+        throw new Error(errorData.message || 'Error en el registro');
       }
 
       const data = await response.json();
       console.log('Respuesta del servidor:', data);
 
-      setTipoMensaje('success');
-      setMensaje('Registro exitoso.');
+      await Swal.fire({
+        icon: 'success',
+        title: '¡Registro exitoso!',
+        text: 'El taller ha sido registrado correctamente.',
+        confirmButtonColor: '#24487f'
+      });
 
       // Limpiar campos
       setNombreTaller('');
       setDireccionTaller('');
       setIdUsuario('');
+      
+      setTipoMensaje('success');
+      setMensaje('Registro exitoso.');
     } catch (error) {
       console.error('Error:', error);
+      await Swal.fire({
+        icon: 'error',
+        title: 'Error',
+        text: error.message || 'Hubo un problema al registrar el taller.',
+        confirmButtonColor: '#24487f'
+      });
       setTipoMensaje('error');
       setMensaje('Hubo un problema al registrar el taller.');
     }
