@@ -239,6 +239,7 @@ export default function RegisterRepuesto() {
           border-radius: 5px;
           font-size: 16px;
           width: 100%;
+          box-sizing: border-box;
         }
 
         .guardar-btn {
@@ -250,6 +251,8 @@ export default function RegisterRepuesto() {
           border-radius: 5px;
           cursor: pointer;
           margin-top: 20px;
+          width: 100%;
+          box-sizing: border-box;
         }
 
         .guardar-btn:hover {
@@ -258,4 +261,4 @@ export default function RegisterRepuesto() {
       `}</style>
     </div>
   );
-} 
+}
