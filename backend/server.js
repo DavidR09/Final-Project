@@ -8,6 +8,7 @@ import authRoutes from './routes/auth.js';
 import categoriasRoutes from './categoriasRoute.js';
 import productosRoutes from './productos.js';
 import repuestosRoutes from './routes/repuestos.js';
+import usuariosRoutes from './routes/usuarios.js';
 
 const app = express();
 
@@ -61,6 +62,9 @@ app.use('/api/productos', productosRoutes);
 
 // Rutas de repuestos
 app.use('/api/repuestos', repuestosRoutes);
+
+// Rutas de usuarios
+app.use('/api/usuarios', usuariosRoutes);
 
 // Manejo de errores
 app.use((err, req, res, next) => {

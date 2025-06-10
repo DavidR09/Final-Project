@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
+import CartIcon from './components/CartIcon';
 import './Inicio_Client.css';
 import './styles/global.css';
 
@@ -9,6 +10,7 @@ export default function Inicio_Client() {
   const [categorias, setCategorias] = useState([]);
   const [selectedCategory, setSelectedCategory] = useState(null);
   const [userRole, setUserRole] = useState(null);
+  const [stockPorCategoria, setStockPorCategoria] = useState({});
 
   useEffect(() => {
     // Verificar el rol del usuario
@@ -29,25 +31,39 @@ export default function Inicio_Client() {
     // Función para obtener las categorías desde el backend
     const fetchCategorias = async () => {
       try {
-        const response = await fetch('http://localhost:3000/api/categorias');
-        const data = await response.json();
-        
-        // Mapeamos los datos de la base de datos con las imágenes locales
-        const categoriasConImagenes = data.map((cat) => {
-          // Asegurarnos de que estamos usando el ID correcto de la base de datos
-          const imagenes = {
-            2: '/Neumatico.png',    // Neumáticos
-            3: '/bateria.jpg',      // Baterías
-            4: '/pantallasmicas.png', // Faroles y pantallas
-            5: '/aros.png',         // Aros
-            6: '/gato.png',         // Gatos
-            7: '/lubricante.png',   // Lubricantes
-            8: '/carroceria.png',   // Carrocerías
-            9: '/electricas.png',   // Eléctricos
-            10: '/amortiguadores.png', // Amortiguadores
-            11: '/filtros.png'      // Filtros
-          };
+        const [categoriasResponse, productosResponse] = await Promise.all([
+          fetch('http://localhost:3000/api/categorias'),
+          fetch('http://localhost:3000/api/productos')
+        ]);
 
+        const categoriasData = await categoriasResponse.json();
+        const productosData = await productosResponse.json();
+
+        // Calcular stock por categoría
+        const stockCategoria = {};
+        productosData.forEach(producto => {
+          if (producto.cantidad_pieza > 0) {
+            stockCategoria[producto.id_categoria_pieza] = (stockCategoria[producto.id_categoria_pieza] || 0) + 1;
+          }
+        });
+
+        setStockPorCategoria(stockCategoria);
+
+        // Mapeamos los datos de la base de datos con las imágenes locales
+        const imagenes = {
+          2: '/Neumatico.png',    // Neumáticos
+          3: '/bateria.jpg',      // Baterías
+          4: '/pantallasmicas.png', // Faroles y pantallas
+          5: '/aros.png',         // Aros
+          6: '/gato.png',         // Gatos
+          7: '/lubricante.png',   // Lubricantes
+          8: '/carroceria.png',   // Carrocerías
+          9: '/electricas.png',   // Eléctricos
+          10: '/amortiguadores.png', // Amortiguadores
+          11: '/filtros.png'      // Filtros
+        };
+
+        const categoriasConImagenes = categoriasData.map((cat) => {
           return {
             ...cat,
             imagen: imagenes[cat.id_categoria_pieza] || '/default.png'
@@ -116,11 +132,7 @@ export default function Inicio_Client() {
             className="buscador"
           />
           <div className="iconos-header">
-            <img
-              src="/carrito.png"
-              alt="Carrito"
-              onClick={() => navigate('/carrito')}
-            />
+            <CartIcon />
             <img
               src="/perfil.png"
               alt="Perfil"
@@ -159,8 +171,14 @@ export default function Inicio_Client() {
                         });
                         navigate(`/productos?categoriaId=${idCategoria}&nombre=${encodeURIComponent(cat.nombre_categoria_pieza)}`);
                       }}
+                      style={{
+                        backgroundColor: !stockPorCategoria[cat.id_categoria_pieza] ? '#cccccc' : '#24487f',
+                        cursor: !stockPorCategoria[cat.id_categoria_pieza] ? 'not-allowed' : 'pointer',
+                        opacity: !stockPorCategoria[cat.id_categoria_pieza] ? '0.6' : '1'
+                      }}
+                      disabled={!stockPorCategoria[cat.id_categoria_pieza]}
                     >
-                      Ver productos
+                      {!stockPorCategoria[cat.id_categoria_pieza] ? 'Sin Productos' : 'Ver Productos'}
                     </button>
                   </div>
                 ))}

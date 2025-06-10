@@ -1,10 +1,14 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import Swal from 'sweetalert2';
-//import './Perfil.css';
+import axios from 'axios';
+import './styles/global.css';
+import HeaderIcons from './components/HeaderIcons';
 
 export default function Perfil() {
   const navigate = useNavigate();
+  const [userRole, setUserRole] = useState(null);
+  const [showPassword, setShowPassword] = useState(false);
   const [formData, setFormData] = useState({
     nombre_usuario: '',
     apellido_usuario: '',
@@ -12,9 +16,23 @@ export default function Perfil() {
     contrasenia_usuario: '',
     telefono_usuario: ''
   });
+  const [busqueda, setBusqueda] = useState('');
 
-  // Cargar datos del usuario al montar el componente
   useEffect(() => {
+    const checkUserRole = async () => {
+      try {
+        const response = await fetch('http://localhost:3000/api/auth/check-auth', {
+          credentials: 'include'
+        });
+        const data = await response.json();
+        setUserRole(data.rol);
+      } catch (error) {
+        console.error('Error al verificar el rol:', error);
+      }
+    };
+
+    checkUserRole();
+
     const userId = localStorage.getItem('userId');
     if (!userId) {
       navigate('/login');
@@ -160,29 +178,83 @@ export default function Perfil() {
           <li onClick={() => navigate('/productos')}>Piezas</li>
           <li onClick={() => navigate('/pedidos')}>Pedidos</li>
           <li onClick={() => navigate('/contacto')}>Sobre Nosotros</li>
-          <li onClick={() => navigate('/')}>Cerrar Sesión</li>
+          {userRole === 'administrador' && (
+            <li onClick={() => navigate('/Inicio')}>Volver al Panel Admin</li>
+          )}
+          <li onClick={async () => {
+            try {
+              await axios.post(`${import.meta.env.VITE_API_URL}/api/auth/logout`, {}, {
+                withCredentials: true
+              });
+              localStorage.removeItem('userId');
+              navigate('/');
+            } catch (error) {
+              console.error('Error al cerrar sesión:', error);
+              navigate('/');
+            }
+          }}>Cerrar Sesión</li>
         </ul>
+
+        <style>{`
+          .sidebar {
+            width: 250px;
+            background-color: #24487f;
+            color: white;
+            padding: 20px;
+          }
+
+          .logo-wrapper {
+            width: 120px;
+            height: 120px;
+            background-color: white;
+            border-radius: 50%;
+            overflow: hidden;
+            margin: 0 auto 20px auto;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+          }
+
+          .logo-wrapper img {
+            width: 90%;
+            height: 90%;
+            object-fit: contain;
+          }
+
+          .sidebar ul {
+            list-style: none;
+            padding: 0;
+          }
+
+          .sidebar li {
+            margin-bottom: 15px;
+            cursor: pointer;
+            padding: 8px;
+            border-radius: 5px;
+            transition: background-color 0.3s ease;
+          }
+
+          .sidebar li:hover {
+            background-color: #333;
+          }
+
+          .sidebar li:active {
+            background-color: #1b355b;
+          }
+        `}</style>
       </div>
 
       <main className="main-content">
         <header className="header">
           <div className="iconos-header">
-            <img
-              src="/carrito.png"
-              alt="Carrito"
-              onClick={() => navigate('/carrito')}
-            />
-            <img
-              src="/perfil.png"
-              alt="Perfil"
-              onClick={() => navigate('/perfil')}
-            />
+            <HeaderIcons />
           </div>
         </header>
 
         <section className="content">
           <div className="welcome">
-            <h1>Editar Perfil</h1>
+            <h1>Mi Perfil</h1>
           </div>
 
           <form className="perfil-form" onSubmit={handleSubmit}>
@@ -192,8 +264,6 @@ export default function Perfil() {
               name="nombre_usuario"
               value={formData.nombre_usuario}
               onChange={handleInputChange}
-              placeholder="Tu nombre"
-              maxLength={30}
               required
             />
 
@@ -203,31 +273,41 @@ export default function Perfil() {
               name="apellido_usuario"
               value={formData.apellido_usuario}
               onChange={handleInputChange}
-              placeholder="Tu apellido"
-              maxLength={30}
               required
             />
 
-            <label>Correo electrónico:</label>
+            <label>Correo Electrónico:</label>
             <input
               type="email"
               name="correo_electronico_usuario"
               value={formData.correo_electronico_usuario}
               onChange={handleInputChange}
-              placeholder="tu@correo.com"
-              maxLength={50}
               required
             />
 
-            <label>Nueva contraseña:</label>
-            <input
-              type="password"
-              name="contrasenia_usuario"
-              value={formData.contrasenia_usuario}
-              onChange={handleInputChange}
-              placeholder="Nueva contraseña"
-              maxLength={100}
-            />
+            <label>Contraseña:</label>
+            <div style={{ position: 'relative' }}>
+              <input
+                type={showPassword ? "text" : "password"}
+                name="contrasenia_usuario"
+                value={formData.contrasenia_usuario}
+                onChange={handleInputChange}
+                placeholder="Dejar en blanco para mantener la contraseña actual"
+              />
+              <span 
+                onClick={() => setShowPassword(!showPassword)}
+                style={{
+                  position: 'absolute',
+                  right: '10px',
+                  top: '50%',
+                  transform: 'translateY(-50%)',
+                  cursor: 'pointer',
+                  fontSize: '20px'
+                }}
+              >
+                {showPassword ? '👁️' : '👁️‍🗨️'}
+              </span>
+            </div>
 
             <label>Teléfono:</label>
             <input
@@ -235,14 +315,10 @@ export default function Perfil() {
               name="telefono_usuario"
               value={formData.telefono_usuario}
               onChange={handleInputChange}
-              placeholder="XXX-XXX-XXXX"
-              maxLength={12}
               required
             />
 
-            <button type="submit" className="guardar-btn">
-              Guardar Cambios
-            </button>
+            <button className="guardar-btn" type="submit">Guardar Cambios</button>
           </form>
         </section>
       </main>
@@ -379,6 +455,16 @@ export default function Perfil() {
 
         .guardar-btn:hover {
           background-color: #1b3560;
+        }
+
+        .readonly-input {
+          border-color: #24487f;
+          box-shadow: 0 0 5px rgba(36, 72, 127, 0.2);
+        }
+
+        .email-note {
+          font-size: 1em;
+          color: #666;
         }
       `}</style>
     </div>

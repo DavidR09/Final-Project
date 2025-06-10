@@ -72,16 +72,17 @@ export default function RegisterRepuesto() {
   return (
     <div className="inicio-container">
       <aside className="sidebar">
-        <div className="logo-container" onClick={() => navigate('/inicio')}>
-          <div className="logo-circle">
-            <img src="/Logo.png" alt="Logo" />
-          </div>
+        <div className="logo-wrapper" onClick={() => navigate('/inicio')}>
+          <img src="/Logo.png" alt="Logo" />
         </div>
         <ul>
-          <li onClick={() => navigate('/Inicio')}>Panel de Administración</li>
+        <li onClick={() => navigate('/Inicio')}>Panel de Administración</li>
           <li onClick={() => navigate('/register')}>Registrar Usuario</li>
           <li onClick={() => navigate('/register-taller')}>Registrar Taller</li>
           <li onClick={() => navigate('/register-repuesto')}>Registrar Repuesto</li>
+          <li onClick={() => navigate('/admin-pedidos')}>Ver Pedidos Clientes</li>
+          <li onClick={() => navigate('/admin-repuestos-piezas')}>Gestionar Repuestos y Piezas</li>
+          <li onClick={() => navigate('/admin-usuarios')}>Gestionar Usuarios</li>
           <li onClick={() => navigate('/Inicio_Client')}>Ver Vista Cliente</li>
           <li onClick={() => navigate('/')}>Cerrar sesión</li>
         </ul>
@@ -152,22 +153,22 @@ export default function RegisterRepuesto() {
           padding: 20px;
         }
 
-        .logo-container {
-          cursor: pointer;
-          text-align: center;
-          margin-bottom: 20px;
-        }
-
-        .logo-circle {
+        .logo-wrapper {
+          width: 120px;
+          height: 120px;
           background-color: white;
           border-radius: 50%;
-          padding: 10px;
-          display: inline-block;
+          overflow: hidden;
+          margin: 0 auto 20px auto;
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          cursor: pointer;
         }
 
-        .logo-circle img {
-          width: 100px;
-          height: 100px;
+        .logo-wrapper img {
+          width: 90%;
+          height: 90%;
           object-fit: contain;
         }
 

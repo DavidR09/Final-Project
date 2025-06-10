@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
 import Swal from 'sweetalert2';
 import axios from 'axios';
@@ -11,7 +11,24 @@ export default function Carrito() {
   const [productos, setProductos] = useState([]);
   const [userRole, setUserRole] = useState(null);
   const [isPaymentModalOpen, setIsPaymentModalOpen] = useState(false);
-  const [paymentDetails, setPaymentDetails] = useState({ method: 'tarjeta' });
+  const [paymentDetails, setPaymentDetails] = useState(null);
+  const paymentDetailsRef = useRef(null);
+  const [selectedTaller, setSelectedTaller] = useState(null);
+  const [busqueda, setBusqueda] = useState('');
+
+  const handlePaymentDetailsChange = async (details) => {
+    console.log('A. Recibiendo detalles de pago en Carrito:', details);
+    return new Promise((resolve) => {
+      setPaymentDetails(details);
+      paymentDetailsRef.current = details;
+      console.log('B. Estado actualizado de paymentDetails:', details);
+      console.log('B.1 Estado en referencia:', paymentDetailsRef.current);
+      setTimeout(() => {
+        console.log('C. Estado final de paymentDetails después del timeout:', paymentDetailsRef.current);
+        resolve(details);
+      }, 100);
+    });
+  };
 
   useEffect(() => {
     // Verificar la autenticación del usuario
@@ -44,25 +61,52 @@ export default function Carrito() {
   // Función para verificar el stock disponible
   const verificarStock = async () => {
     try {
-      // Obtener los productos actualizados de la base de datos
-      const response = await axios.get('http://localhost:3000/api/productos');
+      // Primero obtenemos todos los productos actualizados
+      const response = await axios.get(`${import.meta.env.VITE_API_URL}/api/productos`);
       const productosDB = response.data;
 
-      // Verificar el stock para cada producto en el carrito
-      for (const productoCarrito of productos) {
-        const productoDB = productosDB.find(p => p.id_repuesto === productoCarrito.id_repuesto);
+      // Verificamos cada producto del carrito
+      for (const producto of productos) {
+        // Buscamos el producto en la base de datos por ID y nombre
+        const productoDB = productosDB.find(p => 
+          p.id_repuesto === producto.id_repuesto && 
+          p.nombre_pieza === producto.nombre_pieza
+        );
         
         if (!productoDB) {
-          throw new Error(`El producto ${productoCarrito.nombre_pieza} ya no está disponible.`);
+          throw new Error(`No se encontró el producto ${producto.nombre_pieza} en el catálogo.`);
         }
 
-        if (productoDB.cantidad_pieza < productoCarrito.cantidad) {
-          throw new Error(`Stock insuficiente para ${productoCarrito.nombre_pieza}. Stock disponible: ${productoDB.cantidad_pieza}`);
+        console.log('Verificando producto:', {
+          nombre: producto.nombre_pieza,
+          id: producto.id_repuesto,
+          precio: producto.precio_pieza,
+          stockDisponible: productoDB.cantidad_pieza,
+          cantidadSolicitada: producto.cantidad
+        });
+
+        if (productoDB.cantidad_pieza <= 0) {
+          throw new Error(`El producto ${producto.nombre_pieza} no está disponible actualmente.`);
+        }
+
+        if (parseInt(productoDB.cantidad_pieza) < producto.cantidad) {
+          throw new Error(`Stock insuficiente para ${producto.nombre_pieza}. Stock disponible: ${productoDB.cantidad_pieza}`);
+        }
+
+        // Actualizamos el precio por si ha cambiado
+        if (producto.precio_pieza !== productoDB.precio_pieza) {
+          producto.precio_pieza = parseFloat(productoDB.precio_pieza);
         }
       }
 
+      // Actualizamos el carrito en localStorage con los datos actualizados
+      const userId = localStorage.getItem('userId');
+      const carritoKey = `carrito_${userId}`;
+      localStorage.setItem(carritoKey, JSON.stringify(productos));
+
       return true;
     } catch (error) {
+      console.error('Error en verificación de stock:', error);
       throw error;
     }
   };
@@ -131,70 +175,98 @@ export default function Carrito() {
   const total = productos.reduce((acc, p) => acc + p.precio_pieza * p.cantidad, 0);
 
   const handlePaymentSuccess = async () => {
+    console.log('1. Iniciando proceso de pago');
+
+    const currentPaymentDetails = paymentDetailsRef.current;
+    const currentUserId = localStorage.getItem('userId');
+    const carritoKey = `carrito_${currentUserId}`;
+
+    if (!currentPaymentDetails || !currentPaymentDetails.method) {
+      await Swal.fire({
+        icon: 'error',
+        title: 'Error',
+        text: 'Debe seleccionar un método de pago',
+        confirmButtonColor: '#24487f'
+      });
+      return;
+    }
+
     try {
-      const userId = localStorage.getItem('userId');
-      if (!userId) {
+      if (!currentUserId) {
         throw new Error('Usuario no autenticado');
       }
 
-      const carritoKey = `carrito_${userId}`;
-      console.log('Productos en el carrito:', productos);
-      
-      // Mapear los productos al formato correcto
-      const productosFormateados = productos.map(item => ({
-        id_repuesto: item.id_repuesto,
-        cantidad: item.cantidad,
-        precio: item.precio_pieza
-      }));
-      
-      console.log('Productos formateados:', productosFormateados);
+      // Verificar stock antes de procesar el pago
+      await verificarStock();
+
+      // Calcular el total sin ITBIS
+      const subtotal = productos.reduce((acc, item) => {
+        return acc + (item.precio_pieza * item.cantidad);
+      }, 0);
+
+      console.log('Desglose de precios:', {
+        productos: productos.map(item => ({
+          nombre: item.nombre_pieza,
+          id: item.id_repuesto,
+          precio_unitario: item.precio_pieza,
+          cantidad: item.cantidad,
+          subtotal: item.precio_pieza * item.cantidad
+        })),
+        subtotal: subtotal,
+        totalConITBIS: subtotal * 1.18
+      });
 
       const pedidoData = {
-        productos: productosFormateados,
-        total: total * 1.18, // Total con ITBIS
-        estado: "pendiente",
-        id_usuario: parseInt(userId),
-        direccion_envio_pedido: "Pendiente", // Valor por defecto temporal
-        metodo_pago: paymentDetails.method // Usamos el método seleccionado
+        productos: productos.map(item => ({
+          id_repuesto: item.id_repuesto,
+          cantidad: item.cantidad,
+          precio: item.precio_pieza // Precio sin ITBIS
+        })),
+        total: subtotal * 1.18, // Total con ITBIS
+        estado: 'Pendiente',
+        id_usuario: parseInt(currentUserId),
+        direccion_envio_pedido: selectedTaller ? selectedTaller.direccion_taller : 'Sin taller asignado',
+        metodo_pago: currentPaymentDetails.method,
+        id_taller: selectedTaller ? selectedTaller.id_taller : null
       };
 
       console.log('Datos del pedido a enviar:', pedidoData);
 
-      const pedidoResponse = await axios.post('http://localhost:3000/api/pedidos', pedidoData);
-      console.log('Respuesta del servidor:', pedidoResponse.data);
+      const response = await axios.post(`${import.meta.env.VITE_API_URL}/api/pedidos`, pedidoData);
+      console.log('Respuesta del servidor:', response.data);
 
-      // Limpiar el carrito
-      localStorage.removeItem(carritoKey);
+      // Limpiar carrito después de crear el pedido exitosamente
+      localStorage.setItem(carritoKey, JSON.stringify([]));
       setProductos([]);
-      setIsPaymentModalOpen(false);
 
-      // Mostrar mensaje de éxito
       await Swal.fire({
         icon: 'success',
-        title: '¡Pedido realizado con éxito!',
-        text: 'Tu pedido ha sido registrado y será procesado pronto.',
+        title: '¡Pedido creado!',
+        text: 'Su pedido ha sido creado exitosamente',
         confirmButtonColor: '#24487f'
       });
 
+      // Cerrar el modal de pago si está abierto
+      if (typeof setIsPaymentModalOpen === 'function') {
+        setIsPaymentModalOpen(false);
+      }
+
+      // Redirigir a la página de pedidos
       navigate('/pedidos');
     } catch (error) {
       console.error('Error al crear el pedido:', error);
-      if (error.response) {
-        console.error('Detalles del error:', error.response.data);
-      }
-
-      // Mostrar mensaje de error
-      let errorMessage = 'Hubo un problema al procesar tu pedido.';
-      if (error.message === 'No se encontró la dirección del usuario') {
-        errorMessage = 'Por favor, actualiza tu dirección en tu perfil antes de realizar un pedido.';
-      } else if (error.response?.data?.error) {
-        errorMessage = error.response.data.error;
+      
+      let mensajeError = 'Hubo un error al procesar su pedido';
+      if (error.response?.data?.error) {
+        mensajeError = error.response.data.error;
+      } else if (error.message) {
+        mensajeError = error.message;
       }
 
       await Swal.fire({
         icon: 'error',
         title: 'Error',
-        text: errorMessage,
+        text: mensajeError,
         confirmButtonColor: '#24487f'
       });
     }
@@ -241,13 +313,16 @@ export default function Carrito() {
           <li onClick={() => navigate('/productos')}>Piezas</li>
           <li onClick={() => navigate('/pedidos')}>Pedidos</li>
           <li onClick={() => navigate('/contacto')}>Sobre Nosotros</li>
+          {userRole === 'administrador' && (
+            <li onClick={() => navigate('/Inicio')}>Volver al Panel Admin</li>
+          )}
         </ul>
       </div>
 
       <main className="main-content">
         <header className="header">
           <div className="header-title">
-            <h1>Mi Carrito</h1>
+            <h1 style={{ fontSize: '23px' }}>Mi Carrito</h1>
           </div>
           <div className="iconos-header">
             <img
@@ -263,7 +338,10 @@ export default function Carrito() {
           </div>
         </header>
 
-        <section className="carrito-section">
+        <section className="content">
+          <div className="welcome">
+            <h1 style={{ fontSize: '20px', marginBottom: '20px' }}>Mi Carrito</h1>
+          </div>
           {productos.length === 0 ? (
             <div className="carrito-vacio">
               <img src="/empty-cart.png" alt="Carrito vacío" className="empty-cart-img" />
@@ -283,7 +361,7 @@ export default function Carrito() {
                     </div>
                     <div className="producto-detalles">
                       <h3>{p.nombre_pieza}</h3>
-                      <p className="precio">RD$ {p.precio_pieza}</p>
+                      <p className="precio">RD$ {p.precio_pieza.toFixed(2)}</p>
                       <div className="cantidad-control">
                         <button 
                           className="cantidad-btn"
@@ -301,7 +379,7 @@ export default function Carrito() {
                       </div>
                     </div>
                     <div className="producto-acciones">
-                      <p className="subtotal">Subtotal: RD$ {p.precio_pieza * p.cantidad}</p>
+                      <p className="subtotal">Subtotal: RD$ {(p.precio_pieza * p.cantidad).toFixed(2)}</p>
                       <button 
                         className="eliminar-btn"
                         onClick={() => eliminarProducto(p.id_repuesto)}
@@ -348,9 +426,10 @@ export default function Carrito() {
       <PaymentModal
         isOpen={isPaymentModalOpen}
         onClose={() => setIsPaymentModalOpen(false)}
-        onConfirm={handlePaymentSuccess}
         amount={total}
-        onPaymentDetailsChange={setPaymentDetails}
+        onConfirm={handlePaymentSuccess}
+        onPaymentDetailsChange={handlePaymentDetailsChange}
+        onTallerSelect={setSelectedTaller}
       />
     </div>
   );

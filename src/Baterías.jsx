@@ -1,9 +1,12 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
+import CategorySidebar from './components/CategorySidebar';
+import './styles/global.css';
 
 export default function Baterias() {
   const navigate = useNavigate();
   const [busqueda, setBusqueda] = useState('');
+  const [userRole, setUserRole] = useState(null);
 
   const baterias = [
     { nombre: 'Batería Bosch', imagen: '/bateria_bosch.png' },
@@ -12,23 +15,29 @@ export default function Baterias() {
     { nombre: 'Batería AC Delco', imagen: '/bateria_acdelco.png' },
   ];
 
+  useEffect(() => {
+    const checkUserRole = async () => {
+      try {
+        const response = await fetch('http://localhost:3000/api/auth/check-auth', {
+          credentials: 'include'
+        });
+        const data = await response.json();
+        setUserRole(data.rol);
+      } catch (error) {
+        console.error('Error al verificar el rol:', error);
+      }
+    };
+
+    checkUserRole();
+  }, []);
+
   const bateriasFiltradas = baterias.filter((b) =>
     b.nombre.toLowerCase().includes(busqueda.toLowerCase())
   );
 
   return (
     <div className="productos-container">
-      <aside className="sidebar">
-        <div className="logo-wrapper" onClick={() => navigate('/inicio_client')}>
-          <img src="/Logo.png" alt="Logo" />
-        </div>
-        <ul>
-          <li onClick={() => navigate('/inicio_client')}>Inicio</li>
-          <li onClick={() => navigate('/productos')}>Piezas</li>
-          <li onClick={() => navigate('/contacto')}>Sobre Nosotros</li>
-        </ul>
-      </aside>
-
+      <CategorySidebar userRole={userRole} />
       <main className="main-content">
         <header className="header">
           <input
@@ -38,20 +47,7 @@ export default function Baterias() {
             onChange={(e) => setBusqueda(e.target.value)}
             className="buscador"
           />
-          <div className="iconos-header">
-            <img
-              src="/carrito.png"
-              alt="Carrito"
-              className="cart-img"
-              onClick={() => navigate('/carrito')}
-            />
-            <img
-              src="/perfil.png"
-              alt="Perfil"
-              className="perfil-img"
-              onClick={() => navigate('/perfil')}
-            />
-          </div>
+          <HeaderIcons />
         </header>
 
         <section className="content">

@@ -23,9 +23,15 @@ router.get('/', async (req, res) => {
         p.id_categoria_pieza,
         p.id_vehiculo,
         c.nombre_categoria_pieza,
-        c.descripcion_categoria_pieza
+        c.descripcion_categoria_pieza,
+        ma.nombre_marca,
+        mo.nombre_modelo,
+        v.anio_vehiculo
       FROM pieza p
       LEFT JOIN categoria_pieza c ON p.id_categoria_pieza = c.id_categoria_pieza
+      LEFT JOIN vehiculo v ON p.id_vehiculo = v.id_vehiculo
+      LEFT JOIN modelo mo ON v.id_modelo = mo.id_modelo
+      LEFT JOIN marca ma ON mo.id_marca = ma.id_marca
       ORDER BY p.id_repuesto;
     `);
 
