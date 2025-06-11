@@ -172,55 +172,6 @@ export default function Perfil() {
             }
           }}>Cerrar Sesión</li>
         </ul>
-
-        <style>{`
-          .sidebar {
-            width: 250px;
-            background-color: #24487f;
-            color: white;
-            padding: 20px;
-          }
-
-          .logo-wrapper {
-            width: 120px;
-            height: 120px;
-            background-color: white;
-            border-radius: 50%;
-            overflow: hidden;
-            margin: 0 auto 20px auto;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            cursor: pointer;
-          }
-
-          .logo-wrapper img {
-            width: 90%;
-            height: 90%;
-            object-fit: contain;
-          }
-
-          .sidebar ul {
-            list-style: none;
-            padding: 0;
-          }
-
-          .sidebar li {
-            margin-bottom: 15px;
-            cursor: pointer;
-            padding: 8px;
-            border-radius: 5px;
-            transition: background-color 0.3s ease;
-          }
-
-          .sidebar li:hover {
-            background-color: #333;
-          }
-
-          .sidebar li:active {
-            background-color: #1b355b;
-          }
-        `}</style>
       </div>
 
       <main className="main-content">
@@ -264,26 +215,20 @@ export default function Perfil() {
             />
 
             <label>Contraseña:</label>
-            <div style={{ position: 'relative' }}>
+            <div className="password-container">
               <input
                 type={showPassword ? "text" : "password"}
                 name="contrasenia_usuario"
                 value={formData.contrasenia_usuario}
                 onChange={handleInputChange}
                 placeholder="Dejar en blanco para mantener la contraseña actual"
+                className="password-input"
               />
               <span 
                 onClick={() => setShowPassword(!showPassword)}
-                style={{
-                  position: 'absolute',
-                  right: '10px',
-                  top: '50%',
-                  transform: 'translateY(-50%)',
-                  cursor: 'pointer',
-                  fontSize: '20px'
-                }}
+                className="password-toggle"
               >
-                {showPassword ? '👁️' : '👁️‍🗨️'}
+                {showPassword ? '👁️' : '🙈'}
               </span>
             </div>
 
@@ -317,14 +262,21 @@ export default function Perfil() {
         }
 
         .logo-wrapper {
+          width: 120px;
+          height: 120px;
+          background-color: white;
+          border-radius: 50%;
+          overflow: hidden;
+          margin: 0 auto 20px auto;
+          display: flex;
+          align-items: center;
+          justify-content: center;
           cursor: pointer;
-          text-align: center;
-          margin-bottom: 20px;
         }
 
         .logo-wrapper img {
-          width: 100px;
-          height: 100px;
+          width: 90%;
+          height: 90%;
           object-fit: contain;
         }
 
@@ -336,15 +288,17 @@ export default function Perfil() {
         .sidebar li {
           margin-bottom: 15px;
           cursor: pointer;
-          display: flex;
-          align-items: center;
-          gap: 10px;
           padding: 8px;
           border-radius: 5px;
+          transition: background-color 0.3s ease;
         }
 
         .sidebar li:hover {
           background-color: #333;
+        }
+
+        .sidebar li:active {
+          background-color: #1b355b;
         }
 
         .main-content {
@@ -411,12 +365,49 @@ export default function Perfil() {
           border-radius: 5px;
           font-size: 16px;
           width: 100%;
+          box-sizing: border-box;
         }
 
         .perfil-form input:focus {
           outline: none;
           border-color: #24487f;
           box-shadow: 0 0 5px rgba(36, 72, 127, 0.2);
+        }
+
+        .password-container {
+          position: relative;
+          width: 100%;
+        }
+
+        .password-input {
+          padding: 10px 40px 10px 10px !important;
+          border: 1px solid #ccc;
+          border-radius: 5px;
+          font-size: 16px;
+          width: 100%;
+          box-sizing: border-box;
+        }
+
+        .password-toggle {
+          position: absolute;
+          right: 10px;
+          top: 50%;
+          transform: translateY(-50%);
+          cursor: pointer;
+          font-size: 18px;
+          user-select: none;
+          background: white;
+          padding: 2px;
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          width: 24px;
+          height: 24px;
+        }
+
+        .password-toggle:hover {
+          background-color: #f0f0f0;
+          border-radius: 3px;
         }
 
         .guardar-btn {
@@ -429,6 +420,8 @@ export default function Perfil() {
           cursor: pointer;
           transition: background-color 0.2s;
           margin-top: 20px;
+          width: 100%;
+          box-sizing: border-box;
         }
 
         .guardar-btn:hover {

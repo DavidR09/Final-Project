@@ -244,6 +244,7 @@ export default function RegisterTaller() {
           border-radius: 5px;
           font-size: 16px;
           width: 100%;
+          box-sizing: border-box;
         }
 
         .perfil-form input:disabled {
@@ -274,4 +275,4 @@ export default function RegisterTaller() {
       `}</style>
     </div>
   );
-} 
+}
