@@ -6,28 +6,51 @@ import connectToDatabase from '../database/connectionMySQL.js';
 
 const router = express.Router();
 
+// Configuración común para cookies
+const cookieConfig = {
+  httpOnly: true,
+  secure: false, // Cambiar a true en producción
+  sameSite: 'lax',
+  path: '/',
+  maxAge: 24 * 60 * 60 * 1000 // 24 horas
+};
+
 // Middleware para verificar el token
 const verifyToken = (req, res, next) => {
-  console.log('Verificando token...');
-  console.log('Cookies recibidas:', req.cookies);
-  console.log('Headers recibidos:', req.headers);
-  console.log('Cookie header:', req.headers.cookie);
+  console.log('=== Verificando token ===');
+  console.log('Headers completos:', req.headers);
+  console.log('Cookies parseadas:', req.cookies);
   
-  let token = req.cookies?.token;
+  // Intentar obtener el token de diferentes fuentes
+  let token = null;
   
-  // Si no está en req.cookies, intentar extraerlo del header
-  if (!token && req.headers.cookie) {
-    const cookies = req.headers.cookie.split(';').reduce((acc, cookie) => {
-      const [key, value] = cookie.trim().split('=');
-      acc[key] = value;
-      return acc;
-    }, {});
-    token = cookies.token;
-    console.log('Token extraído del header:', token ? 'presente' : 'no encontrado');
+  // 1. Intentar obtener de req.cookies
+  if (req.cookies && req.cookies.token) {
+    token = req.cookies.token;
+    console.log('Token encontrado en req.cookies');
   }
-  
+  // 2. Intentar obtener del header cookie
+  else if (req.headers.cookie) {
+    const cookies = req.headers.cookie.split(';')
+      .map(cookie => cookie.trim().split('='))
+      .reduce((acc, [key, value]) => {
+        acc[key] = value;
+        return acc;
+      }, {});
+    
+    if (cookies.token) {
+      token = cookies.token;
+      console.log('Token encontrado en header cookie');
+    }
+  }
+  // 3. Intentar obtener del header Authorization
+  else if (req.headers.authorization && req.headers.authorization.startsWith('Bearer ')) {
+    token = req.headers.authorization.split(' ')[1];
+    console.log('Token encontrado en header Authorization');
+  }
+
   if (!token) {
-    console.log('No se encontró token en las cookies ni en los headers');
+    console.log('No se encontró token en ninguna fuente');
     return res.status(401).json({ 
       authenticated: false,
       error: 'No autenticado',
@@ -39,9 +62,14 @@ const verifyToken = (req, res, next) => {
     const decoded = jwt.verify(token, process.env.JWT_SECRET);
     console.log('Token decodificado:', decoded);
     req.user = decoded;
+    
+    // Renovar la cookie en cada petición exitosa
+    res.cookie('token', token, cookieConfig);
+    
     next();
   } catch (error) {
     console.error('Error al verificar token:', error);
+    res.clearCookie('token', cookieConfig);
     res.status(401).json({ 
       authenticated: false,
       error: 'Token inválido o expirado',
@@ -51,7 +79,8 @@ const verifyToken = (req, res, next) => {
 };
 
 router.post('/login', async (req, res) => {
-  console.log('Recibida petición de login:', req.body);
+  console.log('=== Inicio de proceso de login ===');
+  console.log('Body recibido:', req.body);
   const { correo_electronico_usuario, contrasenia_usuario } = req.body;
 
   if (!correo_electronico_usuario || !contrasenia_usuario) {
@@ -88,78 +117,65 @@ router.post('/login', async (req, res) => {
       { expiresIn: '24h' }
     );
 
-    // Configurar la cookie para desarrollo local
-    res.cookie('token', token, {
-      httpOnly: true,
-      secure: false,
-      sameSite: 'lax',
-      maxAge: 24 * 60 * 60 * 1000, // 24 horas
-      path: '/',
-      domain: 'localhost'
-    });
-
-    console.log('Cookie establecida:', {
-      token: token.substring(0, 20) + '...',
-      options: {
-        httpOnly: true,
-        secure: false,
-        sameSite: 'lax',
-        maxAge: 24 * 60 * 60 * 1000,
-        path: '/',
-        domain: 'localhost'
-      }
-    });
+    console.log('=== Configurando cookie ===');
+    console.log('Token generado:', token.substring(0, 20) + '...');
     
-    res.json({
+    // Limpiar cualquier cookie anterior
+    res.clearCookie('token', cookieConfig);
+    
+    // Configurar la nueva cookie
+    res.cookie('token', token, cookieConfig);
+
+    console.log('Cookie establecida con config:', cookieConfig);
+    
+    const responseData = {
       userId: user.id_usuario,
       nombre: user.nombre_usuario,
       apellido: user.apellido_usuario,
       correo: user.correo_electronico_usuario,
       rol: user.rol_usuario
-    });
+    };
+
+    console.log('Enviando respuesta:', responseData);
+    res.json(responseData);
   } catch (error) {
     console.error('Error en login:', error);
-    res.status(500).json({ 
-      error: 'Error al procesar el login',
-      details: error.message
-    });
+    res.status(500).json({ error: 'Error al iniciar sesión' });
   } finally {
     if (connection) {
-      await connection.end();
+      try {
+        await connection.end();
+      } catch (err) {
+        console.error('Error al cerrar la conexión:', err);
+      }
     }
   }
 });
 
 router.get('/check-auth', verifyToken, (req, res) => {
+  console.log('=== Check Auth exitoso ===');
   console.log('Usuario autenticado:', req.user);
   res.json({
     authenticated: true,
-    userId: req.user.id,
+    id: req.user.id,
     rol: req.user.rol
   });
 });
 
 router.post('/logout', (req, res) => {
-  res.clearCookie('token', {
-    httpOnly: true,
-    secure: false,
-    sameSite: 'lax',
-    path: '/',
-    domain: 'localhost'
-  });
+  console.log('=== Cerrando sesión ===');
+  res.clearCookie('token', cookieConfig);
   res.json({ message: 'Sesión cerrada exitosamente' });
 });
 
-// Nueva ruta para obtener datos del usuario
-router.get('/usuario/:id', async (req, res) => {
-  const token = req.cookies.token;
-  if (!token) {
-    return res.status(401).json({ error: 'No autorizado' });
-  }
-
+// Ruta para obtener datos del usuario
+router.get('/usuario/:id', verifyToken, async (req, res) => {
+  console.log('=== Obteniendo datos de usuario ===');
+  console.log('ID solicitado:', req.params.id);
+  console.log('Usuario autenticado:', req.user);
+  
   try {
-    const decoded = jwt.verify(token, process.env.JWT_SECRET);
-    if (decoded.id != req.params.id) {
+    if (req.user.id != req.params.id) {
       return res.status(403).json({ error: 'No autorizado para acceder a estos datos' });
     }
 
@@ -178,6 +194,8 @@ router.get('/usuario/:id', async (req, res) => {
       }
 
       const user = users[0];
+      console.log('Datos de usuario encontrados:', user);
+      
       res.json({ 
         success: true,
         usuario: user
@@ -188,57 +206,60 @@ router.get('/usuario/:id', async (req, res) => {
       }
     }
   } catch (error) {
-    console.error('Error al verificar token o obtener datos:', error);
-    res.status(401).json({ error: 'Token inválido o error al obtener datos' });
+    console.error('Error al obtener datos:', error);
+    res.status(500).json({ error: 'Error al obtener datos del usuario' });
   }
 });
 
-// Nueva ruta para actualizar datos del usuario
-router.put('/usuario/:id', async (req, res) => {
-  const userId = req.params.id;
-  
-  // Verificar que el usuario está autenticado y es el mismo que solicita la actualización
-  if (!req.session.userId || req.session.userId != userId) {
-    return res.status(401).json({ error: 'No autorizado' });
-  }
-
-  const { nombre_usuario, apellido_usuario, correo_electronico_usuario, contrasenia_usuario, telefono_usuario } = req.body;
-  let connection;
-
+// Ruta para actualizar datos del usuario
+router.put('/usuario/:id', verifyToken, async (req, res) => {
   try {
-    connection = await connectToDatabase();
-
-    // Si se proporciona una nueva contraseña, hashearla
-    if (contrasenia_usuario) {
-      const hashedPassword = await bcrypt.hash(contrasenia_usuario, 10);
-      await connection.execute(
-        `UPDATE usuario SET 
-         nombre_usuario = ?, 
-         apellido_usuario = ?, 
-         correo_electronico_usuario = ?, 
-         contrasenia_usuario = ?,
-         telefono_usuario = ?
-         WHERE id_usuario = ?`,
-        [nombre_usuario, apellido_usuario, correo_electronico_usuario, hashedPassword, telefono_usuario, userId]
-      );
-    } else {
-      // Si no hay nueva contraseña, actualizar todo excepto la contraseña
-      await connection.execute(
-        `UPDATE usuario SET 
-         nombre_usuario = ?, 
-         apellido_usuario = ?, 
-         correo_electronico_usuario = ?, 
-         telefono_usuario = ?
-         WHERE id_usuario = ?`,
-        [nombre_usuario, apellido_usuario, correo_electronico_usuario, telefono_usuario, userId]
-      );
+    if (req.user.id != req.params.id) {
+      return res.status(403).json({ error: 'No autorizado para modificar estos datos' });
     }
 
-    res.json({ message: 'Datos del usuario actualizados exitosamente' });
-  } finally {
-    if (connection) {
-      await connection.end();
+    const { nombre_usuario, apellido_usuario, correo_electronico_usuario, contrasenia_usuario, telefono_usuario } = req.body;
+    let connection;
+
+    try {
+      connection = await connectToDatabase();
+
+      if (contrasenia_usuario) {
+        const hashedPassword = await bcrypt.hash(contrasenia_usuario, 10);
+        await connection.execute(
+          `UPDATE usuario SET 
+           nombre_usuario = ?, 
+           apellido_usuario = ?, 
+           correo_electronico_usuario = ?, 
+           contrasenia_usuario = ?,
+           telefono_usuario = ?
+           WHERE id_usuario = ?`,
+          [nombre_usuario, apellido_usuario, correo_electronico_usuario, hashedPassword, telefono_usuario, req.params.id]
+        );
+      } else {
+        await connection.execute(
+          `UPDATE usuario SET 
+           nombre_usuario = ?, 
+           apellido_usuario = ?, 
+           correo_electronico_usuario = ?, 
+           telefono_usuario = ?
+           WHERE id_usuario = ?`,
+          [nombre_usuario, apellido_usuario, correo_electronico_usuario, telefono_usuario, req.params.id]
+        );
+      }
+
+      res.json({ 
+        success: true,
+        message: 'Datos del usuario actualizados exitosamente' 
+      });
+    } finally {
+      if (connection) {
+        await connection.end();
+      }
     }
+  } catch (error) {
+    console.error('Error al actualizar datos:', error);
+    res.status(500).json({ error: 'Error al actualizar datos del usuario' });
   }
 });
 

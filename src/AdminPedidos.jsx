@@ -3,6 +3,18 @@ import { useNavigate } from 'react-router-dom';
 import axios from 'axios';
 import Swal from 'sweetalert2';
 
+// Configurar axios para incluir credenciales en todas las solicitudes
+axios.defaults.withCredentials = true;
+axios.defaults.headers.common['Content-Type'] = 'application/json';
+
+const axiosInstance = axios.create({
+  baseURL: 'http://localhost:3000',
+  withCredentials: true,
+  headers: {
+    'Content-Type': 'application/json'
+  }
+});
+
 export default function AdminPedidos() {
   const navigate = useNavigate();
   const [pedidos, setPedidos] = useState([]);
@@ -10,19 +22,35 @@ export default function AdminPedidos() {
   const [pedidoSeleccionado, setPedidoSeleccionado] = useState(null);
 
   useEffect(() => {
-    cargarPedidos();
-  }, []);
+    // Verificar si el usuario está autenticado
+    const checkAuth = async () => {
+      try {
+        const response = await axiosInstance.get('/api/auth/check-auth');
+        if (response.data.rol !== 'administrador') {
+          throw new Error('No tienes permisos de administrador');
+        }
+        cargarPedidos();
+      } catch (error) {
+        console.error('Error de autenticación:', error);
+        Swal.fire({
+          icon: 'error',
+          title: 'Error de autenticación',
+          text: 'Por favor, inicia sesión como administrador',
+          confirmButtonColor: '#24487f'
+        }).then(() => {
+          navigate('/login');
+        });
+      }
+    };
+
+    checkAuth();
+  }, [navigate]);
 
   const cargarPedidos = async () => {
     try {
       console.log('Iniciando carga de pedidos...');
       
-      const response = await axios.get('http://localhost:3000/api/pedidos', {
-        withCredentials: true,
-        headers: {
-          'Content-Type': 'application/json'
-        }
-      });
+      const response = await axiosInstance.get('/api/pedidos/admin');
 
       console.log('Pedidos recibidos:', response.data);
       setPedidos(response.data);
@@ -33,17 +61,26 @@ export default function AdminPedidos() {
       if (error.response) {
         console.error('Detalles del error:', error.response.data);
         mensajeError = error.response.data.error || mensajeError;
+
+        // Si el error es de autenticación o autorización, redirigir al login
+        if (error.response.status === 401 || error.response.status === 403) {
+          await Swal.fire({
+            icon: 'error',
+            title: 'Error de autenticación',
+            text: 'Por favor, inicia sesión nuevamente.',
+            confirmButtonColor: '#24487f'
+          });
+          navigate('/login');
+          return;
+        }
       }
 
-      Swal.fire({
+      await Swal.fire({
         icon: 'error',
         title: 'Error',
-        text: mensajeError
+        text: mensajeError,
+        confirmButtonColor: '#24487f'
       });
-
-      if (error.response && error.response.status === 401) {
-        navigate('/login');
-      }
     } finally {
       setLoading(false);
     }
@@ -165,7 +202,11 @@ export default function AdminPedidos() {
                               >
                                 <img 
                                   src={detalle.imagen_pieza || '/default-part.png'} 
-                                  alt={detalle.nombre_pieza} 
+                                  alt={detalle.nombre_pieza}
+                                  onError={(e) => {
+                                    e.target.onerror = null; // Prevenir loop infinito
+                                    e.target.src = '/default-part.png';
+                                  }}
                                   className="producto-imagen"
                                 />
                                 <div className="producto-info">
@@ -360,6 +401,15 @@ export default function AdminPedidos() {
           height: 80px;
           object-fit: cover;
           border-radius: 4px;
+          background-color: #f5f5f5;
+          border: 1px solid #ddd;
+        }
+
+        /* Agregar efecto de hover a las imágenes */
+        .producto-imagen:hover {
+          transform: scale(1.1);
+          transition: transform 0.3s ease;
+          box-shadow: 0 4px 8px rgba(0,0,0,0.1);
         }
 
         .producto-info {

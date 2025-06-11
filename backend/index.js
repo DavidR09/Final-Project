@@ -26,22 +26,36 @@ if (!process.env.JWT_SECRET) {
 console.log("Entorno: Desarrollo Local (Node.js)");
 console.log("JWT_SECRET:", process.env.JWT_SECRET || "No configurado");
 
+// Middleware para parsear cookies ANTES de CORS
+app.use(cookieParser(process.env.JWT_SECRET));
+
 // Configuración de CORS
-app.use(cors({
+const corsOptions = {
   origin: 'http://localhost:5173',
   credentials: true,
   methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
   allowedHeaders: ['Content-Type', 'Authorization', 'Cookie'],
-}));
+  exposedHeaders: ['Set-Cookie'],
+  preflightContinue: false,
+  optionsSuccessStatus: 204,
+  maxAge: 86400 // 24 horas
+};
 
-// Middleware para parsear JSON y cookies
+app.use(cors(corsOptions));
+
+// Middleware para OPTIONS
+app.options('*', cors(corsOptions));
+
+// Middleware para parsear JSON
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
-app.use(cookieParser());
 
 // Middleware para logging básico
 app.use((req, res, next) => {
   console.log(`${new Date().toISOString()} - ${req.method} ${req.path}`);
+  console.log('Headers:', req.headers);
+  console.log('Cookies parseadas:', req.cookies);
+  console.log('Cookies firmadas:', req.signedCookies);
   next();
 });
 
