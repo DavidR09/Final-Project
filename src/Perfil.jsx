@@ -5,6 +5,15 @@ import axios from 'axios';
 import './styles/global.css';
 import HeaderIcons from './components/HeaderIcons';
 
+// Configurar axios
+const axiosInstance = axios.create({
+  baseURL: 'http://localhost:3000',
+  withCredentials: true,
+  headers: {
+    'Content-Type': 'application/json'
+  }
+});
+
 export default function Perfil() {
   const navigate = useNavigate();
   const [userRole, setUserRole] = useState(null);
@@ -19,71 +28,49 @@ export default function Perfil() {
   const [busqueda, setBusqueda] = useState('');
 
   useEffect(() => {
-    const checkUserRole = async () => {
+    const loadUserData = async () => {
       try {
-        const response = await fetch('http://localhost:3000/api/auth/check-auth', {
-          credentials: 'include'
-        });
-        const data = await response.json();
-        setUserRole(data.rol);
-      } catch (error) {
-        console.error('Error al verificar el rol:', error);
-      }
-    };
+        // Verificar autenticación y rol
+        const authResponse = await axiosInstance.get('/api/auth/check-auth');
+        setUserRole(authResponse.data.rol);
 
-    checkUserRole();
-
-    const userId = localStorage.getItem('userId');
-    if (!userId) {
-      navigate('/login');
-      return;
-    }
-
-    fetch(`http://localhost:3000/api/auth/usuario/${userId}`, {
-      credentials: 'include' // Incluir cookies en la petición
-    })
-      .then(async res => {
-        const contentType = res.headers.get('content-type');
-        if (!contentType || !contentType.includes('application/json')) {
-          throw new Error('La respuesta del servidor no es JSON válido');
+        const userId = localStorage.getItem('userId');
+        if (!userId) {
+          throw new Error('Usuario no autenticado');
         }
 
-        const data = await res.json();
+        // Cargar datos del usuario
+        const userResponse = await axiosInstance.get(`/api/auth/usuario/${userId}`);
         
-        if (!res.ok) {
-          throw new Error(data.error || 'Error al obtener los datos del usuario');
-        }
-        
-        return data;
-      })
-      .then(data => {
-        console.log('Datos recibidos del servidor:', data);
-        
-        if (data && data.usuario) {
+        if (userResponse.data && userResponse.data.usuario) {
           setFormData({
-            nombre_usuario: data.usuario.nombre_usuario || '',
-            apellido_usuario: data.usuario.apellido_usuario || '',
-            correo_electronico_usuario: data.usuario.correo_electronico_usuario || '',
-            contrasenia_usuario: '', // No mostrar la contraseña actual
-            telefono_usuario: data.usuario.telefono_usuario || ''
+            nombre_usuario: userResponse.data.usuario.nombre_usuario || '',
+            apellido_usuario: userResponse.data.usuario.apellido_usuario || '',
+            correo_electronico_usuario: userResponse.data.usuario.correo_electronico_usuario || '',
+            contrasenia_usuario: '',
+            telefono_usuario: userResponse.data.usuario.telefono_usuario || ''
           });
         } else {
-          console.error('Estructura de datos inesperada:', data);
           throw new Error('Datos de usuario no encontrados o en formato incorrecto');
         }
-      })
-      .catch(error => {
-        console.error('Error detallado al cargar datos del usuario:', {
-          message: error.message,
-          stack: error.stack
-        });
+      } catch (error) {
+        console.error('Error al cargar datos del usuario:', error);
+        
+        if (error.response?.status === 401) {
+          navigate('/login');
+          return;
+        }
+
         Swal.fire({
           icon: 'error',
           title: 'Error',
           text: error.message || 'No se pudieron cargar los datos del usuario',
           confirmButtonColor: '#24487f'
         });
-      });
+      }
+    };
+
+    loadUserData();
   }, [navigate]);
 
   const handleInputChange = (e) => {
@@ -135,33 +122,24 @@ export default function Perfil() {
     }
 
     try {
-      const response = await fetch(`http://localhost:3000/api/auth/usuario/${userId}`, {
-        method: 'PUT',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        credentials: 'include',
-        body: JSON.stringify(formData)
-      });
-
-      const data = await response.json();
+      const response = await axiosInstance.put(`/api/auth/usuario/${userId}`, formData);
       
-      if (response.ok && data.success) {
-        Swal.fire({
+      if (response.data.success) {
+        await Swal.fire({
           icon: 'success',
           title: '¡Éxito!',
           text: 'Perfil actualizado correctamente',
           confirmButtonColor: '#24487f'
         });
       } else {
-        throw new Error(data.error || 'Error al actualizar el perfil');
+        throw new Error(response.data.error || 'Error al actualizar el perfil');
       }
     } catch (error) {
       console.error('Error:', error);
-      Swal.fire({
+      await Swal.fire({
         icon: 'error',
         title: 'Error',
-        text: error.message || 'No se pudo actualizar el perfil',
+        text: error.response?.data?.error || error.message || 'No se pudo actualizar el perfil',
         confirmButtonColor: '#24487f'
       });
     }

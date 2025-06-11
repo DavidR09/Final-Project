@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import axios from 'axios';
+import axios from './config/axios';
 import Swal from 'sweetalert2';
 import Sidebar from './components/Sidebar';
 import HeaderIcons from './components/HeaderIcons';
@@ -17,13 +17,12 @@ export default function Pedidos() {
   useEffect(() => {
     const checkUserRole = async () => {
       try {
-        const response = await fetch('http://localhost:3000/api/auth/check-auth', {
-          credentials: 'include'
-        });
-        const data = await response.json();
-        setUserRole(data.rol);
+        const response = await axios.get('/api/auth/check-auth');
+        console.log('Respuesta de autenticación:', response.data);
+        setUserRole(response.data.rol);
       } catch (error) {
         console.error('Error al verificar el rol:', error);
+        navigate('/login');
       }
     };
 
@@ -35,53 +34,24 @@ export default function Pedidos() {
     try {
       console.log('Iniciando carga de pedidos...');
       
-      const userId = localStorage.getItem('userId');
-      if (!userId) {
-        console.log('Usuario no autenticado');
-        navigate('/login');
-        return;
-      }
-
-      console.log('Realizando petición a /api/pedidos');
-      const response = await axios.get('http://localhost:3000/api/pedidos', {
-        withCredentials: true,
-        headers: {
-          'Content-Type': 'application/json'
-        }
-      });
-
+      const response = await axios.get('/api/pedidos');
       console.log('Pedidos recibidos:', response.data);
-      
-      // Log detallado de la estructura de cada pedido
-      response.data.forEach((pedido, idx) => {
-        console.log(`Pedido ${idx + 1}:`, {
-          id_pedido: pedido.id_pedido,
-          detalles: pedido.detalles?.map(d => ({
-            id_detalle_pedido: d.id_detalle_pedido,
-            id_pieza: d.id_pieza,
-            nombre_pieza: d.nombre_pieza
-          }))
-        });
-      });
-
       setPedidos(response.data);
+
     } catch (error) {
       console.error('Error al cargar los pedidos:', error);
+      console.error('Detalles del error:', error.response?.data);
       
-      let mensajeError = 'No se pudieron cargar los pedidos';
-      if (error.response) {
-        console.error('Detalles del error:', error.response.data);
-        mensajeError = error.response.data.error || mensajeError;
-      }
+      let mensajeError = error.response?.data?.error || 'No se pudieron cargar los pedidos';
 
-      Swal.fire({
-        icon: 'error',
-        title: 'Error',
-        text: mensajeError
-      });
-
-      if (error.response && error.response.status === 401) {
+      if (error.response?.status === 401) {
         navigate('/login');
+      } else {
+        Swal.fire({
+          icon: 'error',
+          title: 'Error',
+          text: mensajeError
+        });
       }
     } finally {
       setLoading(false);
@@ -162,7 +132,7 @@ export default function Pedidos() {
 
       if (confirmacion.isConfirmed) {
         // Realizar la actualización en la base de datos
-        await axios.put(`http://localhost:3000/api/pedidos/${pedidoId}/cancelar`, {}, {
+        await axios.put(`/api/pedidos/${pedidoId}/cancelar`, {}, {
           withCredentials: true
         });
 

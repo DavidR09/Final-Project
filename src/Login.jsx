@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import axios from 'axios';
+import axiosInstance from './config/axios';
+import { useAuth } from './hooks/useAuth';
 
 export default function Login() {
   const [email, setEmail] = useState('');
@@ -10,6 +11,7 @@ export default function Login() {
   const [isLoading, setIsLoading] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
   const navigate = useNavigate();
+  const { checkAuth } = useAuth();
 
   const handleLogin = async (e) => {
     e.preventDefault();
@@ -17,21 +19,26 @@ export default function Login() {
     setMensaje(null);
 
     try {
-      const response = await axios.post('http://localhost:3000/api/auth/login', {
+      console.log('Iniciando proceso de login...');
+      const response = await axiosInstance.post('/api/auth/login', {
         correo_electronico_usuario: email,
         contrasenia_usuario: password
-      }, {
-        withCredentials: true,
-        headers: {
-          'Content-Type': 'application/json'
-        }
       });
+
+      console.log('Respuesta de login:', response.data);
 
       if (response.data && response.data.userId) {
         localStorage.setItem('userId', response.data.userId);
+        sessionStorage.setItem('userRole', response.data.rol);
+        sessionStorage.setItem('isAuthenticated', 'true');
+        
         setTipoMensaje('success');
         setMensaje('Inicio de sesión exitoso');
+
+        // Verificar autenticación después del login
+        await checkAuth();
         
+        // Redirigir basado en el rol
         if (response.data.rol === 'administrador') {
           navigate('/Inicio');
         } else {
@@ -42,9 +49,14 @@ export default function Login() {
       }
       
     } catch (error) {
-      console.error('Error:', error);
+      console.error('Error en login:', error);
       setTipoMensaje('error');
       setMensaje(error.response?.data?.error || 'Error al iniciar sesión');
+      
+      // Limpiar datos de autenticación en caso de error
+      localStorage.removeItem('userId');
+      sessionStorage.removeItem('userRole');
+      sessionStorage.removeItem('isAuthenticated');
     } finally {
       setIsLoading(false);
     }

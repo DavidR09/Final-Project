@@ -6,6 +6,15 @@ import PaymentModal from './components/PaymentModal';
 import './Carrito.css';
 import './styles/global.css';
 
+// Configurar axios
+const axiosInstance = axios.create({
+  baseURL: 'http://localhost:3000',
+  withCredentials: true,
+  headers: {
+    'Content-Type': 'application/json'
+  }
+});
+
 export default function Carrito() {
   const navigate = useNavigate();
   const [productos, setProductos] = useState([]);
@@ -34,9 +43,7 @@ export default function Carrito() {
     // Verificar la autenticación del usuario
     const checkAuth = async () => {
       try {
-        const response = await axios.get('http://localhost:3000/api/auth/check-auth', {
-          withCredentials: true
-        });
+        const response = await axiosInstance.get('/api/auth/check-auth');
         
         if (response.data.rol) {
           setUserRole(response.data.rol);
