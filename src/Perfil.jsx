@@ -187,7 +187,7 @@ export default function Perfil() {
           </div>
 
           <form className="perfil-form" onSubmit={handleSubmit}>
-            <label>Nombre:</label>
+            {/* <label>Nombre:</label>
             <input
               type="text"
               name="nombre_usuario"
@@ -212,7 +212,7 @@ export default function Perfil() {
               value={formData.correo_electronico_usuario}
               onChange={handleInputChange}
               required
-            />
+            /> */}
 
             <label>Contraseña:</label>
             <div className="password-container">

@@ -11,9 +11,24 @@ const axiosInstance = axios.create({
   baseURL: 'http://localhost:3000',
   withCredentials: true,
   headers: {
-    'Content-Type': 'application/json'
+    'Content-Type': 'application/json',
+    'Accept': 'application/json'
   }
 });
+
+// Interceptor para agregar el token en cada petición
+axiosInstance.interceptors.request.use(
+  (config) => {
+    const token = document.cookie.split('; ').find(row => row.startsWith('token='));
+    if (token) {
+      config.headers.Authorization = `Bearer ${token.split('=')[1]}`;
+    }
+    return config;
+  },
+  (error) => {
+    return Promise.reject(error);
+  }
+);
 
 export default function Carrito() {
   const navigate = useNavigate();
@@ -239,7 +254,7 @@ export default function Carrito() {
 
       console.log('Datos del pedido a enviar:', pedidoData);
 
-      const response = await axios.post(`${import.meta.env.VITE_API_URL}/api/pedidos`, pedidoData);
+      const response = await axiosInstance.post('/api/pedidos', pedidoData);
       console.log('Respuesta del servidor:', response.data);
 
       // Limpiar carrito después de crear el pedido exitosamente
