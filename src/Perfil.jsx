@@ -187,13 +187,13 @@ export default function Perfil() {
           </div>
 
           <form className="perfil-form" onSubmit={handleSubmit}>
-            {/* <label>Nombre:</label>
+            <label>Nombre:</label>
             <input
               type="text"
               name="nombre_usuario"
               value={formData.nombre_usuario}
               onChange={handleInputChange}
-              required
+              readOnly
             />
 
             <label>Apellido:</label>
@@ -202,7 +202,7 @@ export default function Perfil() {
               name="apellido_usuario"
               value={formData.apellido_usuario}
               onChange={handleInputChange}
-              required
+              readOnly
             />
 
             <label>Correo Electrónico:</label>
@@ -211,8 +211,9 @@ export default function Perfil() {
               name="correo_electronico_usuario"
               value={formData.correo_electronico_usuario}
               onChange={handleInputChange}
-              required
-            /> */}
+              readOnly
+            /> 
+            <p>Sí desea cambiar su correo, contacte con el administrador.</p>
 
             <label>Contraseña:</label>
             <div className="password-container">

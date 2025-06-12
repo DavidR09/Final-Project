@@ -5,6 +5,7 @@ import axios from 'axios';
 import PaymentModal from './components/PaymentModal';
 import './Carrito.css';
 import './styles/global.css';
+import HeaderIcons from './components/HeaderIcons';
 
 // Configurar axios
 const axiosInstance = axios.create({
@@ -154,7 +155,7 @@ export default function Carrito() {
     }
   };
 
-  const eliminarProducto = (id_repuesto) => {
+  const eliminarProducto = (id_repuesto, nombre_pieza) => {
     Swal.fire({
       title: '¿Estás seguro?',
       text: "¿Deseas eliminar este producto del carrito?",
@@ -166,7 +167,9 @@ export default function Carrito() {
       cancelButtonText: 'Cancelar'
     }).then((result) => {
       if (result.isConfirmed) {
-        const nuevosProductos = productos.filter(p => p.id_repuesto !== id_repuesto);
+        const nuevosProductos = productos.filter(p => 
+          !(p.id_repuesto === id_repuesto && p.nombre_pieza === nombre_pieza)
+        );
         setProductos(nuevosProductos);
         const userId = localStorage.getItem('userId');
         const carritoKey = `carrito_${userId}`;
@@ -180,18 +183,44 @@ export default function Carrito() {
     });
   };
 
-  const actualizarCantidad = (id_repuesto, nuevaCantidad) => {
+  const actualizarCantidad = async (id_repuesto, nombre_pieza, nuevaCantidad) => {
     if (nuevaCantidad < 1) return;
     
-    const nuevosProductos = productos.map(p => 
-      p.id_repuesto === id_repuesto 
-        ? { ...p, cantidad: nuevaCantidad }
-        : p
-    );
-    setProductos(nuevosProductos);
-    const userId = localStorage.getItem('userId');
-    const carritoKey = `carrito_${userId}`;
-    localStorage.setItem(carritoKey, JSON.stringify(nuevosProductos));
+    try {
+      // Verificar stock disponible antes de actualizar
+      const response = await axios.get(`${import.meta.env.VITE_API_URL}/api/productos`);
+      const productoDB = response.data.find(p => 
+        p.id_repuesto === id_repuesto && 
+        p.nombre_pieza === nombre_pieza
+      );
+
+      if (!productoDB) {
+        throw new Error('Producto no encontrado en el catálogo');
+      }
+
+      if (nuevaCantidad > parseInt(productoDB.cantidad_pieza)) {
+        throw new Error(`No hay suficiente stock disponible. Stock actual: ${productoDB.cantidad_pieza}`);
+      }
+
+      const nuevosProductos = productos.map(p => 
+        (p.id_repuesto === id_repuesto && p.nombre_pieza === nombre_pieza)
+          ? { ...p, cantidad: nuevaCantidad }
+          : p
+      );
+      
+      setProductos(nuevosProductos);
+      const userId = localStorage.getItem('userId');
+      const carritoKey = `carrito_${userId}`;
+      localStorage.setItem(carritoKey, JSON.stringify(nuevosProductos));
+    } catch (error) {
+      console.error('Error al actualizar cantidad:', error);
+      Swal.fire({
+        icon: 'error',
+        title: 'Error',
+        text: error.message || 'Error al actualizar la cantidad',
+        confirmButtonColor: '#24487f'
+      });
+    }
   };
 
   const total = productos.reduce((acc, p) => acc + p.precio_pieza * p.cantidad, 0);
@@ -346,18 +375,7 @@ export default function Carrito() {
           <div className="header-title">
             <h1 style={{ fontSize: '23px' }}>Mi Carrito</h1>
           </div>
-          <div className="iconos-header">
-            <img
-              src="/carrito.png"
-              alt="Carrito"
-              onClick={() => handleNavigate('carrito')}
-            />
-            <img
-              src="/perfil.png"
-              alt="Perfil"
-              onClick={() => handleNavigate('perfil')}
-            />
-          </div>
+          <HeaderIcons />
         </header>
 
         <section className="content">
@@ -387,14 +405,14 @@ export default function Carrito() {
                       <div className="cantidad-control">
                         <button 
                           className="cantidad-btn"
-                          onClick={() => actualizarCantidad(p.id_repuesto, p.cantidad - 1)}
+                          onClick={() => actualizarCantidad(p.id_repuesto, p.nombre_pieza, p.cantidad - 1)}
                         >
                           -
                         </button>
                         <span className="cantidad-display">{p.cantidad}</span>
                         <button 
                           className="cantidad-btn"
-                          onClick={() => actualizarCantidad(p.id_repuesto, p.cantidad + 1)}
+                          onClick={() => actualizarCantidad(p.id_repuesto, p.nombre_pieza, p.cantidad + 1)}
                         >
                           +
                         </button>
@@ -404,7 +422,7 @@ export default function Carrito() {
                       <p className="subtotal">Subtotal: RD$ {(p.precio_pieza * p.cantidad).toFixed(2)}</p>
                       <button 
                         className="eliminar-btn"
-                        onClick={() => eliminarProducto(p.id_repuesto)}
+                        onClick={() => eliminarProducto(p.id_repuesto, p.nombre_pieza)}
                       >
                         Eliminar
                       </button>

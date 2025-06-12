@@ -170,38 +170,55 @@ export default function Productos() {
     try {
       // Verificar stock actualizado antes de agregar
       const response = await axios.get(`${import.meta.env.VITE_API_URL}/api/productos`);
-      const productoActualizado = response.data.find(p => p.id_repuesto === producto.id_repuesto);
+      
+      // Asegurarse de que estamos usando el id_repuesto correcto
+      const productoActualizado = response.data.find(p => 
+        p.id_repuesto === producto.id_repuesto && 
+        p.nombre_pieza === producto.nombre_pieza
+      );
 
       if (!productoActualizado) {
-        throw new Error('Producto no encontrado');
+        throw new Error('Producto no encontrado en el catálogo');
       }
 
-      if (productoActualizado.cantidad_pieza <= 0) {
-        throw new Error('Este producto no está disponible actualmente');
+      // Convertir a número para asegurar comparación correcta
+      const cantidadDisponible = parseInt(productoActualizado.cantidad_pieza);
+      
+      if (isNaN(cantidadDisponible)) {
+        throw new Error('Error al verificar el stock disponible');
+      }
+
+      if (cantidadDisponible <= 0) {
+        throw new Error(`El producto ${productoActualizado.nombre_pieza} no está disponible actualmente`);
       }
 
       const carritoKey = `carrito_${userId}`;
       let carrito = JSON.parse(localStorage.getItem(carritoKey)) || [];
 
-      // Verificar si el producto ya está en el carrito
-      const productoExistente = carrito.find(item => item.id_repuesto === producto.id_repuesto);
+      // Verificar si el producto ya está en el carrito usando id_repuesto y nombre_pieza
+      const productoExistente = carrito.find(item => 
+        item.id_repuesto === producto.id_repuesto && 
+        item.nombre_pieza === producto.nombre_pieza
+      );
 
       if (productoExistente) {
-        // Verificar si hay suficiente stock
-        if (productoExistente.cantidad >= productoActualizado.cantidad_pieza) {
-          throw new Error(`No hay suficiente stock disponible. Stock actual: ${productoActualizado.cantidad_pieza}`);
+        // Verificar si hay suficiente stock para la cantidad solicitada
+        if (productoExistente.cantidad >= cantidadDisponible) {
+          throw new Error(`No hay suficiente stock disponible. Stock actual: ${cantidadDisponible}`);
         }
         // Actualizar cantidad y precio
         productoExistente.cantidad += 1;
         productoExistente.precio_pieza = parseFloat(productoActualizado.precio_pieza);
       } else {
-        // Agregar nuevo producto
+        // Agregar nuevo producto con identificación única
         carrito.push({
           id_repuesto: productoActualizado.id_repuesto,
           nombre_pieza: productoActualizado.nombre_pieza,
           precio_pieza: parseFloat(productoActualizado.precio_pieza),
           cantidad: 1,
-          imagen_pieza: productoActualizado.imagen_pieza
+          imagen_pieza: productoActualizado.imagen_pieza,
+          stock_disponible: cantidadDisponible,
+          categoria_id: productoActualizado.id_categoria_pieza // Agregar el ID de categoría para mejor identificación
         });
       }
 
@@ -211,11 +228,16 @@ export default function Productos() {
       // Disparar evento para actualizar el contador del carrito
       window.dispatchEvent(new Event('carritoActualizado'));
 
-      // Mostrar mensaje de éxito
+      // Mostrar mensaje de éxito con información del stock restante
       await Swal.fire({
         icon: 'success',
         title: '¡Agregado!',
-        text: 'El producto se agregó al carrito',
+        html: `
+          <p>El producto se agregó al carrito</p>
+          <p style="margin-top: 10px; font-size: 0.9em; color: #666;">
+            Stock disponible: ${cantidadDisponible - 1}
+          </p>
+        `,
         confirmButtonColor: '#24487f',
         showCancelButton: true,
         confirmButtonText: 'Ir al carrito',
@@ -227,6 +249,7 @@ export default function Productos() {
           navigate('/productos');
         }
       });
+
     } catch (error) {
       console.error('Error al agregar al carrito:', error);
       await Swal.fire({

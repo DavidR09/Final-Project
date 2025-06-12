@@ -1,5 +1,6 @@
 import express from 'express';
 import connectToDatabase from '../database/connectionMySQL.js';
+import { validateAndUpdateStock, updateStock, checkLowStock } from '../utils/stockValidation.js';
 import { verifyToken, checkRole } from '../middleware/auth.js';
 
 const router = express.Router();
@@ -11,27 +12,14 @@ router.use(verifyToken);
 router.post('/', async (req, res) => {
   let connection;
   try {
-    console.log('Datos recibidos completos:', JSON.stringify(req.body, null, 2));
-    
-    const { productos, total, direccion_envio_pedido } = req.body;
-    const id_usuario = req.user.id; // Obtener el ID del usuario del token
+    const { productos, total, id_usuario, direccion_envio_pedido } = req.body;
 
-    console.log('Estructura de productos:', JSON.stringify(productos, null, 2));
-
-    // Validaciones básicas
-    if (!Array.isArray(productos) || productos.length === 0) {
-      return res.status(400).json({ 
-        error: 'La lista de productos es inválida',
-        productos: productos 
-      });
+    if (!productos || !Array.isArray(productos) || productos.length === 0) {
+      return res.status(400).json({ error: 'Debe proporcionar productos válidos' });
     }
 
-    if (!total || isNaN(total) || total <= 0) {
-      return res.status(400).json({ error: 'El total del pedido es inválido' });
-    }
-
-    if (!direccion_envio_pedido || typeof direccion_envio_pedido !== 'string' || direccion_envio_pedido.trim() === '') {
-      return res.status(400).json({ error: 'La dirección de envío es inválida' });
+    if (!id_usuario) {
+      return res.status(400).json({ error: 'Debe proporcionar un ID de usuario' });
     }
 
     // Validar estructura de productos
@@ -55,12 +43,12 @@ router.post('/', async (req, res) => {
         });
       }
 
-      // Convertir valores a números si son strings
+      // Convertir valores a números
       producto.id_repuesto = Number(producto.id_repuesto);
       producto.cantidad = Number(producto.cantidad);
       producto.precio = Number(producto.precio);
 
-      // Verificar que los valores son válidos
+      // Validar valores
       if (isNaN(producto.id_repuesto) || producto.id_repuesto <= 0) {
         return res.status(400).json({ 
           error: 'ID de repuesto inválido',
@@ -95,69 +83,64 @@ router.post('/', async (req, res) => {
       return res.status(404).json({ error: 'Usuario no encontrado' });
     }
 
-    // Verificar que todos los productos existen y tienen stock suficiente
+    // Verificar stock de todos los productos antes de comenzar la transacción
     for (const producto of productos) {
-      const [stock] = await connection.execute(
-        'SELECT cantidad_pieza FROM pieza WHERE id_repuesto = ?',
-        [producto.id_repuesto]
-      );
-
-      if (stock.length === 0) {
-        return res.status(404).json({ 
-          error: `El producto con ID ${producto.id_repuesto} no existe` 
-        });
-      }
-
-      if (stock[0].cantidad_pieza < producto.cantidad) {
-        return res.status(400).json({ 
-          error: `Stock insuficiente para el producto con ID ${producto.id_repuesto}`,
-          stockDisponible: stock[0].cantidad_pieza,
-          cantidadSolicitada: producto.cantidad
-        });
+      try {
+        await validateAndUpdateStock(connection, producto, producto.cantidad);
+      } catch (error) {
+        return res.status(400).json({ error: error.message });
       }
     }
 
     await connection.beginTransaction();
 
-    // Insertar el pedido con estado pendiente (id_estado_pedido = 1)
-    const [pedidoResult] = await connection.execute(
-      'INSERT INTO pedido (id_usuario, total_pedido, id_estado_pedido, direccion_envio_pedido) VALUES (?, ?, 1, ?)',
-      [id_usuario, total, direccion_envio_pedido]
-    );
+    try {
+      // Insertar el pedido
+      const [pedidoResult] = await connection.execute(
+        'INSERT INTO pedido (id_usuario, total_pedido, id_estado_pedido, direccion_envio_pedido) VALUES (?, ?, 1, ?)',
+        [id_usuario, total, direccion_envio_pedido]
+      );
 
-    const pedidoId = pedidoResult.insertId;
+      const pedidoId = pedidoResult.insertId;
 
-    // Insertar el pago
-    await connection.execute(
-      'INSERT INTO pago (estado_pago, metodo_pago, monto_pago, id_pedido) VALUES (?, ?, ?, ?)',
-      [1, req.body.metodo_pago, total, pedidoId]
-    );
-    
-    // Insertar los detalles del pedido
-    for (const producto of productos) {
-      const importe_total = producto.cantidad * producto.precio * 1.18;  // Aplicamos el ITBIS al importe total
+      // Insertar el pago
+      await connection.execute(
+        'INSERT INTO pago (estado_pago, metodo_pago, monto_pago, id_pedido) VALUES (?, ?, ?, ?)',
+        [1, req.body.metodo_pago, total, pedidoId]
+      );
       
-      await connection.execute(
-        'INSERT INTO detalle_pedido (id_pedido, id_pieza, cantidad_detalle, precio_unitario_pieza, importe_total_pedido) VALUES (?, ?, ?, ?, ?)',
-        [pedidoId, producto.id_repuesto, producto.cantidad, producto.precio, importe_total]
-      );
+      // Insertar detalles y actualizar stock
+      for (const producto of productos) {
+        const importe_total = producto.cantidad * producto.precio * 1.18;
+        
+        await connection.execute(
+          'INSERT INTO detalle_pedido (id_pedido, id_pieza, cantidad_detalle, precio_unitario_pieza, importe_total_pedido) VALUES (?, ?, ?, ?, ?)',
+          [pedidoId, producto.id_repuesto, producto.cantidad, producto.precio, importe_total]
+        );
 
-      // Actualizar el stock
-      await connection.execute(
-        'UPDATE pieza SET cantidad_pieza = cantidad_pieza - ? WHERE id_repuesto = ?',
-        [producto.cantidad, producto.id_repuesto]
-      );
+        // Actualizar stock
+        await updateStock(connection, producto.id_repuesto, producto.cantidad);
+      }
+
+      // Verificar productos con stock bajo
+      const productosStockBajo = await checkLowStock(connection);
+      if (productosStockBajo.length > 0) {
+        console.log('Productos con stock bajo:', productosStockBajo);
+      }
+
+      await connection.commit();
+      
+      res.status(201).json({ 
+        message: 'Pedido creado exitosamente',
+        id_pedido: pedidoId
+      });
+    } catch (error) {
+      await connection.rollback();
+      throw error;
     }
 
-    await connection.commit();
-    
-    res.status(201).json({ 
-      message: 'Pedido creado exitosamente', 
-      id_pedido: pedidoId 
-    });
-
   } catch (error) {
-    console.error('Error completo:', error);
+    console.error('Error al crear pedido:', error);
     
     if (connection) {
       try {
@@ -167,20 +150,22 @@ router.post('/', async (req, res) => {
       }
     }
 
-    res.status(500).json({ 
-      error: 'Error al crear el pedido',
-      message: error.message,
-      sqlMessage: error.sqlMessage,
-      code: error.code,
-      details: error.toString()
-    });
-
+    // Determinar el tipo de error y enviar una respuesta apropiada
+    if (error.code === 'ER_CHECK_CONSTRAINT_VIOLATED') {
+      res.status(400).json({ 
+        error: 'No hay suficiente stock disponible para completar el pedido'
+      });
+    } else {
+      res.status(500).json({ 
+        error: error.message || 'Error al crear el pedido'
+      });
+    }
   } finally {
     if (connection) {
       try {
         await connection.end();
-      } catch (closeError) {
-        console.error('Error al cerrar la conexión:', closeError);
+      } catch (err) {
+        console.error('Error al cerrar la conexión:', err);
       }
     }
   }
@@ -375,4 +360,4 @@ router.put('/:id/cancelar', async (req, res) => {
   }
 });
 
-export default router; 
+export default router;
