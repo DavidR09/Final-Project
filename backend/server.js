@@ -1,6 +1,7 @@
 import express from 'express';
 import cors from 'cors';
 import session from 'express-session';
+import cookieParser from 'cookie-parser';
 import stripeRoutes from './routes/stripe.js';
 import talleresRoutes from './routes/talleres.js';
 import pedidosRoutes from './routes/pedidos.js';
@@ -12,12 +13,16 @@ import usuariosRoutes from './routes/usuarios.js';
 
 const app = express();
 
-// Configuración de CORS antes de cualquier otra configuración
+// Configuración de cookie-parser
+app.use(cookieParser());
+
+// Configuración de CORS
 app.use(cors({
   origin: 'http://localhost:5173',
   credentials: true,
   methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
-  allowedHeaders: ['Content-Type', 'Authorization']
+  allowedHeaders: ['Content-Type', 'Authorization', 'Accept', 'Origin', 'X-Requested-With'],
+  exposedHeaders: ['Set-Cookie']
 }));
 
 // Middleware para parsear JSON
