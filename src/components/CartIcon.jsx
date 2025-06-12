@@ -11,7 +11,9 @@ export default function CartIcon() {
       if (userId) {
         const carritoKey = `carrito_${userId}`;
         const carrito = JSON.parse(localStorage.getItem(carritoKey)) || [];
-        setCantidadProductos(carrito.length);
+        // Sumar todas las cantidades de los productos
+        const cantidadTotal = carrito.reduce((total, producto) => total + producto.cantidad, 0);
+        setCantidadProductos(cantidadTotal);
       } else {
         setCantidadProductos(0);
       }
