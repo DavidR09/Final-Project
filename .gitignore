@@ -31,3 +31,4 @@ src/__tests__/pureFunctions.test.js
 src/__tests__/security.test.jsx
 src/setupTests.js
 src/utils/carritoUtils.js
+.babelrc
