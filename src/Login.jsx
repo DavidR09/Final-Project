@@ -30,7 +30,11 @@ export default function Login() {
       if (response.data && response.data.userId) {
         // Guardar el token JWT en localStorage
         if (response.data.token) {
-          localStorage.setItem('token', response.data.token);
+          // Asegurarse de que el token tenga el formato correcto
+          const token = response.data.token.startsWith('Bearer ') 
+            ? response.data.token 
+            : `Bearer ${response.data.token}`;
+          localStorage.setItem('token', token);
         }
         localStorage.setItem('userId', response.data.userId);
         sessionStorage.setItem('userRole', response.data.rol);
