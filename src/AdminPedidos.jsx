@@ -230,11 +230,17 @@ export default function AdminPedidos() {
     }
 
     try {
-      // Aquí iría la lógica para guardar la selección de repuestos
+      // Simular la asignación de repuestos y el cambio de estado localmente
+      const repuestosAsignados = repuestosSeleccionados.map(r => ({ nombre_repuesto: r.nombre_repuesto, id_repuesto: r.id_repuesto }));
+      setPedidoSeleccionado(prev => prev ? {
+        ...prev,
+        repuestos_asignados: repuestosAsignados,
+        nombre_estado: 'EN PROCESO'
+      } : prev);
       await Swal.fire({
         icon: 'success',
         title: '¡Éxito!',
-        text: 'Repuestos asignados correctamente',
+        text: 'Repuestos asignados correctamente y pedido en proceso',
         confirmButtonColor: '#24487f'
       });
       cerrarModalRepuestos();
@@ -311,9 +317,7 @@ export default function AdminPedidos() {
                         <p className="fecha">{formatearFecha(pedido.fecha_pedido)}</p>
                       </div>
                       <div className="pedido-estado">
-                        <span className={`estado-badge ${pedido.nombre_estado.toLowerCase()}`}>
-                          {pedido.nombre_estado}
-                        </span>
+                        <span className={`estado-badge ${pedidoSeleccionado?.nombre_estado?.toLowerCase() || pedido.nombre_estado.toLowerCase()}`}>{pedidoSeleccionado?.nombre_estado || pedido.nombre_estado}</span>
                       </div>
                     </div>
 
@@ -324,6 +328,8 @@ export default function AdminPedidos() {
                             const detalle = pedido.detalles.find(d => d.id_detalle_pedido === detalleId);
                             if (!detalle) return null;
                             
+                            // Buscar repuesto asignado (si existe)
+                            const repuestoAsignado = pedidoSeleccionado.repuestos_asignados?.find(r => r.id_repuesto === detalle.id_pieza);
                             return (
                               <div 
                                 key={`pedido-${pedido.id_pedido}-detalle-${detalle.id_detalle_pedido}`}
@@ -342,6 +348,11 @@ export default function AdminPedidos() {
                                   <h4>{detalle.nombre_pieza}</h4>
                                   <p>Precio sin ITBIS: RD$ {formatearPrecio(detalle.precio_unitario_pieza)}</p>
                                   <p>Cantidad: {detalle.cantidad_detalle}</p>
+                                  {repuestoAsignado && (
+                                    <div style={{ color: '#24487f', fontWeight: 'bold', marginTop: '5px' }}>
+                                      Repuesto asignado: {repuestoAsignado.nombre_repuesto}
+                                    </div>
+                                  )}
                                 </div>
                                 <div className="producto-total">
                                   <p>Total (con ITBIS): RD$ {formatearPrecio(detalle.importe_total_pedido)}</p>
