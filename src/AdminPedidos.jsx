@@ -2,47 +2,45 @@ import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import axios from 'axios';
 import Swal from 'sweetalert2';
+import { useAuth } from './hooks/useAuth';
 
 // Configurar axios para incluir credenciales en todas las solicitudes
 axios.defaults.withCredentials = true;
 axios.defaults.headers.common['Content-Type'] = 'application/json';
 
 const axiosInstance = axios.create({
-  baseURL: 'https://backend-respuestosgra.up.railway.app/',
+  baseURL: 'https://backend-respuestosgra.up.railway.app',
   withCredentials: true,
   headers: {
     'Content-Type': 'application/json'
   }
 });
 
-// Interceptor para debugging
+// Interceptor para añadir el token a todas las peticiones
 axiosInstance.interceptors.request.use(request => {
-  console.log('Request Config:', {
-    url: request.url,
-    method: request.method,
-    headers: request.headers,
-    withCredentials: request.withCredentials,
-    cookies: document.cookie
-  });
+  const token = localStorage.getItem('token');
+  console.log('Token en localStorage:', token);
+  
+  if (token) {
+    request.headers.Authorization = `Bearer ${token}`;
+    console.log('Headers de la petición:', request.headers);
+  } else {
+    console.log('No se encontró token en localStorage');
+  }
   return request;
+}, error => {
+  console.error('Error en el interceptor de request:', error);
+  return Promise.reject(error);
 });
 
+// Interceptor para manejar errores de respuesta
 axiosInstance.interceptors.response.use(
-  response => {
-    console.log('Response Headers:', response.headers);
-    return response;
-  },
+  response => response,
   error => {
-    console.log('Response Error Details:', {
+    console.error('Error en la respuesta:', {
       status: error.response?.status,
       data: error.response?.data,
-      headers: error.response?.headers,
-      config: {
-        url: error.config?.url,
-        method: error.config?.method,
-        headers: error.config?.headers,
-        withCredentials: error.config?.withCredentials
-      }
+      headers: error.response?.headers
     });
     return Promise.reject(error);
   }
@@ -50,6 +48,7 @@ axiosInstance.interceptors.response.use(
 
 export default function AdminPedidos() {
   const navigate = useNavigate();
+  const { checkAuth, isAuthenticated, userRole, isLoading } = useAuth();
   const [pedidos, setPedidos] = useState([]);
   const [loading, setLoading] = useState(true);
   const [pedidoSeleccionado, setPedidoSeleccionado] = useState(null);
@@ -59,96 +58,70 @@ export default function AdminPedidos() {
   const [loadingRepuestos, setLoadingRepuestos] = useState(false);
 
   useEffect(() => {
-    const checkAuth = async () => {
+    const verifyAccess = async () => {
       try {
-        // Verificar si hay una sesión activa
-        const sessionCookie = document.cookie.split('; ').find(row => row.startsWith('session='));
-        console.log('Session Cookie:', sessionCookie);
+        console.log('Verificando acceso...');
+        console.log('Estado de autenticación:', {
+          isAuthenticated,
+          userRole,
+          token: localStorage.getItem('token')
+        });
 
-        if (!sessionCookie) {
+        // Esperar a que la verificación de autenticación termine
+        if (isLoading) {
+          console.log('Esperando verificación de autenticación...');
+          return;
+        }
+
+        // Verificar autenticación usando el hook
+        await checkAuth();
+
+        if (!isAuthenticated) {
           throw new Error('No hay sesión activa');
         }
 
-        console.log('Verificando autenticación...');
-        const response = await axiosInstance.get('/api/auth/check-auth');
-        console.log('Respuesta de autenticación:', response.data);
-
-        if (response.data.rol !== 'administrador') {
+        if (userRole !== 'administrador') {
           throw new Error('No tienes permisos de administrador');
         }
 
+        console.log('Acceso verificado, cargando pedidos...');
         await cargarPedidos();
       } catch (error) {
-        console.error('Error detallado de autenticación:', {
-          message: error.message,
-          response: error.response?.data,
-          status: error.response?.status,
-          headers: error.response?.headers
-        });
-
+        console.error('Error de acceso:', error);
+        
         let mensajeError = 'Por favor, inicia sesión como administrador';
         
         if (error.message === 'No hay sesión activa') {
           mensajeError = 'No hay una sesión activa. Por favor, inicia sesión.';
-        } else if (error.response?.status === 401) {
-          mensajeError = 'Tu sesión ha expirado o no tienes permisos de administrador';
-        } else if (error.response?.status === 403) {
+        } else if (error.message === 'No tienes permisos de administrador') {
           mensajeError = 'No tienes permisos para acceder a esta página';
         }
 
         await Swal.fire({
           icon: 'error',
-          title: 'Error de autenticación',
+          title: 'Error de acceso',
           text: mensajeError,
           confirmButtonColor: '#24487f'
         });
 
         // Limpiar datos de sesión
-        localStorage.removeItem('user');
-        sessionStorage.removeItem('user');
+        localStorage.clear();
+        sessionStorage.clear();
         
         navigate('/login');
       }
     };
 
-    checkAuth();
-  }, [navigate]);
+    verifyAccess();
+  }, [navigate, checkAuth, isAuthenticated, userRole, isLoading]);
 
   const cargarPedidos = async () => {
     try {
-      console.log('Iniciando carga de pedidos...');
-      
-      const response = await axiosInstance.get('https://backend-respuestosgra.up.railway.app/api/pedidos/admin');
-
-      console.log('Pedidos recibidos:', response.data);
+      const response = await axiosInstance.get('/api/pedidos/admin');
       setPedidos(response.data);
     } catch (error) {
       console.error('Error al cargar los pedidos:', error);
-      
-      let mensajeError = 'No se pudieron cargar los pedidos';
-      if (error.response) {
-        console.error('Detalles del error:', error.response.data);
-        mensajeError = error.response.data.error || mensajeError;
-
-        // Si el error es de autenticación o autorización, redirigir al login
-        if (error.response.status === 401 || error.response.status === 403) {
-          await Swal.fire({
-            icon: 'error',
-            title: 'Error de autenticación',
-            text: 'Por favor, inicia sesión nuevamente.',
-            confirmButtonColor: '#24487f'
-          });
-          navigate('/login');
-          return;
-        }
-      }
-
-      await Swal.fire({
-        icon: 'error',
-        title: 'Error',
-        text: mensajeError,
-        confirmButtonColor: '#24487f'
-      });
+      throw error;
     } finally {
       setLoading(false);
     }
@@ -275,6 +248,10 @@ export default function AdminPedidos() {
       });
     }
   };
+
+  if (isLoading) {
+    return <div>Cargando...</div>;
+  }
 
   return (
     <div className="inicio-container">

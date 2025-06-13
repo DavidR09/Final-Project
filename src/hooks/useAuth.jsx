@@ -3,7 +3,7 @@ import { useNavigate, useLocation } from 'react-router-dom';
 import axiosInstance from '../config/axios';
 
 export const useAuth = () => {
-  const [userRole, setUserRole] = useState(() => sessionStorage.getItem('userRole'));
+  const [userRole, setUserRole] = useState(() => localStorage.getItem('userRole'));
   const [isLoading, setIsLoading] = useState(true);
   const [isAuthenticated, setIsAuthenticated] = useState(() => {
     const token = localStorage.getItem('token');
@@ -34,12 +34,11 @@ export const useAuth = () => {
       
       console.log('Respuesta de autenticación:', response.data);
       
-      if (response.data && response.data.rol) {
+      if (response.data && response.data.authenticated) {
         console.log('Usuario autenticado con rol:', response.data.rol);
         setUserRole(response.data.rol);
         setIsAuthenticated(true);
-        sessionStorage.setItem('userRole', response.data.rol);
-        sessionStorage.setItem('isAuthenticated', 'true');
+        localStorage.setItem('userRole', response.data.rol);
       } else {
         console.log('Usuario no autenticado - datos inválidos');
         handleAuthFailure();
@@ -61,13 +60,11 @@ export const useAuth = () => {
   }, [location.pathname, navigate]);
 
   const handleAuthFailure = useCallback(() => {
-    // Limpiar estado y sessionStorage
+    // Limpiar estado y localStorage
     setIsAuthenticated(false);
     setUserRole(null);
-    sessionStorage.removeItem('userRole');
-    sessionStorage.removeItem('isAuthenticated');
-    localStorage.removeItem('userId');
-    localStorage.removeItem('token');
+    localStorage.clear();
+    sessionStorage.clear();
 
     // Solo redirigir si no estamos ya en una ruta pública
     if (!publicRoutes.includes(location.pathname)) {
