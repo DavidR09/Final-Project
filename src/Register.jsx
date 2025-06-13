@@ -1,58 +1,55 @@
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import axios from 'axios';
+import axiosInstance from './config/axios';
 import Swal from 'sweetalert2';
 
 export default function Register() {
   const navigate = useNavigate();
-  const [nombre, setNombre] = useState('');
-  const [apellido, setApellido] = useState('');
-  const [correo, setCorreo] = useState('');
-  const [rol, setRol] = useState('');
-  const [contrasenia, setContrasenia] = useState('');
-  const [telefono, setTelefono] = useState('');
+  const [formData, setFormData] = useState({
+    nombre_usuario: '',
+    apellido_usuario: '',
+    correo_electronico_usuario: '',
+    contrasenia_usuario: '',
+    telefono_usuario: '',
+    rol: 'cliente' // valor por defecto
+  });
+  const [mensaje, setMensaje] = useState(null);
+  const [tipoMensaje, setTipoMensaje] = useState('');
   const [isLoading, setIsLoading] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
 
-  const handleRegister = async (e) => {
+  const handleInputChange = (e) => {
+    const { name, value } = e.target;
+    setFormData(prev => ({
+      ...prev,
+      [name]: value
+    }));
+  };
+
+  const handleSubmit = async (e) => {
     e.preventDefault();
     setIsLoading(true);
-
-    const nuevoUsuario = {
-      nombre_usuario: nombre,
-      apellido_usuario: apellido,
-      correo_electronico_usuario: correo,
-      rol_usuario: rol,
-      contrasenia_usuario: contrasenia,
-      telefono_usuario: telefono,
-      fecha_registro_usuario: new Date().toISOString()
-    };
+    setMensaje(null);
 
     try {
-      const response = await axios.post('https://backend-respuestosgra.up.railway.app/api/usuarios/insertar-usuario', nuevoUsuario, {
-        headers: {
-          'Content-Type': 'application/json'
-        }
-      });
-
-      console.log('Respuesta del servidor:', response.data);
-
-      await Swal.fire({
-        icon: 'success',
-        title: '¡Registro exitoso!',
-        text: 'El usuario ha sido registrado correctamente.',
-        confirmButtonColor: '#24487f'
-      });
-
-      // Limpiar campos
-      setNombre('');
-      setApellido('');
-      setCorreo('');
-      setRol('');
-      setContrasenia('');
-      setTelefono('');
+      const response = await axiosInstance.post('/api/auth/register', formData);
+      
+      if (response.data.success) {
+        await Swal.fire({
+          icon: 'success',
+          title: '¡Registro exitoso!',
+          text: 'El usuario ha sido registrado correctamente.',
+          confirmButtonColor: '#24487f'
+        });
+        navigate('/login');
+      } else {
+        throw new Error(response.data.error || 'Error en el registro');
+      }
     } catch (error) {
       console.error('Error:', error);
+      setTipoMensaje('error');
+      setMensaje(error.response?.data?.error || 'Error al registrar el usuario');
+      
       await Swal.fire({
         icon: 'error',
         title: 'Error',
@@ -65,275 +62,232 @@ export default function Register() {
   };
 
   return (
-    <div className="inicio-container">
-      <aside className="sidebar">
-        <div className="logo-wrapper" onClick={() => navigate('/inicio')}>
+    <div className="welcome-container">
+      <div className="left-section">
+        <img src="/fotinicio.jpg" alt="Dashboard ilustración" />
+      </div>
+      <div className="right-section">
+        <div
+          className="logo-container"
+          onClick={() => navigate('/')}
+          style={{ cursor: 'pointer' }}
+        >
           <img src="/Logo.png" alt="Logo" />
         </div>
-        <ul>
-          <li onClick={() => navigate('/Inicio')}>Panel de Administración</li>
-          <li onClick={() => navigate('/register')}>Registrar Usuario</li>
-          <li onClick={() => navigate('/register-taller')}>Registrar Taller</li>
-          <li onClick={() => navigate('/register-repuesto')}>Registrar Repuesto</li>
-          <li onClick={() => navigate('/admin-pedidos')}>Ver Pedidos Clientes</li>
-          <li onClick={() => navigate('/admin-repuestos-piezas')}>Gestionar Repuestos y Piezas</li>
-          <li onClick={() => navigate('/admin-usuarios')}>Gestionar Usuarios</li>
-          <li onClick={() => navigate('/Inicio_Client')}>Ver Vista Cliente</li>
-          <li onClick={() => navigate('/')}>Cerrar sesión</li>
-        </ul>
-      </aside>
-
-      <main className="main-content">
-        <section className="content">
-          <div className="welcome">
-            <h1>Registro de Usuario</h1>
-          </div>
-
-          <form className="perfil-form" onSubmit={handleRegister}>
-            <label>Nombre:</label>
-            <input 
-              type="text" 
-              value={nombre} 
-              onChange={(e) => setNombre(e.target.value)} 
-              required 
-              disabled={isLoading}
-            />
-
-            <label>Apellido:</label>
-            <input 
-              type="text" 
-              value={apellido} 
-              onChange={(e) => setApellido(e.target.value)} 
-              required 
-              disabled={isLoading}
-            />
-
-            <label>Correo Electrónico:</label>
-            <input 
-              type="email" 
-              value={correo} 
-              onChange={(e) => setCorreo(e.target.value)} 
-              required 
-              disabled={isLoading}
-            />
-
-            <label>Rol:</label>
-            <select 
-              value={rol} 
-              onChange={(e) => setRol(e.target.value)} 
-              required 
-              disabled={isLoading}
+        <div className="register-box">
+          <h2>Registro de Usuario</h2>
+          {mensaje && (
+            <div
+              className={`mensaje ${tipoMensaje}`}
+              style={{
+                color: tipoMensaje === 'error' ? '#ff6b6b' : '#51cf66',
+                marginBottom: '15px',
+                padding: '10px',
+                borderRadius: '5px',
+                backgroundColor: tipoMensaje === 'error' ? 'rgba(255, 107, 107, 0.1)' : 'rgba(81, 207, 102, 0.1)'
+              }}
             >
-              <option value="">Seleccione un rol</option>
-              <option value="administrador">Administrador</option>
-              <option value="usuario">Usuario</option>
-            </select>
-
-            <label>Contraseña:</label>
-            <div style={{ position: 'relative' }}>
-              <input
-                type={showPassword ? "text" : "password"}
-                value={contrasenia}
-                onChange={(e) => setContrasenia(e.target.value)}
-                required
-                disabled={isLoading}
-              />
-              <span 
-                onClick={() => setShowPassword(!showPassword)}
-                className="password-toggle"
-              >
-                {showPassword ? '👁️' : '🙈'}
-              </span>
+              {mensaje}
             </div>
-
-            <label>Teléfono:</label>
-            <input 
-              type="tel" 
-              value={telefono} 
-              onChange={(e) => setTelefono(e.target.value)} 
-              required 
-              pattern="[0-9]{3}-[0-9]{3}-[0-9]{4}"
-              placeholder="123-456-7890"
-              disabled={isLoading}
-            />
-
+          )}
+          <form onSubmit={handleSubmit}>
+            <div className="user-box">
+              <input
+                type="text"
+                name="nombre_usuario"
+                required
+                value={formData.nombre_usuario}
+                onChange={handleInputChange}
+                maxLength="30"
+              />
+              <label>Nombre</label>
+            </div>
+            <div className="user-box">
+              <input
+                type="text"
+                name="apellido_usuario"
+                required
+                value={formData.apellido_usuario}
+                onChange={handleInputChange}
+                maxLength="30"
+              />
+              <label>Apellido</label>
+            </div>
+            <div className="user-box">
+              <input
+                type="email"
+                name="correo_electronico_usuario"
+                required
+                value={formData.correo_electronico_usuario}
+                onChange={handleInputChange}
+                maxLength="50"
+              />
+              <label>Correo Electrónico</label>
+            </div>
+            <div className="user-box">
+              <div style={{ position: 'relative' }}>
+                <input
+                  type={showPassword ? "text" : "password"}
+                  name="contrasenia_usuario"
+                  required
+                  value={formData.contrasenia_usuario}
+                  onChange={handleInputChange}
+                />
+                <span 
+                  onClick={() => setShowPassword(!showPassword)}
+                  style={{
+                    position: 'absolute',
+                    right: '10px',
+                    top: '50%',
+                    transform: 'translateY(-50%)',
+                    cursor: 'pointer',
+                    fontSize: '20px'
+                  }}
+                >
+                  {showPassword ? '👁️' : '👁️‍🗨️'}
+                </span>
+                <label>Contraseña</label>
+              </div>
+            </div>
+            <div className="user-box">
+              <input
+                type="tel"
+                name="telefono_usuario"
+                required
+                value={formData.telefono_usuario}
+                onChange={handleInputChange}
+                pattern="[0-9]{12}"
+                title="El teléfono debe tener 12 dígitos"
+              />
+              <label>Teléfono (12 dígitos)</label>
+            </div>
             <button 
               type="submit" 
-              className="submit-button"
+              className="register-button"
               disabled={isLoading}
             >
-              {isLoading ? 'Registrando...' : 'Registrar Usuario'}
+              {isLoading ? 'Registrando...' : 'Registrar'}
             </button>
           </form>
-        </section>
-      </main>
+        </div>
+      </div>
 
       <style>{`
-        .inicio-container {
+        .welcome-container {
           display: flex;
           height: 100vh;
           font-family: 'Segoe UI', sans-serif;
-          background-color: #ffffff;
         }
 
-        .sidebar {
-          width: 250px;
-          background-color: #24487f;
-          color: white;
-          padding: 20px;
-        }
-
-        .logo-wrapper {
-          width: 120px;
-          height: 120px;
-          background-color: white;
-          border-radius: 50%;
-          overflow: hidden;
-          margin: 0 auto 20px auto;
+        .left-section {
+          flex: 1;
+          background-color: #2a2829;
           display: flex;
           align-items: center;
           justify-content: center;
-          cursor: pointer;
+          overflow: hidden;
         }
 
-        .logo-wrapper img {
-          width: 90%;
-          height: 90%;
-          object-fit: contain;
+        .left-section img {
+          width: 100%;
+          height: 100%;
+          object-fit: cover;
         }
 
-        .sidebar ul {
-          list-style: none;
-          padding: 0;
-        }
-
-        .sidebar li {
-          margin-bottom: 15px;
-          cursor: pointer;
-          display: flex;
-          align-items: center;
-          gap: 10px;
-          padding: 8px;
-          border-radius: 5px;
-        }
-
-        .sidebar li:hover {
-          background-color: #333;
-        }
-
-        .icon-img {
-          width: 18px;
-          height: 18px;
-        }
-
-        .main-content {
+        .right-section {
           flex: 1;
           display: flex;
           flex-direction: column;
-        }
-
-        .header {
-          display: flex;
-          justify-content: flex-end;
           align-items: center;
+          justify-content: center;
+          background-color: white;
           padding: 20px;
-          background-color: #24487f;
         }
 
-        .cart-img,
-        .perfil-img {
-          width: 30px;
-          height: 30px;
+        .logo-container {
+          width: 100px;
+          height: 100px;
+          border-radius: 50%;
+          overflow: hidden;
+          margin-bottom: 20px;
+          box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
         }
 
-        .content {
-          padding: 20px 40px;
-          display: flex;
-          flex-direction: column;
-          align-items: center;
-          overflow-y: auto;
-          background-color: #ffffff;
-          color: black;
+        .logo-container img {
+          width: 100%;
+          height: 100%;
+          object-fit: cover;
         }
 
-        .welcome {
-          margin-bottom: 30px;
+        .register-box {
+          width: 400px;
+          padding: 40px;
+          background: rgba(90, 86, 86, 0.36);
+          color: white;
+          border-radius: 10px;
+          box-shadow: 0 15px 25px rgba(0, 0, 0, 0.5);
           text-align: center;
         }
 
-        .perfil-form {
-          width: 100%;
-          max-width: 500px;
-          display: flex;
-          flex-direction: column;
-          gap: 15px;
+        .register-box h2 {
+          margin-bottom: 30px;
+          color: #24487f;
         }
 
-        .perfil-form label {
-          font-weight: bold;
-          color: #333;
-        }
-
-        .perfil-form input {
-          padding: 10px;
-          border: 1px solid #ccc;
-          border-radius: 5px;
-          font-size: 16px;
-          width: 100%;
-          box-sizing: border-box;
-        }
-
-        .password-container {
+        .user-box {
           position: relative;
-          width: 100%;
+          margin-bottom: 30px;
         }
 
-        .password-input {
-          padding: 10px 40px 10px 10px !important;
-          border: 1px solid #ccc;
-          border-radius: 5px;
+        .user-box input {
+          width: 100%;
+          padding: 10px 0;
           font-size: 16px;
-          width: 100%;
-          box-sizing: border-box;
-        }
-
-        .password-toggle {
-          position: absolute;
-          right: 10px;
-          top: 50%;
-          transform: translateY(-50%);
-          cursor: pointer;
-          font-size: 18px;
-          user-select: none;
-          background: white;
-          padding: 2px;
-          display: flex;
-          align-items: center;
-          justify-content: center;
-          width: 24px;
-          height: 24px;
-        }
-
-        .password-toggle:hover {
-          background-color: #f0f0f0;
-          border-radius: 3px;
-        }
-
-        .guardar-btn {
-          background-color:rgb(34, 94, 184);
-          color: white;
+          color: #333;
           border: none;
-          padding: 12px 20px;
-          font-size: 16px;
-          border-radius: 5px;
-          cursor: pointer;
-          width: 100%;
-          margin-top: 10px;
-          box-sizing: border-box;
+          border-bottom: 1px solid #24487f;
+          background: transparent;
+          outline: none;
         }
 
-        .guardar-btn:hover {
-          background-color:rgb(23, 82, 177);
+        .user-box label {
+          position: absolute;
+          top: 0;
+          left: 0;
+          padding: 10px 0;
+          font-size: 16px;
+          color: #24487f;
+          pointer-events: none;
+          transition: 0.5s;
+        }
+
+        .user-box input:focus ~ label,
+        .user-box input:valid ~ label {
+          top: -20px;
+          color: #24487f;
+          font-size: 12px;
+        }
+
+        .register-button {
+          width: 100%;
+          padding: 12px;
+          color: white;
+          background-color: #24487f;
+          border: none;
+          font-size: 16px;
+          cursor: pointer;
+          border-radius: 5px;
+          transition: 0.3s;
+          margin-bottom: 10px;
+        }
+
+        .register-button:hover {
+          background-color: #1a365d;
+        }
+
+        .register-button:disabled {
+          background-color: #cccccc;
+          cursor: not-allowed;
         }
       `}</style>
     </div>
