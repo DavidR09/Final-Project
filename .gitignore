@@ -32,3 +32,8 @@ src/__tests__/security.test.jsx
 src/setupTests.js
 src/utils/carritoUtils.js
 .babelrc
+__mocks__/fileMock.js
+src/__mocks__/config/axios.js
+src/__mocks__/Carrito.jsx
+src/__mocks__/env.js
+src/utils/pureFunctions.js
