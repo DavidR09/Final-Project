@@ -176,7 +176,7 @@ export default function Register() {
         </section>
       </main>
 
-      <style>{`
+      <style jsx>{`
         .inicio-container {
           display: flex;
           height: 100vh;
@@ -218,15 +218,17 @@ export default function Register() {
         .sidebar li {
           margin-bottom: 15px;
           cursor: pointer;
-          display: flex;
-          align-items: center;
-          gap: 10px;
           padding: 8px;
           border-radius: 5px;
+          transition: background-color 0.3s ease;
         }
 
         .sidebar li:hover {
           background-color: #333;
+        }
+
+        .sidebar li:active {
+          background-color: #1b355b;
         }
 
         .main-content {
@@ -272,6 +274,11 @@ export default function Register() {
           box-sizing: border-box;
         }
 
+        .perfil-form input:disabled {
+          background-color: #f5f5f5;
+          cursor: not-allowed;
+        }
+
         .password-toggle {
           position: absolute;
           right: 10px;
@@ -295,20 +302,19 @@ export default function Register() {
         }
 
         .guardar-btn {
-          background-color: rgb(34, 94, 184);
+          background-color: #24487f;
           color: white;
           border: none;
-          padding: 12px 20px;
+          padding: 10px;
           font-size: 16px;
           border-radius: 5px;
           cursor: pointer;
-          width: 100%;
-          margin-top: 10px;
-          box-sizing: border-box;
+          margin-top: 20px;
+          transition: background-color 0.3s ease;
         }
 
-        .guardar-btn:hover {
-          background-color: rgb(23, 82, 177);
+        .guardar-btn:hover:not(:disabled) {
+          background-color: #1a365d;
         }
 
         .guardar-btn:disabled {
