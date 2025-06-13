@@ -19,7 +19,7 @@ app.use(cookieParser());
 // Configuración de CORS
 app.use(cors({
   origin: [
-    'http://localhost:5173',
+    //'http://localhost:5173',
     'https://backend-respuestosgra.up.railway.app',
     'https://respuestosgra.up.railway.app'
   ],

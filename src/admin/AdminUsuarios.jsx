@@ -12,7 +12,7 @@ export default function AdminUsuarios() {
   useEffect(() => {
     const fetchUsuarios = async () => {
       try {
-        const response = await axios.get('http://localhost:3000/api/usuarios');
+        const response = await axios.get('https://backend-respuestosgra.up.railway.app/api/usuarios');
         setUsuarios(response.data);
       } catch (error) {
         console.error('Error al obtener usuarios:', error);
