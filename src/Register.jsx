@@ -155,7 +155,7 @@ export default function Register() {
 
             <label>Rol:</label>
             <input
-              type="rol"
+              type="text"
               name="rol_usuario"
               value={formData.rol_usuario}
               onChange={handleInputChange}
