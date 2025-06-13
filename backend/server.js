@@ -21,7 +21,7 @@ app.use(cors({
   origin: [
     'http://localhost:5173',
     'https://backend-respuestosgra.up.railway.app',
-    'https://respuestos-gra.up.railway.app'
+    'https://respuestosgra.up.railway.app'
   ],
   credentials: true,
   methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
