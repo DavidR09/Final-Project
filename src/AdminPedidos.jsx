@@ -8,7 +8,7 @@ axios.defaults.withCredentials = true;
 axios.defaults.headers.common['Content-Type'] = 'application/json';
 
 const axiosInstance = axios.create({
-  baseURL: 'http://localhost:3000',
+  baseURL: 'https://backend-respuestosgra.up.railway.app/',
   withCredentials: true,
   headers: {
     'Content-Type': 'application/json'
@@ -54,7 +54,7 @@ export default function AdminPedidos() {
     try {
       console.log('Iniciando carga de pedidos...');
       
-      const response = await axiosInstance.get('/api/pedidos/admin');
+      const response = await axiosInstance.get('https://backend-respuestosgra.up.railway.app/api/pedidos/admin');
 
       console.log('Pedidos recibidos:', response.data);
       setPedidos(response.data);

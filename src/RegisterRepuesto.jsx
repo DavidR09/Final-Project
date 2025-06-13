@@ -40,7 +40,7 @@ export default function RegisterRepuesto() {
     };
 
     try {
-      const response = await fetch('http://localhost:3000/api/repuestos/registrar', {
+      const response = await fetch('https://backend-respuestosgra.up.railway.app/api/repuestos/registrar', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json'

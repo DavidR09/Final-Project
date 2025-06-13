@@ -11,7 +11,7 @@ export default function Contacto() {
   useEffect(() => {
     const checkUserRole = async () => {
       try {
-        const response = await fetch('http://localhost:3000/api/auth/check-auth', {
+        const response = await fetch('https://backend-respuestosgra.up.railway.app/api/auth/check-auth', {
           credentials: 'include'
         });
         const data = await response.json();

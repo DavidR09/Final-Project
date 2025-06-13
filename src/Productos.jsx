@@ -25,7 +25,7 @@ export default function Productos() {
     // Verificar el rol del usuario
     const checkUserRole = async () => {
       try {
-        const response = await fetch('http://localhost:3000/api/auth/check-auth', {
+        const response = await fetch('https://backend-respuestosgra.up.railway.app/api/auth/check-auth', {
           credentials: 'include'
         });
         const data = await response.json();
@@ -38,7 +38,7 @@ export default function Productos() {
     checkUserRole();
 
     setIsLoading(true);
-    fetch('http://localhost:3000/api/productos')
+    fetch('https://backend-respuestosgra.up.railway.app/api/productos')
       .then((res) => res.json())
       .then((data) => {
         const productosUnicos = data.map((prod, index) => ({

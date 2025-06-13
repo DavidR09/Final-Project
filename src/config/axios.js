@@ -1,13 +1,14 @@
 import axios from 'axios';
 
 const axiosInstance = axios.create({
-  baseURL: 'https://backend-respuestosgra.up.railway.app/',
+  baseURL: 'https://backend-respuestosgra.up.railway.app',
   withCredentials: true,
   headers: {
     'Content-Type': 'application/json',
-    'Accept': 'application/json'
+    'Accept': 'application/json',
+    'Access-Control-Allow-Origin': '*'
   },
-  timeout: 5000,
+  timeout: 15000,
   // Deshabilitar las credenciales por defecto de axios
   xsrfCookieName: null,
   xsrfHeaderName: null
@@ -30,8 +31,13 @@ axiosInstance.interceptors.response.use(
       method: error.config?.method,
       status: error.response?.status,
       data: error.response?.data,
-      headers: error.response?.headers
+      headers: error.response?.headers,
+      message: error.message
     });
+
+    if (error.code === 'ECONNABORTED') {
+      console.error('La petición tardó demasiado en responder. El servidor puede estar inactivo.');
+    }
 
     if (error.response?.status === 401) {
       // Limpiar sessionStorage en caso de error de autenticación
