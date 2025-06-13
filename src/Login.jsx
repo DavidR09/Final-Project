@@ -28,6 +28,10 @@ export default function Login() {
       console.log('Respuesta de login:', response.data);
 
       if (response.data && response.data.userId) {
+        // Guardar el token JWT en localStorage
+        if (response.data.token) {
+          localStorage.setItem('token', response.data.token);
+        }
         localStorage.setItem('userId', response.data.userId);
         sessionStorage.setItem('userRole', response.data.rol);
         sessionStorage.setItem('isAuthenticated', 'true');
@@ -54,6 +58,7 @@ export default function Login() {
       setMensaje(error.response?.data?.error || 'Error al iniciar sesión');
       
       // Limpiar datos de autenticación en caso de error
+      localStorage.removeItem('token');
       localStorage.removeItem('userId');
       sessionStorage.removeItem('userRole');
       sessionStorage.removeItem('isAuthenticated');

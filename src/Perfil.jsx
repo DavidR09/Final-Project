@@ -7,7 +7,7 @@ import HeaderIcons from './components/HeaderIcons';
 
 // Configurar axios
 const axiosInstance = axios.create({
-  baseURL: 'http://localhost:3000',
+  baseURL: 'https://backend-respuestosgra.up.railway.app/',
   withCredentials: true,
   headers: {
     'Content-Type': 'application/json'

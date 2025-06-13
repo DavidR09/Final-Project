@@ -9,68 +9,33 @@ const router = express.Router();
 // Configuración común para cookies
 const cookieConfig = {
   httpOnly: true,
-  secure: false, // Cambiar a true en producción
-  sameSite: 'lax',
+  secure: process.env.NODE_ENV === 'production',
+  sameSite: process.env.NODE_ENV === 'production' ? 'none' : 'lax',
   path: '/',
   maxAge: 24 * 60 * 60 * 1000 // 24 horas
 };
 
 // Middleware para verificar el token
 const verifyToken = (req, res, next) => {
-  console.log('=== Verificando token ===');
-  console.log('Headers completos:', req.headers);
-  console.log('Cookies parseadas:', req.cookies);
-  
-  // Intentar obtener el token de diferentes fuentes
   let token = null;
-  
-  // 1. Intentar obtener de req.cookies
-  if (req.cookies && req.cookies.token) {
-    token = req.cookies.token;
-    console.log('Token encontrado en req.cookies');
+  // Buscar el token en el header Authorization
+  const authHeader = req.headers.authorization;
+  if (authHeader && authHeader.startsWith('Bearer ')) {
+    token = authHeader.split(' ')[1];
   }
-  // 2. Intentar obtener del header cookie
-  else if (req.headers.cookie) {
-    const cookies = req.headers.cookie.split(';')
-      .map(cookie => cookie.trim().split('='))
-      .reduce((acc, [key, value]) => {
-        acc[key] = value;
-        return acc;
-      }, {});
-    
-    if (cookies.token) {
-      token = cookies.token;
-      console.log('Token encontrado en header cookie');
-    }
-  }
-  // 3. Intentar obtener del header Authorization
-  else if (req.headers.authorization && req.headers.authorization.startsWith('Bearer ')) {
-    token = req.headers.authorization.split(' ')[1];
-    console.log('Token encontrado en header Authorization');
-  }
-
   if (!token) {
-    console.log('No se encontró token en ninguna fuente');
     return res.status(401).json({ 
       authenticated: false,
       error: 'No autenticado',
-      message: 'No se encontró el token en las cookies'
+      message: 'No se encontró el token en el header Authorization'
     });
   }
-
   try {
     const decoded = jwt.verify(token, process.env.JWT_SECRET);
-    console.log('Token decodificado:', decoded);
     req.user = decoded;
-    
-    // Renovar la cookie en cada petición exitosa
-    res.cookie('token', token, cookieConfig);
-    
     next();
   } catch (error) {
-    console.error('Error al verificar token:', error);
-    res.clearCookie('token', cookieConfig);
-    res.status(401).json({ 
+    return res.status(401).json({ 
       authenticated: false,
       error: 'Token inválido o expirado',
       message: error.message
@@ -79,34 +44,25 @@ const verifyToken = (req, res, next) => {
 };
 
 router.post('/login', async (req, res) => {
-  console.log('=== Inicio de proceso de login ===');
-  console.log('Body recibido:', req.body);
   const { correo_electronico_usuario, contrasenia_usuario } = req.body;
-
   if (!correo_electronico_usuario || !contrasenia_usuario) {
     return res.status(400).json({ error: 'Se requiere email y contraseña' });
   }
-
   let connection;
   try {
     connection = await connectToDatabase();
-    
     const [users] = await connection.execute(
       'SELECT id_usuario, nombre_usuario, apellido_usuario, correo_electronico_usuario, contrasenia_usuario, rol_usuario FROM usuario WHERE correo_electronico_usuario = ?',
       [correo_electronico_usuario]
     );
-
     if (users.length === 0) {
       return res.status(401).json({ error: 'Credenciales inválidas' });
     }
-
     const user = users[0];
     const validPassword = await bcrypt.compare(contrasenia_usuario, user.contrasenia_usuario);
-
     if (!validPassword) {
       return res.status(401).json({ error: 'Credenciales inválidas' });
     }
-
     // Generar token JWT
     const token = jwt.sign(
       { 
@@ -116,45 +72,27 @@ router.post('/login', async (req, res) => {
       process.env.JWT_SECRET,
       { expiresIn: '24h' }
     );
-
-    console.log('=== Configurando cookie ===');
-    console.log('Token generado:', token.substring(0, 20) + '...');
-    
-    // Limpiar cualquier cookie anterior
-    res.clearCookie('token', cookieConfig);
-    
-    // Configurar la nueva cookie
-    res.cookie('token', token, cookieConfig);
-
-    console.log('Cookie establecida con config:', cookieConfig);
-    
     const responseData = {
+      token,
       userId: user.id_usuario,
       nombre: user.nombre_usuario,
       apellido: user.apellido_usuario,
       correo: user.correo_electronico_usuario,
       rol: user.rol_usuario
     };
-
-    console.log('Enviando respuesta:', responseData);
     res.json(responseData);
   } catch (error) {
-    console.error('Error en login:', error);
     res.status(500).json({ error: 'Error al iniciar sesión' });
   } finally {
     if (connection) {
       try {
         await connection.end();
-      } catch (err) {
-        console.error('Error al cerrar la conexión:', err);
-      }
+      } catch (err) {}
     }
   }
 });
 
 router.get('/check-auth', verifyToken, (req, res) => {
-  console.log('=== Check Auth exitoso ===');
-  console.log('Usuario autenticado:', req.user);
   res.json({
     authenticated: true,
     id: req.user.id,
@@ -163,8 +101,6 @@ router.get('/check-auth', verifyToken, (req, res) => {
 });
 
 router.post('/logout', (req, res) => {
-  console.log('=== Cerrando sesión ===');
-  res.clearCookie('token', cookieConfig);
   res.json({ message: 'Sesión cerrada exitosamente' });
 });
 

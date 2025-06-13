@@ -1,7 +1,7 @@
 import axios from 'axios';
 
 const axiosInstance = axios.create({
-  baseURL: 'http://localhost:3000',
+  baseURL: 'https://backend-respuestosgra.up.railway.app/',
   withCredentials: true,
   headers: {
     'Content-Type': 'application/json',
@@ -48,7 +48,11 @@ axiosInstance.interceptors.request.use(
   config => {
     // Asegurarse de que withCredentials esté siempre activado
     config.withCredentials = true;
-    
+    // Agregar el token JWT al header Authorization si existe
+    const token = localStorage.getItem('token');
+    if (token) {
+      config.headers.Authorization = `Bearer ${token}`;
+    }
     console.log('Enviando petición:', {
       url: config.url,
       method: config.method,

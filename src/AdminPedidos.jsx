@@ -140,7 +140,14 @@ export default function AdminPedidos() {
     setLoadingRepuestos(true);
     try {
       const response = await axiosInstance.get('/api/repuestos/con-piezas');
-      setRepuestosDisponibles(response.data);
+      // Filtrar repuestos que contienen las piezas del pedido
+      const repuestosFiltrados = response.data.filter(repuesto => {
+        // Obtener los IDs de los repuestos (piezas) del pedido
+        const piezasPedidoIds = pedidoSeleccionado.detalles.map(detalle => detalle.id_pieza);
+        // Verificar si el repuesto tiene alguna de las piezas del pedido
+        return repuesto.piezas?.some(pieza => piezasPedidoIds.includes(pieza.id_repuesto));
+      });
+      setRepuestosDisponibles(repuestosFiltrados);
     } catch (error) {
       console.error('Error al cargar repuestos:', error);
       Swal.fire({
@@ -344,34 +351,43 @@ export default function AdminPedidos() {
               <div className="loading">Cargando repuestos...</div>
             ) : (
               <div className="repuestos-grid">
-                {repuestosDisponibles.map((repuesto) => (
-                  <div 
-                    key={repuesto.id_repuesto}
-                    className={`repuesto-card ${repuestosSeleccionados.some(r => r.id_repuesto === repuesto.id_repuesto) ? 'seleccionado' : ''}`}
-                    onClick={() => seleccionarRepuesto(repuesto)}
-                  >
-                    <h3>{repuesto.nombre_repuesto}</h3>
-                    <div className="piezas-lista">
-                      {repuesto.piezas?.map((pieza) => (
-                        <div key={pieza.id_repuesto} className="pieza-item">
-                          <img 
-                            src={pieza.imagen_pieza || '/default-part.png'} 
-                            alt={pieza.nombre_pieza}
-                            onError={(e) => {
-                              e.target.onerror = null;
-                              e.target.src = '/default-part.png';
-                            }}
-                          />
-                          <div className="pieza-info">
-                            <p>{pieza.nombre_pieza}</p>
-                            <p>Stock: {pieza.cantidad_pieza}</p>
-                            <p>Precio: RD$ {formatearPrecio(pieza.precio_pieza)}</p>
+                {repuestosDisponibles.map((repuesto) => {
+                  // Filtrar solo la(s) pieza(s) exacta(s) que el cliente pidió
+                  const piezasPedidoIds = pedidoSeleccionado.detalles.map(detalle => detalle.id_pieza);
+                  const piezasFiltradas = repuesto.piezas?.filter(pieza => 
+                    piezasPedidoIds.includes(pieza.id_repuesto)
+                  ) || [];
+                  // Si no hay piezas que coincidan, no renderizar este repuesto
+                  if (piezasFiltradas.length === 0) return null;
+                  return (
+                    <div 
+                      key={repuesto.id_repuesto}
+                      className={`repuesto-card ${repuestosSeleccionados.some(r => r.id_repuesto === repuesto.id_repuesto) ? 'seleccionado' : ''}`}
+                      onClick={() => seleccionarRepuesto(repuesto)}
+                    >
+                      <h3>{repuesto.nombre_repuesto}</h3>
+                      <div className="piezas-lista">
+                        {piezasFiltradas.map((pieza) => (
+                          <div key={pieza.id_repuesto} className="pieza-item">
+                            <img 
+                              src={pieza.imagen_pieza || '/default-part.png'} 
+                              alt={pieza.nombre_pieza}
+                              onError={(e) => {
+                                e.target.onerror = null;
+                                e.target.src = '/default-part.png';
+                              }}
+                            />
+                            <div className="pieza-info">
+                              <p>{pieza.nombre_pieza}</p>
+                              <p>Stock: {pieza.cantidad_pieza}</p>
+                              <p>Precio: RD$ {formatearPrecio(pieza.precio_pieza)}</p>
+                            </div>
                           </div>
-                        </div>
-                      ))}
+                        ))}
+                      </div>
                     </div>
-                  </div>
-                ))}
+                  );
+                })}
               </div>
             )}
 
@@ -648,7 +664,7 @@ export default function AdminPedidos() {
           left: 0;
           right: 0;
           bottom: 0;
-          background-color: rgba(0, 0, 0, 0.5);
+          background-color: rgba(36, 72, 127, 0.2);
           display: flex;
           justify-content: center;
           align-items: center;
@@ -656,7 +672,7 @@ export default function AdminPedidos() {
         }
 
         .repuestos-modal {
-          background: white;
+          background: #f4f8fb;
           padding: 20px;
           border-radius: 8px;
           width: 80%;
@@ -673,11 +689,12 @@ export default function AdminPedidos() {
         }
 
         .repuesto-card {
-          border: 1px solid #ddd;
+          border: 1px solid #b3c6e0;
           border-radius: 8px;
           padding: 15px;
           cursor: pointer;
           transition: all 0.3s ease;
+          background-color: #eaf1fa;
         }
 
         .repuesto-card:hover {
@@ -687,7 +704,7 @@ export default function AdminPedidos() {
 
         .repuesto-card.seleccionado {
           border: 2px solid #24487f;
-          background-color: #f0f4f8;
+          background-color: #d6e4f5;
         }
 
         .piezas-lista {
@@ -698,7 +715,10 @@ export default function AdminPedidos() {
           display: flex;
           align-items: center;
           padding: 10px;
-          border-bottom: 1px solid #eee;
+          border-bottom: 1px solid #c3d0e6;
+          background-color: #fafdff;
+          border-radius: 4px;
+          margin-bottom: 8px;
         }
 
         .pieza-item img {
