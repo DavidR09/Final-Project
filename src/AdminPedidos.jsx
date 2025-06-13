@@ -384,9 +384,9 @@ export default function AdminPedidos() {
       {/* Modal de Repuestos */}
       {showRepuestosModal && (
         <div className="modal-overlay">
-          <div className="modal-content repuestos-modal" style={{ color: 'black' }}>
+          <div className="modal-content repuestos-modal" style={{ color: '#111' }}>
             <button className="close-modal" onClick={cerrarModalRepuestos}>&times;</button>
-            <h2>Seleccionar Repuestos</h2>
+            <h2 style={{ color: '#111' }}>Seleccionar Repuestos</h2>
             
             {loadingRepuestos ? (
               <div className="loading">Cargando repuestos...</div>
@@ -405,9 +405,9 @@ export default function AdminPedidos() {
                       key={repuesto.id_repuesto}
                       className={`repuesto-card ${repuestosSeleccionados.some(r => r.id_repuesto === repuesto.id_repuesto) ? 'seleccionado' : ''}`}
                       onClick={() => seleccionarRepuesto(repuesto)}
-                      style={{ color: 'black' }}
+                      style={{ color: '#111', fontWeight: 'bold', fontSize: '1.2em', display: 'flex', alignItems: 'center', justifyContent: 'center', minHeight: '60px' }}
                     >
-                      <h3 style={{ color: 'black', textAlign: 'center' }}>{repuesto.nombre_repuesto}</h3>
+                      {repuesto.nombre_repuesto}
                     </div>
                   );
                 })}
