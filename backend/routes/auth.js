@@ -17,24 +17,36 @@ const cookieConfig = {
 
 // Middleware para verificar el token
 const verifyToken = (req, res, next) => {
+  console.log('=== Verificando token ===');
+  console.log('Headers recibidos:', req.headers);
+  
   let token = null;
   // Buscar el token en el header Authorization
   const authHeader = req.headers.authorization;
+  console.log('Authorization header:', authHeader);
+  
   if (authHeader && authHeader.startsWith('Bearer ')) {
     token = authHeader.split(' ')[1];
+    console.log('Token extraído:', token);
   }
+  
   if (!token) {
+    console.log('No se encontró token válido');
     return res.status(401).json({ 
       authenticated: false,
       error: 'No autenticado',
       message: 'No se encontró el token en el header Authorization'
     });
   }
+  
   try {
+    console.log('Verificando token con JWT_SECRET:', process.env.JWT_SECRET ? 'Configurado' : 'No configurado');
     const decoded = jwt.verify(token, process.env.JWT_SECRET);
+    console.log('Token decodificado:', decoded);
     req.user = decoded;
     next();
   } catch (error) {
+    console.error('Error al verificar token:', error);
     return res.status(401).json({ 
       authenticated: false,
       error: 'Token inválido o expirado',

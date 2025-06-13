@@ -26,25 +26,26 @@ if (!process.env.JWT_SECRET) {
 console.log("Entorno: Desarrollo Local (Node.js)");
 console.log("JWT_SECRET:", process.env.JWT_SECRET || "No configurado");
 
-// Middleware para parsear cookies ANTES de CORS
-app.use(cookieParser(process.env.JWT_SECRET));
-
 // Configuración de CORS
 const corsOptions = {
-  origin: 'https://respuestosgra.up.railway.app/',
+  origin: ['https://respuestosgra.up.railway.app', 'https://backend-respuestosgra.up.railway.app'],
   credentials: true,
   methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
-  allowedHeaders: ['Content-Type', 'Authorization', 'Cookie'],
-  exposedHeaders: ['Set-Cookie'],
+  allowedHeaders: ['Content-Type', 'Authorization', 'Cookie', 'Accept'],
+  exposedHeaders: ['Set-Cookie', 'Authorization'],
   preflightContinue: false,
   optionsSuccessStatus: 204,
   maxAge: 86400 // 24 horas
 };
 
+// Aplicar CORS primero
 app.use(cors(corsOptions));
 
 // Middleware para OPTIONS
 app.options('*', cors(corsOptions));
+
+// Middleware para parsear cookies DESPUÉS de CORS
+app.use(cookieParser(process.env.JWT_SECRET));
 
 // Middleware para parsear JSON
 app.use(express.json());
