@@ -74,18 +74,23 @@ export default function AdminPedidos() {
         }
 
         // Verificar autenticación usando el hook
-        await checkAuth();
+        const isAuthValid = await checkAuth();
+        console.log('Resultado de verificación de autenticación:', isAuthValid);
 
-        if (!isAuthenticated) {
+        if (!isAuthValid) {
           throw new Error('No hay sesión activa');
         }
 
-        if (userRole !== 'administrador') {
+        const currentRole = localStorage.getItem('userRole');
+        console.log('Rol actual:', currentRole);
+
+        if (currentRole !== 'administrador') {
           throw new Error('No tienes permisos de administrador');
         }
 
         console.log('Acceso verificado, cargando pedidos...');
         await cargarPedidos();
+        setLoading(false);
       } catch (error) {
         console.error('Error de acceso:', error);
         
@@ -249,7 +254,7 @@ export default function AdminPedidos() {
     }
   };
 
-  if (isLoading) {
+  if (isLoading || loading) {
     return <div>Cargando...</div>;
   }
 

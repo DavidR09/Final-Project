@@ -39,9 +39,11 @@ export const useAuth = () => {
         setUserRole(response.data.rol);
         setIsAuthenticated(true);
         localStorage.setItem('userRole', response.data.rol);
+        return true;
       } else {
         console.log('Usuario no autenticado - datos inválidos');
         handleAuthFailure();
+        return false;
       }
     } catch (error) {
       console.error('Error en checkAuth:', error);
@@ -54,6 +56,7 @@ export const useAuth = () => {
           handleAuthFailure();
         }
       }
+      return false;
     } finally {
       setIsLoading(false);
     }
