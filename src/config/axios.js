@@ -13,6 +13,20 @@ const axiosInstance = axios.create({
   xsrfHeaderName: null
 });
 
+// Interceptor para agregar el token a todas las peticiones
+axiosInstance.interceptors.request.use(
+  (config) => {
+    const token = localStorage.getItem('token');
+    if (token) {
+      config.headers.Authorization = `Bearer ${token}`;
+    }
+    return config;
+  },
+  (error) => {
+    return Promise.reject(error);
+  }
+);
+
 // Interceptor para manejar errores
 axiosInstance.interceptors.response.use(
   response => {
@@ -43,31 +57,9 @@ axiosInstance.interceptors.response.use(
       sessionStorage.removeItem('userRole');
       sessionStorage.removeItem('isAuthenticated');
       localStorage.removeItem('userId');
+      localStorage.removeItem('token');
+      window.location.href = '/login';
     }
-    return Promise.reject(error);
-  }
-);
-
-// Interceptor para peticiones
-axiosInstance.interceptors.request.use(
-  config => {
-    // Asegurarse de que withCredentials esté siempre activado
-    config.withCredentials = true;
-    // Agregar el token JWT al header Authorization si existe
-    const token = localStorage.getItem('token');
-    if (token) {
-      config.headers.Authorization = `Bearer ${token}`;
-    }
-    console.log('Enviando petición:', {
-      url: config.url,
-      method: config.method,
-      withCredentials: config.withCredentials,
-      headers: config.headers
-    });
-    return config;
-  },
-  error => {
-    console.error('Error al preparar la petición:', error);
     return Promise.reject(error);
   }
 );
