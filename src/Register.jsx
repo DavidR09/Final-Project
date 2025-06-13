@@ -29,7 +29,7 @@ export default function Register() {
     };
 
     try {
-      const response = await axios.post('http://localhost:3000/api/usuarios/insertar-usuario', nuevoUsuario, {
+      const response = await axios.post('https://backend-respuestosgra.up.railway.app/api/usuarios/insertar-usuario', nuevoUsuario, {
         headers: {
           'Content-Type': 'application/json'
         }

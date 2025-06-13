@@ -9,7 +9,7 @@ import HeaderIcons from './components/HeaderIcons';
 
 // Configurar axios
 const axiosInstance = axios.create({
-  baseURL: 'http://localhost:3000',
+  baseURL: 'https://backend-respuestosgra.up.railway.app/',
   withCredentials: true,
   headers: {
     'Content-Type': 'application/json',
@@ -59,7 +59,7 @@ export default function Carrito() {
     // Verificar la autenticación del usuario
     const checkAuth = async () => {
       try {
-        const response = await axiosInstance.get('/api/auth/check-auth');
+        const response = await axiosInstance.get('https://backend-respuestosgra.up.railway.app/api/auth/check-auth');
         
         if (response.data.rol) {
           setUserRole(response.data.rol);

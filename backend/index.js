@@ -31,7 +31,7 @@ app.use(cookieParser(process.env.JWT_SECRET));
 
 // Configuración de CORS
 const corsOptions = {
-  origin: 'http://localhost:5173',
+  origin: 'https://respuestosgra.up.railway.app/',
   credentials: true,
   methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
   allowedHeaders: ['Content-Type', 'Authorization', 'Cookie'],
@@ -93,7 +93,7 @@ app.use((err, req, res, next) => {
 app.listen(port, async () => {
     try {
         await connectToDatabase();
-        console.log(`Servidor backend local iniciado en http://localhost:${port}`);
+        console.log(`Servidor backend local iniciado en https://backend-respuestosgra.up.railway.app/:${port}`);
         console.log('JWT_SECRET está configurado correctamente');
     } catch (err) {
         console.error('Error al conectar a la base de datos:', err.message);

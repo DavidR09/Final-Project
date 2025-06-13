@@ -11,7 +11,7 @@ export default function Aros() {
     { nombre: 'Aro Deportivo 18"', imagen: '/aro_deportivo.png' },
     { nombre: 'Aro Clásico Cromado', imagen: '/aro_cromado.png' },
     { nombre: 'Aro Negro Mate 17"', imagen: '/aro_negro.png' },
-  ];
+  ]; 
 
   const arosFiltrados = aros.filter((a) =>
     a.nombre.toLowerCase().includes(busqueda.toLowerCase())

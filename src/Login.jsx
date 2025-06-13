@@ -51,7 +51,12 @@ export default function Login() {
     } catch (error) {
       console.error('Error en login:', error);
       setTipoMensaje('error');
-      setMensaje(error.response?.data?.error || 'Error al iniciar sesión');
+      
+      if (error.code === 'ECONNABORTED') {
+        setMensaje('El servidor está tardando en responder. Por favor, intente nuevamente.');
+      } else {
+        setMensaje(error.response?.data?.error || 'Error al iniciar sesión');
+      }
       
       // Limpiar datos de autenticación en caso de error
       localStorage.removeItem('userId');
