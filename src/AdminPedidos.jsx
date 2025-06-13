@@ -405,27 +405,9 @@ export default function AdminPedidos() {
                       key={repuesto.id_repuesto}
                       className={`repuesto-card ${repuestosSeleccionados.some(r => r.id_repuesto === repuesto.id_repuesto) ? 'seleccionado' : ''}`}
                       onClick={() => seleccionarRepuesto(repuesto)}
+                      style={{ color: 'black' }}
                     >
-                      <h3>{repuesto.nombre_repuesto}</h3>
-                      <div className="piezas-lista">
-                        {piezasFiltradas.map((pieza) => (
-                          <div key={pieza.id_repuesto} className="pieza-item" style={{ color: 'black' }}>
-                            <img 
-                              src={pieza.imagen_pieza || '/default-part.png'} 
-                              alt={pieza.nombre_pieza}
-                              onError={(e) => {
-                                e.target.onerror = null;
-                                e.target.src = '/default-part.png';
-                              }}
-                            />
-                            <div className="pieza-info">
-                              <p style={{ color: 'black' }}>{pieza.nombre_pieza}</p>
-                              <p style={{ color: 'black' }}>Stock: {pieza.cantidad_pieza}</p>
-                              <p style={{ color: 'black' }}>Precio: RD$ {formatearPrecio(pieza.precio_pieza)}</p>
-                            </div>
-                          </div>
-                        ))}
-                      </div>
+                      <h3 style={{ color: 'black', textAlign: 'center' }}>{repuesto.nombre_repuesto}</h3>
                     </div>
                   );
                 })}
