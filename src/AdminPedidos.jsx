@@ -20,6 +20,10 @@ export default function AdminPedidos() {
   const [pedidos, setPedidos] = useState([]);
   const [loading, setLoading] = useState(true);
   const [pedidoSeleccionado, setPedidoSeleccionado] = useState(null);
+  const [showRepuestosModal, setShowRepuestosModal] = useState(false);
+  const [repuestosDisponibles, setRepuestosDisponibles] = useState([]);
+  const [repuestosSeleccionados, setRepuestosSeleccionados] = useState([]);
+  const [loadingRepuestos, setLoadingRepuestos] = useState(false);
 
   useEffect(() => {
     // Verificar si el usuario está autenticado
@@ -130,6 +134,77 @@ export default function AdminPedidos() {
     );
   };
 
+  const cargarRepuestosDisponibles = async () => {
+    if (!pedidoSeleccionado) return;
+    
+    setLoadingRepuestos(true);
+    try {
+      const response = await axiosInstance.get('/api/repuestos/con-piezas');
+      setRepuestosDisponibles(response.data);
+    } catch (error) {
+      console.error('Error al cargar repuestos:', error);
+      Swal.fire({
+        icon: 'error',
+        title: 'Error',
+        text: 'No se pudieron cargar los repuestos disponibles',
+        confirmButtonColor: '#24487f'
+      });
+    } finally {
+      setLoadingRepuestos(false);
+    }
+  };
+
+  const abrirModalRepuestos = () => {
+    setShowRepuestosModal(true);
+    cargarRepuestosDisponibles();
+  };
+
+  const cerrarModalRepuestos = () => {
+    setShowRepuestosModal(false);
+    setRepuestosSeleccionados([]);
+  };
+
+  const seleccionarRepuesto = (repuesto) => {
+    setRepuestosSeleccionados(prev => {
+      const existe = prev.find(r => r.id_repuesto === repuesto.id_repuesto);
+      if (existe) {
+        return prev.filter(r => r.id_repuesto !== repuesto.id_repuesto);
+      }
+      return [...prev, repuesto];
+    });
+  };
+
+  const confirmarSeleccionRepuestos = async () => {
+    if (repuestosSeleccionados.length === 0) {
+      Swal.fire({
+        icon: 'warning',
+        title: 'Selección requerida',
+        text: 'Debe seleccionar al menos un repuesto',
+        confirmButtonColor: '#24487f'
+      });
+      return;
+    }
+
+    try {
+      // Aquí iría la lógica para guardar la selección de repuestos
+      await Swal.fire({
+        icon: 'success',
+        title: '¡Éxito!',
+        text: 'Repuestos asignados correctamente',
+        confirmButtonColor: '#24487f'
+      });
+      cerrarModalRepuestos();
+    } catch (error) {
+      console.error('Error al confirmar repuestos:', error);
+      Swal.fire({
+        icon: 'error',
+        title: 'Error',
+        text: 'No se pudieron asignar los repuestos',
+        confirmButtonColor: '#24487f'
+      });
+    }
+  };
+
   return (
     <div className="inicio-container">
       <aside className="sidebar">
@@ -238,6 +313,15 @@ export default function AdminPedidos() {
                             <strong>Total del pedido:</strong>
                             <p>RD$ {formatearPrecio(pedido.total_pedido || calcularTotalPedido(pedido.detalles))}</p>
                           </div>
+                          <button 
+                            className="btn-asignar-repuestos"
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              abrirModalRepuestos();
+                            }}
+                          >
+                            Asignar Repuestos
+                          </button>
                         </div>
                       </>
                     )}
@@ -248,6 +332,66 @@ export default function AdminPedidos() {
           </div>
         </section>
       </main>
+
+      {/* Modal de Repuestos */}
+      {showRepuestosModal && (
+        <div className="modal-overlay">
+          <div className="modal-content repuestos-modal">
+            <button className="close-modal" onClick={cerrarModalRepuestos}>&times;</button>
+            <h2>Seleccionar Repuestos</h2>
+            
+            {loadingRepuestos ? (
+              <div className="loading">Cargando repuestos...</div>
+            ) : (
+              <div className="repuestos-grid">
+                {repuestosDisponibles.map((repuesto) => (
+                  <div 
+                    key={repuesto.id_repuesto}
+                    className={`repuesto-card ${repuestosSeleccionados.some(r => r.id_repuesto === repuesto.id_repuesto) ? 'seleccionado' : ''}`}
+                    onClick={() => seleccionarRepuesto(repuesto)}
+                  >
+                    <h3>{repuesto.nombre_repuesto}</h3>
+                    <div className="piezas-lista">
+                      {repuesto.piezas?.map((pieza) => (
+                        <div key={pieza.id_repuesto} className="pieza-item">
+                          <img 
+                            src={pieza.imagen_pieza || '/default-part.png'} 
+                            alt={pieza.nombre_pieza}
+                            onError={(e) => {
+                              e.target.onerror = null;
+                              e.target.src = '/default-part.png';
+                            }}
+                          />
+                          <div className="pieza-info">
+                            <p>{pieza.nombre_pieza}</p>
+                            <p>Stock: {pieza.cantidad_pieza}</p>
+                            <p>Precio: RD$ {formatearPrecio(pieza.precio_pieza)}</p>
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                ))}
+              </div>
+            )}
+
+            <div className="modal-footer">
+              <button 
+                className="btn-cancelar"
+                onClick={cerrarModalRepuestos}
+              >
+                Cancelar
+              </button>
+              <button 
+                className="btn-confirmar"
+                onClick={confirmarSeleccionRepuestos}
+              >
+                Confirmar Selección
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
 
       <style>{`
         .inicio-container {
@@ -482,7 +626,149 @@ export default function AdminPedidos() {
           padding: 40px;
           color: #666;
         }
+
+        .btn-asignar-repuestos {
+          background-color: #24487f;
+          color: white;
+          border: none;
+          padding: 10px 20px;
+          border-radius: 5px;
+          cursor: pointer;
+          margin-top: 10px;
+          transition: background-color 0.3s ease;
+        }
+
+        .btn-asignar-repuestos:hover {
+          background-color: #1b355b;
+        }
+
+        .modal-overlay {
+          position: fixed;
+          top: 0;
+          left: 0;
+          right: 0;
+          bottom: 0;
+          background-color: rgba(0, 0, 0, 0.5);
+          display: flex;
+          justify-content: center;
+          align-items: center;
+          z-index: 1000;
+        }
+
+        .repuestos-modal {
+          background: white;
+          padding: 20px;
+          border-radius: 8px;
+          width: 80%;
+          max-width: 1000px;
+          max-height: 80vh;
+          overflow-y: auto;
+        }
+
+        .repuestos-grid {
+          display: grid;
+          grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+          gap: 20px;
+          margin: 20px 0;
+        }
+
+        .repuesto-card {
+          border: 1px solid #ddd;
+          border-radius: 8px;
+          padding: 15px;
+          cursor: pointer;
+          transition: all 0.3s ease;
+        }
+
+        .repuesto-card:hover {
+          transform: translateY(-2px);
+          box-shadow: 0 4px 8px rgba(0,0,0,0.1);
+        }
+
+        .repuesto-card.seleccionado {
+          border: 2px solid #24487f;
+          background-color: #f0f4f8;
+        }
+
+        .piezas-lista {
+          margin-top: 10px;
+        }
+
+        .pieza-item {
+          display: flex;
+          align-items: center;
+          padding: 10px;
+          border-bottom: 1px solid #eee;
+        }
+
+        .pieza-item img {
+          width: 50px;
+          height: 50px;
+          object-fit: cover;
+          border-radius: 4px;
+          margin-right: 10px;
+        }
+
+        .pieza-info {
+          flex: 1;
+        }
+
+        .pieza-info p {
+          margin: 2px 0;
+          font-size: 0.9em;
+        }
+
+        .modal-footer {
+          display: flex;
+          justify-content: flex-end;
+          gap: 10px;
+          margin-top: 20px;
+          padding-top: 20px;
+          border-top: 1px solid #eee;
+        }
+
+        .btn-cancelar,
+        .btn-confirmar {
+          padding: 10px 20px;
+          border: none;
+          border-radius: 5px;
+          cursor: pointer;
+          transition: background-color 0.3s ease;
+        }
+
+        .btn-cancelar {
+          background-color: #e0e0e0;
+          color: #333;
+        }
+
+        .btn-confirmar {
+          background-color: #24487f;
+          color: white;
+        }
+
+        .btn-cancelar:hover {
+          background-color: #d0d0d0;
+        }
+
+        .btn-confirmar:hover {
+          background-color: #1b355b;
+        }
+
+        .close-modal {
+          position: absolute;
+          top: 10px;
+          right: 10px;
+          background: none;
+          border: none;
+          font-size: 24px;
+          cursor: pointer;
+          color: #666;
+        }
+
+        .close-modal:hover {
+          color: #333;
+        }
       `}</style>
     </div>
   );
-} 
+}
