@@ -230,18 +230,23 @@ export default function AdminPedidos() {
     }
 
     try {
-      // Actualizar el estado del pedido a 'EN PROCESO' y guardar los repuestos asignados
+      // Actualizar el estado del pedido a 'EN TRAMITE' y guardar los repuestos asignados
       await axiosInstance.put(`/api/pedidos/${pedidoSeleccionado.id_pedido}/asignar-repuestos`, {
         repuestos: repuestosSeleccionados.map(r => r.id_repuesto),
-        nuevoEstado: 'EN PROCESO'
+        nuevoEstado: 'EN TRAMITE'
       });
       // Refrescar los pedidos para mostrar el cambio
       await cargarPedidos();
-      setPedidoSeleccionado(null); // Para que se actualice la selección
+      // Seleccionar el pedido actualizado para mostrar los repuestos asignados
+      const actualizado = pedidos.find(p => p.id_pedido === pedidoSeleccionado.id_pedido);
+      setPedidoSeleccionado({
+        ...actualizado,
+        repuestos_asignados: repuestosSeleccionados.map(r => ({ nombre_repuesto: r.nombre_repuesto }))
+      });
       await Swal.fire({
         icon: 'success',
         title: '¡Éxito!',
-        text: 'Repuestos asignados correctamente y pedido en proceso',
+        text: 'Repuestos asignados correctamente y pedido en trámite',
         confirmButtonColor: '#24487f'
       });
       cerrarModalRepuestos();
