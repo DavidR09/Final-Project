@@ -298,7 +298,13 @@ export default function AdminPedidos() {
                   >
                     <div className="pedido-header">
                       <div className="pedido-info">
-                        <h3>Pedido #{pedido.id_pedido}</h3>
+                        <h3>{
+                          pedido.nombre_estado === 'EN PROCESO'
+                            ? `EN PROCESO #${pedido.id_pedido}`
+                            : pedido.nombre_estado === 'EN TRAMITE'
+                              ? `EN TRAMITE #${pedido.id_pedido}`
+                              : `Pedido #${pedido.id_pedido}`
+                        }</h3>
                         <p className="cliente-info">
                           <strong>Cliente:</strong> {pedido.nombre_usuario} {pedido.apellido_usuario}
                         </p>
