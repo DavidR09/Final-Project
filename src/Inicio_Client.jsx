@@ -16,13 +16,38 @@ export default function Inicio_Client() {
     // Verificar el rol del usuario
     const checkUserRole = async () => {
       try {
+        const token = localStorage.getItem('token');
+        if (!token) {
+          console.log('No hay token de autenticación');
+          return;
+        }
+
         const response = await fetch('https://backend-respuestosgra.up.railway.app/api/auth/check-auth', {
+          method: 'GET',
+          headers: {
+            'Authorization': `Bearer ${token}`,
+            'Content-Type': 'application/json'
+          },
           credentials: 'include'
         });
+
+        if (!response.ok) {
+          throw new Error('Error en la verificación de autenticación');
+        }
+
         const data = await response.json();
-        setUserRole(data.rol);
+        console.log('Datos de autenticación:', data);
+        
+        if (data.authenticated && data.rol) {
+          setUserRole(data.rol);
+          localStorage.setItem('userRole', data.rol);
+        } else {
+          console.log('Usuario no autenticado o sin rol');
+          setUserRole(null);
+        }
       } catch (error) {
         console.error('Error al verificar el rol:', error);
+        setUserRole(null);
       }
     };
 
