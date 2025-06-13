@@ -1,17 +1,35 @@
 import axios from 'axios';
 
 const axiosInstance = axios.create({
-  baseURL: 'http://localhost:3000',
+  baseURL: 'https://backend-respuestosgra.up.railway.app',
   withCredentials: true,
   headers: {
     'Content-Type': 'application/json',
     'Accept': 'application/json'
   },
-  timeout: 5000,
+  timeout: 15000,
   // Deshabilitar las credenciales por defecto de axios
   xsrfCookieName: null,
   xsrfHeaderName: null
 });
+
+// Interceptor para agregar el token a todas las peticiones
+axiosInstance.interceptors.request.use(
+  (config) => {
+    const token = localStorage.getItem('token');
+    if (token) {
+      // Si el token ya incluye 'Bearer', lo usamos tal cual
+      // Si no, lo agregamos
+      config.headers.Authorization = token.startsWith('Bearer ') 
+        ? token 
+        : `Bearer ${token}`;
+    }
+    return config;
+  },
+  (error) => {
+    return Promise.reject(error);
+  }
+);
 
 // Interceptor para manejar errores
 axiosInstance.interceptors.response.use(
@@ -30,35 +48,22 @@ axiosInstance.interceptors.response.use(
       method: error.config?.method,
       status: error.response?.status,
       data: error.response?.data,
-      headers: error.response?.headers
+      headers: error.response?.headers,
+      message: error.message
     });
+
+    if (error.code === 'ECONNABORTED') {
+      console.error('La petición tardó demasiado en responder. El servidor puede estar inactivo.');
+    }
 
     if (error.response?.status === 401) {
       // Limpiar sessionStorage en caso de error de autenticación
       sessionStorage.removeItem('userRole');
       sessionStorage.removeItem('isAuthenticated');
       localStorage.removeItem('userId');
+      localStorage.removeItem('token');
+      window.location.href = '/login';
     }
-    return Promise.reject(error);
-  }
-);
-
-// Interceptor para peticiones
-axiosInstance.interceptors.request.use(
-  config => {
-    // Asegurarse de que withCredentials esté siempre activado
-    config.withCredentials = true;
-    
-    console.log('Enviando petición:', {
-      url: config.url,
-      method: config.method,
-      withCredentials: config.withCredentials,
-      headers: config.headers
-    });
-    return config;
-  },
-  error => {
-    console.error('Error al preparar la petición:', error);
     return Promise.reject(error);
   }
 );

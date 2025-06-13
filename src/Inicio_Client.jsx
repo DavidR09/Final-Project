@@ -16,7 +16,7 @@ export default function Inicio_Client() {
     // Verificar el rol del usuario
     const checkUserRole = async () => {
       try {
-        const response = await fetch('http://localhost:3000/api/auth/check-auth', {
+        const response = await fetch('https://backend-respuestosgra.up.railway.app/api/auth/check-auth', {
           credentials: 'include'
         });
         const data = await response.json();
@@ -32,8 +32,8 @@ export default function Inicio_Client() {
     const fetchCategorias = async () => {
       try {
         const [categoriasResponse, productosResponse] = await Promise.all([
-          fetch('http://localhost:3000/api/categorias'),
-          fetch('http://localhost:3000/api/productos')
+          fetch('https://backend-respuestosgra.up.railway.app/api/categorias'),
+          fetch('https://backend-respuestosgra.up.railway.app/api/productos')
         ]);
 
         const categoriasData = await categoriasResponse.json();

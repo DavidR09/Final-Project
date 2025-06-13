@@ -11,7 +11,7 @@ export default function AdminRepuestosPiezas() {
   useEffect(() => {
     const fetchRepuestos = async () => {
       try {
-        const response = await axios.get('http://localhost:3000/api/repuestos/con-piezas');
+        const response = await axios.get('https://backend-respuestosgra.up.railway.app/api/repuestos/con-piezas');
         setRepuestos(response.data);
       } catch (error) {
         console.error('Error al obtener repuestos:', error);

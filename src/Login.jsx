@@ -28,6 +28,14 @@ export default function Login() {
       console.log('Respuesta de login:', response.data);
 
       if (response.data && response.data.userId) {
+        // Guardar el token JWT en localStorage
+        if (response.data.token) {
+          // Guardar el token sin el prefijo Bearer
+          const token = response.data.token.startsWith('Bearer ') 
+            ? response.data.token.split(' ')[1] 
+            : response.data.token;
+          localStorage.setItem('token', token);
+        }
         localStorage.setItem('userId', response.data.userId);
         sessionStorage.setItem('userRole', response.data.rol);
         sessionStorage.setItem('isAuthenticated', 'true');
@@ -51,9 +59,15 @@ export default function Login() {
     } catch (error) {
       console.error('Error en login:', error);
       setTipoMensaje('error');
-      setMensaje(error.response?.data?.error || 'Error al iniciar sesión');
+      
+      if (error.code === 'ECONNABORTED') {
+        setMensaje('El servidor está tardando en responder. Por favor, intente nuevamente.');
+      } else {
+        setMensaje(error.response?.data?.error || 'Error al iniciar sesión');
+      }
       
       // Limpiar datos de autenticación en caso de error
+      localStorage.removeItem('token');
       localStorage.removeItem('userId');
       sessionStorage.removeItem('userRole');
       sessionStorage.removeItem('isAuthenticated');

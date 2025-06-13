@@ -18,12 +18,42 @@ app.use(cookieParser());
 
 // Configuración de CORS
 app.use(cors({
-  origin: 'http://localhost:5173',
+  origin: [
+    //'http://localhost:5173',
+    'https://backend-respuestosgra.up.railway.app',
+    'https://respuestosgra.up.railway.app'
+  ],
   credentials: true,
   methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
-  allowedHeaders: ['Content-Type', 'Authorization', 'Accept', 'Origin', 'X-Requested-With'],
-  exposedHeaders: ['Set-Cookie']
+  allowedHeaders: [
+    'Content-Type', 
+    'Authorization', 
+    'Accept', 
+    'Origin', 
+    'X-Requested-With',
+    'Access-Control-Allow-Origin',
+    'Access-Control-Allow-Headers',
+    'Access-Control-Allow-Methods',
+    'Access-Control-Allow-Credentials'
+  ],
+  exposedHeaders: ['Set-Cookie', 'Authorization'],
+  preflightContinue: false,
+  optionsSuccessStatus: 204
 }));
+
+// Middleware adicional para asegurar headers CORS
+app.use((req, res, next) => {
+  res.header('Access-Control-Allow-Origin', req.headers.origin);
+  res.header('Access-Control-Allow-Credentials', 'true');
+  res.header('Access-Control-Allow-Methods', 'GET, POST, PUT, DELETE, OPTIONS');
+  res.header('Access-Control-Allow-Headers', 'Content-Type, Authorization, Accept, Origin, X-Requested-With');
+  
+  // Handle preflight
+  if (req.method === 'OPTIONS') {
+    return res.status(204).end();
+  }
+  next();
+});
 
 // Middleware para parsear JSON
 app.use(express.json());
@@ -35,8 +65,9 @@ app.use(session({
   resave: false,
   saveUninitialized: false,
   cookie: {
-    secure: false, // set to true if using https
+    secure: process.env.NODE_ENV === 'production', // true en producción (https)
     httpOnly: true,
+    sameSite: process.env.NODE_ENV === 'production' ? 'none' : 'lax',
     maxAge: 24 * 60 * 60 * 1000 // 24 horas
   }
 }));

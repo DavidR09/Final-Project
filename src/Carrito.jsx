@@ -7,9 +7,16 @@ import './Carrito.css';
 import './styles/global.css';
 import HeaderIcons from './components/HeaderIcons';
 
+// Función para obtener el token de las cookies
+const getTokenFromCookie = () => {
+  const cookies = document.cookie.split('; ');
+  const tokenCookie = cookies.find(row => row.startsWith('token='));
+  return tokenCookie ? tokenCookie.split('=')[1] : null;
+};
+
 // Configurar axios
 const axiosInstance = axios.create({
-  baseURL: 'http://localhost:3000',
+  baseURL: 'https://backend-respuestosgra.up.railway.app/',
   withCredentials: true,
   headers: {
     'Content-Type': 'application/json',
@@ -20,13 +27,27 @@ const axiosInstance = axios.create({
 // Interceptor para agregar el token en cada petición
 axiosInstance.interceptors.request.use(
   (config) => {
-    const token = document.cookie.split('; ').find(row => row.startsWith('token='));
+    const token = getTokenFromCookie();
     if (token) {
-      config.headers.Authorization = `Bearer ${token.split('=')[1]}`;
+      config.headers.Authorization = `Bearer ${token}`;
     }
     return config;
   },
   (error) => {
+    return Promise.reject(error);
+  }
+);
+
+// Interceptor de respuesta para manejar errores de autenticación
+axiosInstance.interceptors.response.use(
+  (response) => response,
+  (error) => {
+    if (error.response?.status === 401) {
+      // Token expirado o inválido
+      document.cookie = 'token=; expires=Thu, 01 Jan 1970 00:00:00 UTC; path=/;';
+      localStorage.removeItem('userId');
+      window.location.href = '/login';
+    }
     return Promise.reject(error);
   }
 );
@@ -59,6 +80,16 @@ export default function Carrito() {
     // Verificar la autenticación del usuario
     const checkAuth = async () => {
       try {
+        // Verificar que existe el token
+        const token = getTokenFromCookie();
+        if (!token) {
+          console.log('No se encontró token en las cookies');
+          navigate('/login');
+          return;
+        }
+
+        console.log('Token encontrado:', token.substring(0, 20) + '...');
+        
         const response = await axiosInstance.get('/api/auth/check-auth');
         
         if (response.data.rol) {
@@ -74,6 +105,11 @@ export default function Carrito() {
         }
       } catch (error) {
         console.error('Error de autenticación:', error);
+        if (error.response?.status === 401) {
+          // Limpiar datos y redirigir
+          document.cookie = 'token=; expires=Thu, 01 Jan 1970 00:00:00 UTC; path=/;';
+          localStorage.removeItem('userId');
+        }
         navigate('/login');
       }
     };
@@ -84,8 +120,8 @@ export default function Carrito() {
   // Función para verificar el stock disponible
   const verificarStock = async () => {
     try {
-      // Primero obtenemos todos los productos actualizados
-      const response = await axios.get(`${import.meta.env.VITE_API_URL}/api/productos`);
+      // Usar axiosInstance para mantener consistencia
+      const response = await axiosInstance.get('/api/productos');
       const productosDB = response.data;
 
       // Verificamos cada producto del carrito
@@ -187,8 +223,8 @@ export default function Carrito() {
     if (nuevaCantidad < 1) return;
     
     try {
-      // Verificar stock disponible antes de actualizar
-      const response = await axios.get(`${import.meta.env.VITE_API_URL}/api/productos`);
+      // Verificar stock disponible antes de actualizar usando axiosInstance
+      const response = await axiosInstance.get('/api/productos');
       const productoDB = response.data.find(p => 
         p.id_repuesto === id_repuesto && 
         p.nombre_pieza === nombre_pieza
@@ -247,6 +283,12 @@ export default function Carrito() {
         throw new Error('Usuario no autenticado');
       }
 
+      // Verificar que el token esté presente
+      const token = getTokenFromCookie();
+      if (!token) {
+        throw new Error('Sesión expirada. Por favor, inicie sesión nuevamente.');
+      }
+
       // Verificar stock antes de procesar el pago
       await verificarStock();
 
@@ -282,6 +324,7 @@ export default function Carrito() {
       };
 
       console.log('Datos del pedido a enviar:', pedidoData);
+      console.log('Token usado para la petición:', token.substring(0, 20) + '...');
 
       const response = await axiosInstance.post('/api/pedidos', pedidoData);
       console.log('Respuesta del servidor:', response.data);
@@ -308,7 +351,13 @@ export default function Carrito() {
       console.error('Error al crear el pedido:', error);
       
       let mensajeError = 'Hubo un error al procesar su pedido';
-      if (error.response?.data?.error) {
+      if (error.response?.status === 401) {
+        mensajeError = 'Su sesión ha expirado. Por favor, inicie sesión nuevamente.';
+        // Limpiar datos y redirigir al login
+        document.cookie = 'token=; expires=Thu, 01 Jan 1970 00:00:00 UTC; path=/;';
+        localStorage.removeItem('userId');
+        setTimeout(() => navigate('/login'), 2000);
+      } else if (error.response?.data?.error) {
         mensajeError = error.response.data.error;
       } else if (error.message) {
         mensajeError = error.message;
@@ -346,7 +395,6 @@ export default function Carrito() {
         confirmButtonColor: '#24487f'
       });
     }
-    
   };
 
   if (!userRole) {

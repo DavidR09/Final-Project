@@ -5,7 +5,10 @@ import axiosInstance from '../config/axios';
 export const useAuth = () => {
   const [userRole, setUserRole] = useState(() => sessionStorage.getItem('userRole'));
   const [isLoading, setIsLoading] = useState(true);
-  const [isAuthenticated, setIsAuthenticated] = useState(() => sessionStorage.getItem('isAuthenticated') === 'true');
+  const [isAuthenticated, setIsAuthenticated] = useState(() => {
+    const token = localStorage.getItem('token');
+    return !!token;
+  });
   const navigate = useNavigate();
   const location = useLocation();
 
@@ -16,6 +19,12 @@ export const useAuth = () => {
     // Si estamos en una ruta pública, no verificamos autenticación
     if (publicRoutes.includes(location.pathname)) {
       setIsLoading(false);
+      return;
+    }
+
+    const token = localStorage.getItem('token');
+    if (!token) {
+      handleAuthFailure();
       return;
     }
 
@@ -58,6 +67,7 @@ export const useAuth = () => {
     sessionStorage.removeItem('userRole');
     sessionStorage.removeItem('isAuthenticated');
     localStorage.removeItem('userId');
+    localStorage.removeItem('token');
 
     // Solo redirigir si no estamos ya en una ruta pública
     if (!publicRoutes.includes(location.pathname)) {
@@ -82,8 +92,8 @@ export const useAuth = () => {
   useEffect(() => {
     // Solo verificar autenticación si:
     // 1. No estamos en una ruta pública, o
-    // 2. Tenemos datos de autenticación en sessionStorage
-    if (!publicRoutes.includes(location.pathname) || sessionStorage.getItem('isAuthenticated')) {
+    // 2. Tenemos un token en localStorage
+    if (!publicRoutes.includes(location.pathname) || localStorage.getItem('token')) {
       checkAuth();
     } else {
       setIsLoading(false);
@@ -96,7 +106,6 @@ export const useAuth = () => {
     isAuthenticated, 
     checkAuth, 
     logout,
-    // Exponer la función handleAuthFailure para uso en otros componentes
     handleAuthFailure 
   };
 }; 

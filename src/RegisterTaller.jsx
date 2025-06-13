@@ -8,7 +8,7 @@ axios.defaults.withCredentials = true;
 axios.defaults.headers.common['Content-Type'] = 'application/json';
 
 const axiosInstance = axios.create({
-  baseURL: 'http://localhost:3000',
+  baseURL: 'https://backend-respuestosgra.up.railway.app',
   withCredentials: true,
   headers: {
     'Content-Type': 'application/json'

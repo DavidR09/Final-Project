@@ -1,58 +1,55 @@
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import axios from 'axios';
+import axiosInstance from './config/axios';
 import Swal from 'sweetalert2';
 
 export default function Register() {
   const navigate = useNavigate();
-  const [nombre, setNombre] = useState('');
-  const [apellido, setApellido] = useState('');
-  const [correo, setCorreo] = useState('');
-  const [rol, setRol] = useState('');
-  const [contrasenia, setContrasenia] = useState('');
-  const [telefono, setTelefono] = useState('');
+  const [formData, setFormData] = useState({
+    nombre_usuario: '',
+    apellido_usuario: '',
+    correo_electronico_usuario: '',
+    contrasenia_usuario: '',
+    telefono_usuario: '',
+    rol: 'cliente' // valor por defecto
+  });
+  const [mensaje, setMensaje] = useState(null);
+  const [tipoMensaje, setTipoMensaje] = useState('');
   const [isLoading, setIsLoading] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
 
-  const handleRegister = async (e) => {
+  const handleInputChange = (e) => {
+    const { name, value } = e.target;
+    setFormData(prev => ({
+      ...prev,
+      [name]: value
+    }));
+  };
+
+  const handleSubmit = async (e) => {
     e.preventDefault();
     setIsLoading(true);
-
-    const nuevoUsuario = {
-      nombre_usuario: nombre,
-      apellido_usuario: apellido,
-      correo_electronico_usuario: correo,
-      rol_usuario: rol,
-      contrasenia_usuario: contrasenia,
-      telefono_usuario: telefono,
-      fecha_registro_usuario: new Date().toISOString()
-    };
+    setMensaje(null);
 
     try {
-      const response = await axios.post('http://localhost:3000/api/usuarios/insertar-usuario', nuevoUsuario, {
-        headers: {
-          'Content-Type': 'application/json'
-        }
-      });
-
-      console.log('Respuesta del servidor:', response.data);
-
-      await Swal.fire({
-        icon: 'success',
-        title: '¡Registro exitoso!',
-        text: 'El usuario ha sido registrado correctamente.',
-        confirmButtonColor: '#24487f'
-      });
-
-      // Limpiar campos
-      setNombre('');
-      setApellido('');
-      setCorreo('');
-      setRol('');
-      setContrasenia('');
-      setTelefono('');
+      const response = await axiosInstance.post('/api/auth/register', formData);
+      
+      if (response.data.success) {
+        await Swal.fire({
+          icon: 'success',
+          title: '¡Registro exitoso!',
+          text: 'El usuario ha sido registrado correctamente.',
+          confirmButtonColor: '#24487f'
+        });
+        navigate('/login');
+      } else {
+        throw new Error(response.data.error || 'Error en el registro');
+      }
     } catch (error) {
       console.error('Error:', error);
+      setTipoMensaje('error');
+      setMensaje(error.response?.data?.error || 'Error al registrar el usuario');
+      
       await Swal.fire({
         icon: 'error',
         title: 'Error',
@@ -89,52 +86,62 @@ export default function Register() {
             <h1>Registro de Usuario</h1>
           </div>
 
-          <form className="perfil-form" onSubmit={handleRegister}>
+          {mensaje && (
+            <div
+              className={`mensaje ${tipoMensaje}`}
+              style={{
+                color: tipoMensaje === 'error' ? '#ff6b6b' : '#51cf66',
+                marginBottom: '15px',
+                padding: '10px',
+                borderRadius: '5px',
+                backgroundColor: tipoMensaje === 'error' ? 'rgba(255, 107, 107, 0.1)' : 'rgba(81, 207, 102, 0.1)'
+              }}
+            >
+              {mensaje}
+            </div>
+          )}
+
+          <form className="perfil-form" onSubmit={handleSubmit}>
             <label>Nombre:</label>
-            <input 
-              type="text" 
-              value={nombre} 
-              onChange={(e) => setNombre(e.target.value)} 
-              required 
+            <input
+              type="text"
+              name="nombre_usuario"
+              value={formData.nombre_usuario}
+              onChange={handleInputChange}
+              required
               disabled={isLoading}
+              maxLength="30"
             />
 
             <label>Apellido:</label>
-            <input 
-              type="text" 
-              value={apellido} 
-              onChange={(e) => setApellido(e.target.value)} 
-              required 
+            <input
+              type="text"
+              name="apellido_usuario"
+              value={formData.apellido_usuario}
+              onChange={handleInputChange}
+              required
               disabled={isLoading}
+              maxLength="30"
             />
 
             <label>Correo Electrónico:</label>
-            <input 
-              type="email" 
-              value={correo} 
-              onChange={(e) => setCorreo(e.target.value)} 
-              required 
+            <input
+              type="email"
+              name="correo_electronico_usuario"
+              value={formData.correo_electronico_usuario}
+              onChange={handleInputChange}
+              required
               disabled={isLoading}
+              maxLength="50"
             />
-
-            <label>Rol:</label>
-            <select 
-              value={rol} 
-              onChange={(e) => setRol(e.target.value)} 
-              required 
-              disabled={isLoading}
-            >
-              <option value="">Seleccione un rol</option>
-              <option value="administrador">Administrador</option>
-              <option value="usuario">Usuario</option>
-            </select>
 
             <label>Contraseña:</label>
             <div style={{ position: 'relative' }}>
               <input
                 type={showPassword ? "text" : "password"}
-                value={contrasenia}
-                onChange={(e) => setContrasenia(e.target.value)}
+                name="contrasenia_usuario"
+                value={formData.contrasenia_usuario}
+                onChange={handleInputChange}
                 required
                 disabled={isLoading}
               />
@@ -146,20 +153,31 @@ export default function Register() {
               </span>
             </div>
 
+            <label>Rol:</label>
+            <input
+              type="text"
+              name="rol_usuario"
+              value={formData.rol_usuario}
+              onChange={handleInputChange}
+              required
+              disabled={isLoading}
+            />
+
             <label>Teléfono:</label>
-            <input 
-              type="tel" 
-              value={telefono} 
-              onChange={(e) => setTelefono(e.target.value)} 
-              required 
-              pattern="[0-9]{3}-[0-9]{3}-[0-9]{4}"
-              placeholder="123-456-7890"
+            <input
+              type="tel"
+              name="telefono_usuario"
+              value={formData.telefono_usuario}
+              onChange={handleInputChange}
+              required
+              pattern="[0-9]{12}"
+              title="El teléfono debe tener 12 dígitos"
               disabled={isLoading}
             />
 
             <button 
               type="submit" 
-              className="submit-button"
+              className="guardar-btn"
               disabled={isLoading}
             >
               {isLoading ? 'Registrando...' : 'Registrar Usuario'}
@@ -168,7 +186,7 @@ export default function Register() {
         </section>
       </main>
 
-      <style>{`
+      <style jsx>{`
         .inicio-container {
           display: flex;
           height: 100vh;
@@ -210,40 +228,23 @@ export default function Register() {
         .sidebar li {
           margin-bottom: 15px;
           cursor: pointer;
-          display: flex;
-          align-items: center;
-          gap: 10px;
           padding: 8px;
           border-radius: 5px;
+          transition: background-color 0.3s ease;
         }
 
         .sidebar li:hover {
           background-color: #333;
         }
 
-        .icon-img {
-          width: 18px;
-          height: 18px;
+        .sidebar li:active {
+          background-color: #1b355b;
         }
 
         .main-content {
           flex: 1;
           display: flex;
           flex-direction: column;
-        }
-
-        .header {
-          display: flex;
-          justify-content: flex-end;
-          align-items: center;
-          padding: 20px;
-          background-color: #24487f;
-        }
-
-        .cart-img,
-        .perfil-img {
-          width: 30px;
-          height: 30px;
         }
 
         .content {
@@ -283,18 +284,9 @@ export default function Register() {
           box-sizing: border-box;
         }
 
-        .password-container {
-          position: relative;
-          width: 100%;
-        }
-
-        .password-input {
-          padding: 10px 40px 10px 10px !important;
-          border: 1px solid #ccc;
-          border-radius: 5px;
-          font-size: 16px;
-          width: 100%;
-          box-sizing: border-box;
+        .perfil-form input:disabled {
+          background-color: #f5f5f5;
+          cursor: not-allowed;
         }
 
         .password-toggle {
@@ -320,20 +312,24 @@ export default function Register() {
         }
 
         .guardar-btn {
-          background-color:rgb(34, 94, 184);
+          background-color: #24487f;
           color: white;
           border: none;
-          padding: 12px 20px;
+          padding: 10px;
           font-size: 16px;
           border-radius: 5px;
           cursor: pointer;
-          width: 100%;
-          margin-top: 10px;
-          box-sizing: border-box;
+          margin-top: 20px;
+          transition: background-color 0.3s ease;
         }
 
-        .guardar-btn:hover {
-          background-color:rgb(23, 82, 177);
+        .guardar-btn:hover:not(:disabled) {
+          background-color: #1a365d;
+        }
+
+        .guardar-btn:disabled {
+          background-color: #cccccc;
+          cursor: not-allowed;
         }
       `}</style>
     </div>
