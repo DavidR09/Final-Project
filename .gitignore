@@ -24,3 +24,10 @@ dist-ssr
 *.sw?
 .env
 connectionMySQL.js
+src/__tests__/functional.test.jsx
+src/__tests__/integration.test.js
+src/__tests__/carrito.test.js
+src/__tests__/pureFunctions.test.js
+src/__tests__/security.test.jsx
+src/setupTests.js
+src/utils/carritoUtils.js
