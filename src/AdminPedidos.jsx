@@ -230,11 +230,18 @@ export default function AdminPedidos() {
     }
 
     try {
-      // Aquí iría la lógica para guardar la selección de repuestos
+      // Actualizar el estado del pedido a 'EN PROCESO' y guardar los repuestos asignados
+      await axiosInstance.put(`/api/pedidos/${pedidoSeleccionado.id_pedido}/asignar-repuestos`, {
+        repuestos: repuestosSeleccionados.map(r => r.id_repuesto),
+        nuevoEstado: 'EN PROCESO'
+      });
+      // Refrescar los pedidos para mostrar el cambio
+      await cargarPedidos();
+      setPedidoSeleccionado(null); // Para que se actualice la selección
       await Swal.fire({
         icon: 'success',
         title: '¡Éxito!',
-        text: 'Repuestos asignados correctamente',
+        text: 'Repuestos asignados correctamente y pedido en proceso',
         confirmButtonColor: '#24487f'
       });
       cerrarModalRepuestos();
@@ -371,6 +378,13 @@ export default function AdminPedidos() {
                             Asignar Repuestos
                           </button>
                         </div>
+
+                        {/* Mostrar repuestos asignados arriba de la caja del pedido */}
+                        {pedidoSeleccionado?.repuestos_asignados && pedidoSeleccionado.repuestos_asignados.length > 0 && (
+                          <div style={{ marginBottom: '10px', fontWeight: 'bold', color: '#24487f' }}>
+                            Repuestos asignados: {pedidoSeleccionado.repuestos_asignados.map(r => r.nombre_repuesto).join(', ')}
+                          </div>
+                        )}
                       </>
                     )}
                   </div>
