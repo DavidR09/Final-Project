@@ -5,8 +5,7 @@ const axiosInstance = axios.create({
   withCredentials: true,
   headers: {
     'Content-Type': 'application/json',
-    'Accept': 'application/json',
-    'Access-Control-Allow-Origin': '*'
+    'Accept': 'application/json'
   },
   timeout: 15000,
   // Deshabilitar las credenciales por defecto de axios
