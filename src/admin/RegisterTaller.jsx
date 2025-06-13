@@ -20,10 +20,17 @@ export default function RegisterTaller() {
     };
 
     try {
+      const token = localStorage.getItem('token');
+      
+      if (!token) {
+        throw new Error('No hay sesión activa');
+      }
+
       const response = await fetch(`${import.meta.env.VITE_API_URL}/api/talleres/registrar`, {
         method: 'POST',
         headers: {
-          'Content-Type': 'application/json'
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${token}`
         },
         body: JSON.stringify(nuevoTaller),
         credentials: 'include'
@@ -31,6 +38,11 @@ export default function RegisterTaller() {
 
       if (!response.ok) {
         const errorData = await response.json();
+        if (response.status === 401) {
+          localStorage.removeItem('token');
+          navigate('/');
+          throw new Error('Sesión expirada. Por favor, inicie sesión nuevamente.');
+        }
         throw new Error(errorData.message || 'Error en el registro');
       }
 
