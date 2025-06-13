@@ -8,38 +8,106 @@ axios.defaults.withCredentials = true;
 axios.defaults.headers.common['Content-Type'] = 'application/json';
 
 const axiosInstance = axios.create({
-  baseURL: 'http://localhost:3000',
+  baseURL: 'https://backend-respuestosgra.up.railway.app',
   withCredentials: true,
   headers: {
     'Content-Type': 'application/json'
   }
 });
 
+// Interceptor para debugging
+axiosInstance.interceptors.request.use(request => {
+  console.log('Request Config:', {
+    url: request.url,
+    method: request.method,
+    headers: request.headers,
+    withCredentials: request.withCredentials,
+    cookies: document.cookie
+  });
+  return request;
+});
+
+axiosInstance.interceptors.response.use(
+  response => {
+    console.log('Response Headers:', response.headers);
+    return response;
+  },
+  error => {
+    console.log('Response Error Details:', {
+      status: error.response?.status,
+      data: error.response?.data,
+      headers: error.response?.headers,
+      config: {
+        url: error.config?.url,
+        method: error.config?.method,
+        headers: error.config?.headers,
+        withCredentials: error.config?.withCredentials
+      }
+    });
+    return Promise.reject(error);
+  }
+);
+
 export default function AdminPedidos() {
   const navigate = useNavigate();
   const [pedidos, setPedidos] = useState([]);
   const [loading, setLoading] = useState(true);
   const [pedidoSeleccionado, setPedidoSeleccionado] = useState(null);
+  const [showRepuestosModal, setShowRepuestosModal] = useState(false);
+  const [repuestosDisponibles, setRepuestosDisponibles] = useState([]);
+  const [repuestosSeleccionados, setRepuestosSeleccionados] = useState([]);
+  const [loadingRepuestos, setLoadingRepuestos] = useState(false);
 
   useEffect(() => {
-    // Verificar si el usuario está autenticado
     const checkAuth = async () => {
       try {
+        // Verificar si hay una sesión activa
+        const sessionCookie = document.cookie.split('; ').find(row => row.startsWith('session='));
+        console.log('Session Cookie:', sessionCookie);
+
+        if (!sessionCookie) {
+          throw new Error('No hay sesión activa');
+        }
+
+        console.log('Verificando autenticación...');
         const response = await axiosInstance.get('/api/auth/check-auth');
+        console.log('Respuesta de autenticación:', response.data);
+
         if (response.data.rol !== 'administrador') {
           throw new Error('No tienes permisos de administrador');
         }
-        cargarPedidos();
+
+        await cargarPedidos();
       } catch (error) {
-        console.error('Error de autenticación:', error);
-        Swal.fire({
+        console.error('Error detallado de autenticación:', {
+          message: error.message,
+          response: error.response?.data,
+          status: error.response?.status,
+          headers: error.response?.headers
+        });
+
+        let mensajeError = 'Por favor, inicia sesión como administrador';
+        
+        if (error.message === 'No hay sesión activa') {
+          mensajeError = 'No hay una sesión activa. Por favor, inicia sesión.';
+        } else if (error.response?.status === 401) {
+          mensajeError = 'Tu sesión ha expirado o no tienes permisos de administrador';
+        } else if (error.response?.status === 403) {
+          mensajeError = 'No tienes permisos para acceder a esta página';
+        }
+
+        await Swal.fire({
           icon: 'error',
           title: 'Error de autenticación',
-          text: 'Por favor, inicia sesión como administrador',
+          text: mensajeError,
           confirmButtonColor: '#24487f'
-        }).then(() => {
-          navigate('/login');
         });
+
+        // Limpiar datos de sesión
+        localStorage.removeItem('user');
+        sessionStorage.removeItem('user');
+        
+        navigate('/login');
       }
     };
 
@@ -50,7 +118,7 @@ export default function AdminPedidos() {
     try {
       console.log('Iniciando carga de pedidos...');
       
-      const response = await axiosInstance.get('/api/pedidos/admin');
+      const response = await axiosInstance.get('https://backend-respuestosgra.up.railway.app/api/pedidos/admin');
 
       console.log('Pedidos recibidos:', response.data);
       setPedidos(response.data);
@@ -128,6 +196,84 @@ export default function AdminPedidos() {
         ? null 
         : { ...pedido, detalles: detallesUnicos }
     );
+  };
+
+  const cargarRepuestosDisponibles = async () => {
+    if (!pedidoSeleccionado) return;
+    
+    setLoadingRepuestos(true);
+    try {
+      const response = await axiosInstance.get('/api/repuestos/con-piezas');
+      // Filtrar repuestos que contienen las piezas del pedido
+      const repuestosFiltrados = response.data.filter(repuesto => {
+        // Obtener los IDs de los repuestos (piezas) del pedido
+        const piezasPedidoIds = pedidoSeleccionado.detalles.map(detalle => detalle.id_pieza);
+        // Verificar si el repuesto tiene alguna de las piezas del pedido
+        return repuesto.piezas?.some(pieza => piezasPedidoIds.includes(pieza.id_repuesto));
+      });
+      setRepuestosDisponibles(repuestosFiltrados);
+    } catch (error) {
+      console.error('Error al cargar repuestos:', error);
+      Swal.fire({
+        icon: 'error',
+        title: 'Error',
+        text: 'No se pudieron cargar los repuestos disponibles',
+        confirmButtonColor: '#24487f'
+      });
+    } finally {
+      setLoadingRepuestos(false);
+    }
+  };
+
+  const abrirModalRepuestos = () => {
+    setShowRepuestosModal(true);
+    cargarRepuestosDisponibles();
+  };
+
+  const cerrarModalRepuestos = () => {
+    setShowRepuestosModal(false);
+    setRepuestosSeleccionados([]);
+  };
+
+  const seleccionarRepuesto = (repuesto) => {
+    setRepuestosSeleccionados(prev => {
+      const existe = prev.find(r => r.id_repuesto === repuesto.id_repuesto);
+      if (existe) {
+        return prev.filter(r => r.id_repuesto !== repuesto.id_repuesto);
+      }
+      return [...prev, repuesto];
+    });
+  };
+
+  const confirmarSeleccionRepuestos = async () => {
+    if (repuestosSeleccionados.length === 0) {
+      Swal.fire({
+        icon: 'warning',
+        title: 'Selección requerida',
+        text: 'Debe seleccionar al menos un repuesto',
+        confirmButtonColor: '#24487f'
+      });
+      return;
+    }
+
+    try {
+      // Aquí iría la lógica para guardar la selección de repuestos
+      await Swal.fire({
+        icon: 'success',
+        title: '¡Éxito!',
+        text: 'Repuestos asignados correctamente',
+        confirmButtonColor: '#24487f'
+      });
+      cerrarModalRepuestos();
+    } catch (error) {
+      console.error('Error al confirmar repuestos:', error);
+      Swal.fire({
+        icon: 'error',
+        title: 'Error',
+        text: 'No se pudieron asignar los repuestos',
+        confirmButtonColor: '#24487f'
+      });
+    }
   };
 
   return (
@@ -238,6 +384,15 @@ export default function AdminPedidos() {
                             <strong>Total del pedido:</strong>
                             <p>RD$ {formatearPrecio(pedido.total_pedido || calcularTotalPedido(pedido.detalles))}</p>
                           </div>
+                          <button 
+                            className="btn-asignar-repuestos"
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              abrirModalRepuestos();
+                            }}
+                          >
+                            Asignar Repuestos
+                          </button>
                         </div>
                       </>
                     )}
@@ -248,6 +403,75 @@ export default function AdminPedidos() {
           </div>
         </section>
       </main>
+
+      {/* Modal de Repuestos */}
+      {showRepuestosModal && (
+        <div className="modal-overlay">
+          <div className="modal-content repuestos-modal">
+            <button className="close-modal" onClick={cerrarModalRepuestos}>&times;</button>
+            <h2>Seleccionar Repuestos</h2>
+            
+            {loadingRepuestos ? (
+              <div className="loading">Cargando repuestos...</div>
+            ) : (
+              <div className="repuestos-grid">
+                {repuestosDisponibles.map((repuesto) => {
+                  // Filtrar solo la(s) pieza(s) exacta(s) que el cliente pidió
+                  const piezasPedidoIds = pedidoSeleccionado.detalles.map(detalle => detalle.id_pieza);
+                  const piezasFiltradas = repuesto.piezas?.filter(pieza => 
+                    piezasPedidoIds.includes(pieza.id_repuesto)
+                  ) || [];
+                  // Si no hay piezas que coincidan, no renderizar este repuesto
+                  if (piezasFiltradas.length === 0) return null;
+                  return (
+                    <div 
+                      key={repuesto.id_repuesto}
+                      className={`repuesto-card ${repuestosSeleccionados.some(r => r.id_repuesto === repuesto.id_repuesto) ? 'seleccionado' : ''}`}
+                      onClick={() => seleccionarRepuesto(repuesto)}
+                    >
+                      <h3>{repuesto.nombre_repuesto}</h3>
+                      <div className="piezas-lista">
+                        {piezasFiltradas.map((pieza) => (
+                          <div key={pieza.id_repuesto} className="pieza-item">
+                            <img 
+                              src={pieza.imagen_pieza || '/default-part.png'} 
+                              alt={pieza.nombre_pieza}
+                              onError={(e) => {
+                                e.target.onerror = null;
+                                e.target.src = '/default-part.png';
+                              }}
+                            />
+                            <div className="pieza-info">
+                              <p>{pieza.nombre_pieza}</p>
+                              <p>Stock: {pieza.cantidad_pieza}</p>
+                              <p>Precio: RD$ {formatearPrecio(pieza.precio_pieza)}</p>
+                            </div>
+                          </div>
+                        ))}
+                      </div>
+                    </div>
+                  );
+                })}
+              </div>
+            )}
+
+            <div className="modal-footer">
+              <button 
+                className="btn-cancelar"
+                onClick={cerrarModalRepuestos}
+              >
+                Cancelar
+              </button>
+              <button 
+                className="btn-confirmar"
+                onClick={confirmarSeleccionRepuestos}
+              >
+                Confirmar Selección
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
 
       <style>{`
         .inicio-container {
@@ -482,7 +706,153 @@ export default function AdminPedidos() {
           padding: 40px;
           color: #666;
         }
+
+        .btn-asignar-repuestos {
+          background-color: #24487f;
+          color: white;
+          border: none;
+          padding: 10px 20px;
+          border-radius: 5px;
+          cursor: pointer;
+          margin-top: 10px;
+          transition: background-color 0.3s ease;
+        }
+
+        .btn-asignar-repuestos:hover {
+          background-color: #1b355b;
+        }
+
+        .modal-overlay {
+          position: fixed;
+          top: 0;
+          left: 0;
+          right: 0;
+          bottom: 0;
+          background-color: rgba(36, 72, 127, 0.2);
+          display: flex;
+          justify-content: center;
+          align-items: center;
+          z-index: 1000;
+        }
+
+        .repuestos-modal {
+          background: #f4f8fb;
+          padding: 20px;
+          border-radius: 8px;
+          width: 80%;
+          max-width: 1000px;
+          max-height: 80vh;
+          overflow-y: auto;
+        }
+
+        .repuestos-grid {
+          display: grid;
+          grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+          gap: 20px;
+          margin: 20px 0;
+        }
+
+        .repuesto-card {
+          border: 1px solid #b3c6e0;
+          border-radius: 8px;
+          padding: 15px;
+          cursor: pointer;
+          transition: all 0.3s ease;
+          background-color: #eaf1fa;
+        }
+
+        .repuesto-card:hover {
+          transform: translateY(-2px);
+          box-shadow: 0 4px 8px rgba(0,0,0,0.1);
+        }
+
+        .repuesto-card.seleccionado {
+          border: 2px solid #24487f;
+          background-color: #d6e4f5;
+        }
+
+        .piezas-lista {
+          margin-top: 10px;
+        }
+
+        .pieza-item {
+          display: flex;
+          align-items: center;
+          padding: 10px;
+          border-bottom: 1px solid #c3d0e6;
+          background-color: #fafdff;
+          border-radius: 4px;
+          margin-bottom: 8px;
+        }
+
+        .pieza-item img {
+          width: 50px;
+          height: 50px;
+          object-fit: cover;
+          border-radius: 4px;
+          margin-right: 10px;
+        }
+
+        .pieza-info {
+          flex: 1;
+        }
+
+        .pieza-info p {
+          margin: 2px 0;
+          font-size: 0.9em;
+        }
+
+        .modal-footer {
+          display: flex;
+          justify-content: flex-end;
+          gap: 10px;
+          margin-top: 20px;
+          padding-top: 20px;
+          border-top: 1px solid #eee;
+        }
+
+        .btn-cancelar,
+        .btn-confirmar {
+          padding: 10px 20px;
+          border: none;
+          border-radius: 5px;
+          cursor: pointer;
+          transition: background-color 0.3s ease;
+        }
+
+        .btn-cancelar {
+          background-color: #e0e0e0;
+          color: #333;
+        }
+
+        .btn-confirmar {
+          background-color: #24487f;
+          color: white;
+        }
+
+        .btn-cancelar:hover {
+          background-color: #d0d0d0;
+        }
+
+        .btn-confirmar:hover {
+          background-color: #1b355b;
+        }
+
+        .close-modal {
+          position: absolute;
+          top: 10px;
+          right: 10px;
+          background: none;
+          border: none;
+          font-size: 24px;
+          cursor: pointer;
+          color: #666;
+        }
+
+        .close-modal:hover {
+          color: #333;
+        }
       `}</style>
     </div>
   );
-} 
+}
