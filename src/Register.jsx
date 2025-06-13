@@ -153,6 +153,16 @@ export default function Register() {
               </span>
             </div>
 
+            <label>Rol:</label>
+            <input
+              type="rol"
+              name="rol_usuario"
+              value={formData.rol_usuario}
+              onChange={handleInputChange}
+              required
+              disabled={isLoading}
+            />
+
             <label>Teléfono:</label>
             <input
               type="tel"
