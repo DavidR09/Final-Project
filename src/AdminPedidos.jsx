@@ -74,23 +74,18 @@ export default function AdminPedidos() {
         }
 
         // Verificar autenticación usando el hook
-        const isAuthValid = await checkAuth();
-        console.log('Resultado de verificación de autenticación:', isAuthValid);
+        await checkAuth();
 
-        if (!isAuthValid) {
+        if (!isAuthenticated) {
           throw new Error('No hay sesión activa');
         }
 
-        const currentRole = localStorage.getItem('userRole');
-        console.log('Rol actual:', currentRole);
-
-        if (currentRole !== 'administrador') {
+        if (userRole !== 'administrador') {
           throw new Error('No tienes permisos de administrador');
         }
 
         console.log('Acceso verificado, cargando pedidos...');
         await cargarPedidos();
-        setLoading(false);
       } catch (error) {
         console.error('Error de acceso:', error);
         
@@ -254,7 +249,7 @@ export default function AdminPedidos() {
     }
   };
 
-  if (isLoading || loading) {
+  if (isLoading) {
     return <div>Cargando...</div>;
   }
 
@@ -389,7 +384,7 @@ export default function AdminPedidos() {
       {/* Modal de Repuestos */}
       {showRepuestosModal && (
         <div className="modal-overlay">
-          <div className="modal-content repuestos-modal">
+          <div className="modal-content repuestos-modal" style={{ color: 'black' }}>
             <button className="close-modal" onClick={cerrarModalRepuestos}>&times;</button>
             <h2>Seleccionar Repuestos</h2>
             
@@ -414,7 +409,7 @@ export default function AdminPedidos() {
                       <h3>{repuesto.nombre_repuesto}</h3>
                       <div className="piezas-lista">
                         {piezasFiltradas.map((pieza) => (
-                          <div key={pieza.id_repuesto} className="pieza-item">
+                          <div key={pieza.id_repuesto} className="pieza-item" style={{ color: 'black' }}>
                             <img 
                               src={pieza.imagen_pieza || '/default-part.png'} 
                               alt={pieza.nombre_pieza}
@@ -424,9 +419,9 @@ export default function AdminPedidos() {
                               }}
                             />
                             <div className="pieza-info">
-                              <p>{pieza.nombre_pieza}</p>
-                              <p>Stock: {pieza.cantidad_pieza}</p>
-                              <p>Precio: RD$ {formatearPrecio(pieza.precio_pieza)}</p>
+                              <p style={{ color: 'black' }}>{pieza.nombre_pieza}</p>
+                              <p style={{ color: 'black' }}>Stock: {pieza.cantidad_pieza}</p>
+                              <p style={{ color: 'black' }}>Precio: RD$ {formatearPrecio(pieza.precio_pieza)}</p>
                             </div>
                           </div>
                         ))}
