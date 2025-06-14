@@ -2,21 +2,53 @@ import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import axios from 'axios';
 import Swal from 'sweetalert2';
+import { useAuth } from './hooks/useAuth';
 
 // Configurar axios para incluir credenciales en todas las solicitudes
 axios.defaults.withCredentials = true;
 axios.defaults.headers.common['Content-Type'] = 'application/json';
 
 const axiosInstance = axios.create({
-  baseURL: 'https://backend-respuestosgra.up.railway.app/',
+  baseURL: 'https://backend-respuestosgra.up.railway.app',
   withCredentials: true,
   headers: {
     'Content-Type': 'application/json'
   }
 });
 
+// Interceptor para añadir el token a todas las peticiones
+axiosInstance.interceptors.request.use(request => {
+  const token = localStorage.getItem('token');
+  console.log('Token en localStorage:', token);
+  
+  if (token) {
+    request.headers.Authorization = `Bearer ${token}`;
+    console.log('Headers de la petición:', request.headers);
+  } else {
+    console.log('No se encontró token en localStorage');
+  }
+  return request;
+}, error => {
+  console.error('Error en el interceptor de request:', error);
+  return Promise.reject(error);
+});
+
+// Interceptor para manejar errores de respuesta
+axiosInstance.interceptors.response.use(
+  response => response,
+  error => {
+    console.error('Error en la respuesta:', {
+      status: error.response?.status,
+      data: error.response?.data,
+      headers: error.response?.headers
+    });
+    return Promise.reject(error);
+  }
+);
+
 export default function AdminPedidos() {
   const navigate = useNavigate();
+  const { checkAuth, isAuthenticated, userRole, isLoading } = useAuth();
   const [pedidos, setPedidos] = useState([]);
   const [loading, setLoading] = useState(true);
   const [pedidoSeleccionado, setPedidoSeleccionado] = useState(null);
@@ -26,65 +58,70 @@ export default function AdminPedidos() {
   const [loadingRepuestos, setLoadingRepuestos] = useState(false);
 
   useEffect(() => {
-    // Verificar si el usuario está autenticado
-    const checkAuth = async () => {
+    const verifyAccess = async () => {
       try {
-        const response = await axiosInstance.get('/api/auth/check-auth');
-        if (response.data.rol !== 'administrador') {
+        console.log('Verificando acceso...');
+        console.log('Estado de autenticación:', {
+          isAuthenticated,
+          userRole,
+          token: localStorage.getItem('token')
+        });
+
+        // Esperar a que la verificación de autenticación termine
+        if (isLoading) {
+          console.log('Esperando verificación de autenticación...');
+          return;
+        }
+
+        // Verificar autenticación usando el hook
+        await checkAuth();
+
+        if (!isAuthenticated) {
+          throw new Error('No hay sesión activa');
+        }
+
+        if (userRole !== 'administrador') {
           throw new Error('No tienes permisos de administrador');
         }
-        cargarPedidos();
+
+        console.log('Acceso verificado, cargando pedidos...');
+        await cargarPedidos();
       } catch (error) {
-        console.error('Error de autenticación:', error);
-        Swal.fire({
+        console.error('Error de acceso:', error);
+        
+        let mensajeError = 'Por favor, inicia sesión como administrador';
+        
+        if (error.message === 'No hay sesión activa') {
+          mensajeError = 'No hay una sesión activa. Por favor, inicia sesión.';
+        } else if (error.message === 'No tienes permisos de administrador') {
+          mensajeError = 'No tienes permisos para acceder a esta página';
+        }
+
+        await Swal.fire({
           icon: 'error',
-          title: 'Error de autenticación',
-          text: 'Por favor, inicia sesión como administrador',
+          title: 'Error de acceso',
+          text: mensajeError,
           confirmButtonColor: '#24487f'
-        }).then(() => {
-          navigate('/login');
         });
+
+        // Limpiar datos de sesión
+        localStorage.clear();
+        sessionStorage.clear();
+        
+        navigate('/login');
       }
     };
 
-    checkAuth();
-  }, [navigate]);
+    verifyAccess();
+  }, [navigate, checkAuth, isAuthenticated, userRole, isLoading]);
 
   const cargarPedidos = async () => {
     try {
-      console.log('Iniciando carga de pedidos...');
-      
-      const response = await axiosInstance.get('https://backend-respuestosgra.up.railway.app/api/pedidos/admin');
-
-      console.log('Pedidos recibidos:', response.data);
+      const response = await axiosInstance.get('/api/pedidos/admin');
       setPedidos(response.data);
     } catch (error) {
       console.error('Error al cargar los pedidos:', error);
-      
-      let mensajeError = 'No se pudieron cargar los pedidos';
-      if (error.response) {
-        console.error('Detalles del error:', error.response.data);
-        mensajeError = error.response.data.error || mensajeError;
-
-        // Si el error es de autenticación o autorización, redirigir al login
-        if (error.response.status === 401 || error.response.status === 403) {
-          await Swal.fire({
-            icon: 'error',
-            title: 'Error de autenticación',
-            text: 'Por favor, inicia sesión nuevamente.',
-            confirmButtonColor: '#24487f'
-          });
-          navigate('/login');
-          return;
-        }
-      }
-
-      await Swal.fire({
-        icon: 'error',
-        title: 'Error',
-        text: mensajeError,
-        confirmButtonColor: '#24487f'
-      });
+      throw error;
     } finally {
       setLoading(false);
     }
@@ -193,11 +230,17 @@ export default function AdminPedidos() {
     }
 
     try {
-      // Aquí iría la lógica para guardar la selección de repuestos
+      // Simular la asignación de repuestos y el cambio de estado localmente
+      const repuestosAsignados = repuestosSeleccionados.map(r => ({ nombre_repuesto: r.nombre_repuesto, id_repuesto: r.id_repuesto }));
+      setPedidoSeleccionado(prev => prev ? {
+        ...prev,
+        repuestos_asignados: repuestosAsignados,
+        nombre_estado: 'EN PROCESO'
+      } : prev);
       await Swal.fire({
         icon: 'success',
         title: '¡Éxito!',
-        text: 'Repuestos asignados correctamente',
+        text: 'Repuestos asignados correctamente y pedido en proceso',
         confirmButtonColor: '#24487f'
       });
       cerrarModalRepuestos();
@@ -211,6 +254,10 @@ export default function AdminPedidos() {
       });
     }
   };
+
+  if (isLoading) {
+    return <div>Cargando...</div>;
+  }
 
   return (
     <div className="inicio-container">
@@ -257,16 +304,20 @@ export default function AdminPedidos() {
                   >
                     <div className="pedido-header">
                       <div className="pedido-info">
-                        <h3>Pedido #{pedido.id_pedido}</h3>
+                        <h3>{
+                          pedido.nombre_estado === 'EN PROCESO'
+                            ? `EN PROCESO #${pedido.id_pedido}`
+                            : pedido.nombre_estado === 'EN TRAMITE'
+                              ? `EN TRAMITE #${pedido.id_pedido}`
+                              : `Pedido #${pedido.id_pedido}`
+                        }</h3>
                         <p className="cliente-info">
                           <strong>Cliente:</strong> {pedido.nombre_usuario} {pedido.apellido_usuario}
                         </p>
                         <p className="fecha">{formatearFecha(pedido.fecha_pedido)}</p>
                       </div>
                       <div className="pedido-estado">
-                        <span className={`estado-badge ${pedido.nombre_estado.toLowerCase()}`}>
-                          {pedido.nombre_estado}
-                        </span>
+                        <span className={`estado-badge ${pedidoSeleccionado?.nombre_estado?.toLowerCase() || pedido.nombre_estado.toLowerCase()}`}>{pedidoSeleccionado?.nombre_estado || pedido.nombre_estado}</span>
                       </div>
                     </div>
 
@@ -277,6 +328,8 @@ export default function AdminPedidos() {
                             const detalle = pedido.detalles.find(d => d.id_detalle_pedido === detalleId);
                             if (!detalle) return null;
                             
+                            // Buscar repuesto asignado (si existe)
+                            const repuestoAsignado = pedidoSeleccionado.repuestos_asignados?.find(r => r.id_repuesto === detalle.id_pieza);
                             return (
                               <div 
                                 key={`pedido-${pedido.id_pedido}-detalle-${detalle.id_detalle_pedido}`}
@@ -295,6 +348,11 @@ export default function AdminPedidos() {
                                   <h4>{detalle.nombre_pieza}</h4>
                                   <p>Precio sin ITBIS: RD$ {formatearPrecio(detalle.precio_unitario_pieza)}</p>
                                   <p>Cantidad: {detalle.cantidad_detalle}</p>
+                                  {repuestoAsignado && (
+                                    <div style={{ color: '#24487f', fontWeight: 'bold', marginTop: '5px' }}>
+                                      Repuesto asignado: {repuestoAsignado.nombre_repuesto}
+                                    </div>
+                                  )}
                                 </div>
                                 <div className="producto-total">
                                   <p>Total (con ITBIS): RD$ {formatearPrecio(detalle.importe_total_pedido)}</p>
@@ -343,9 +401,9 @@ export default function AdminPedidos() {
       {/* Modal de Repuestos */}
       {showRepuestosModal && (
         <div className="modal-overlay">
-          <div className="modal-content repuestos-modal">
+          <div className="modal-content repuestos-modal" style={{ color: '#111' }}>
             <button className="close-modal" onClick={cerrarModalRepuestos}>&times;</button>
-            <h2>Seleccionar Repuestos</h2>
+            <h2 style={{ color: '#111' }}>Seleccionar Repuestos</h2>
             
             {loadingRepuestos ? (
               <div className="loading">Cargando repuestos...</div>
@@ -364,27 +422,9 @@ export default function AdminPedidos() {
                       key={repuesto.id_repuesto}
                       className={`repuesto-card ${repuestosSeleccionados.some(r => r.id_repuesto === repuesto.id_repuesto) ? 'seleccionado' : ''}`}
                       onClick={() => seleccionarRepuesto(repuesto)}
+                      style={{ color: '#111', fontWeight: 'bold', fontSize: '1.2em', display: 'flex', alignItems: 'center', justifyContent: 'center', minHeight: '60px' }}
                     >
-                      <h3>{repuesto.nombre_repuesto}</h3>
-                      <div className="piezas-lista">
-                        {piezasFiltradas.map((pieza) => (
-                          <div key={pieza.id_repuesto} className="pieza-item">
-                            <img 
-                              src={pieza.imagen_pieza || '/default-part.png'} 
-                              alt={pieza.nombre_pieza}
-                              onError={(e) => {
-                                e.target.onerror = null;
-                                e.target.src = '/default-part.png';
-                              }}
-                            />
-                            <div className="pieza-info">
-                              <p>{pieza.nombre_pieza}</p>
-                              <p>Stock: {pieza.cantidad_pieza}</p>
-                              <p>Precio: RD$ {formatearPrecio(pieza.precio_pieza)}</p>
-                            </div>
-                          </div>
-                        ))}
-                      </div>
+                      {repuesto.nombre_repuesto}
                     </div>
                   );
                 })}
