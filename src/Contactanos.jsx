@@ -7,11 +7,11 @@ export default function Contactanos() {
   return (
     <div className="welcome-container">
       <div className="left-section">
-        <img src="/public/fotinicio.jpg" alt="Imagen de contacto" />
+        <img src="/fotinicio.jpg" alt="Imagen de contacto" />
       </div>
       <div className="right-section">
         <div className="logo-container">
-          <img src="/public/Logo.png" alt="Logo de Repuestos G.R.A" />
+          <img src="/Logo.png" alt="Logo de Repuestos G.R.A" />
         </div>
         <h1>Contáctanos en <span className="highlight">Repuestos G.R.A</span></h1>
         <p className="intro-text">
