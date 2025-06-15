@@ -10,9 +10,10 @@ export default function Contactanos() {
         <img src="/fotinicio.jpg" alt="Imagen de contacto" />
       </div>
       <div className="right-section">
-        <div className="logo-container">
-          <img src="/Logo.png" alt="Logo de Repuestos G.R.A" />
-        </div>
+      <div className="logo-container" onClick={() => navigate('/')}>
+        <img src="/Logo.png" alt="Logo de Repuestos G.R.A" />
+    </div>
+
         <h1>Contáctanos en <span className="highlight">Repuestos G.R.A</span></h1>
         <p className="intro-text">
           Para registrarte y por si necesitas asistencia, información sobre nuestras piezas o tienes alguna consulta,
