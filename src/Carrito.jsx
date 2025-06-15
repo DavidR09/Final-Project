@@ -7,6 +7,9 @@ import './Carrito.css';
 import './styles/global.css';
 import HeaderIcons from './components/HeaderIcons';
 
+const data = await response.json();
+        console.log('Datos de autenticación:', data);
+
 // Función para obtener el token de las cookies
 const getTokenFromCookie = () => {
   const cookies = document.cookie.split('; ');
