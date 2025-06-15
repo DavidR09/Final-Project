@@ -26,10 +26,22 @@ export default function RegisterTaller() {
     setIsLoading(true);
     setMensaje(null);
     try {
-      await axiosInstance.post('/api/talleres/registrar', {
-        ...formData,
-        id_usuario: parseInt(formData.id_usuario)
-      });
+      const token = localStorage.getItem('token');
+      if (!token) throw new Error('No hay sesión activa');
+
+      await axiosInstance.post(
+        '/api/talleres/registrar',
+        {
+          ...formData,
+          id_usuario: parseInt(formData.id_usuario)
+        },
+        {
+          headers: {
+            Authorization: `Bearer ${token}`
+          }
+        }
+      );
+
       await Swal.fire({
         icon: 'success',
         title: '¡Registro exitoso!',
