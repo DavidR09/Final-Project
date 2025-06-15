@@ -7,11 +7,11 @@ export default function Contactanos() {
   return (
     <div className="welcome-container">
       <div className="left-section">
-        <img src="/fotinicio.jpg" alt="Imagen de contacto" />
+      <img src={`${process.env.PUBLIC_URL || ''}/fotinicio.jpg`} alt="Imagen de contacto" />
       </div>
       <div className="right-section">
       <div className="logo-container" onClick={() => navigate('/')}>
-        <img src="/Logo.png" alt="Logo de Repuestos G.R.A" />
+      <img src={`${process.env.PUBLIC_URL || ''}/Logo.png`} alt="Logo" />
     </div>
 
         <h1>Contáctanos en <span className="highlight">Repuestos G.R.A</span></h1>
