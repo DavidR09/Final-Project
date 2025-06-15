@@ -1,39 +1,18 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import axiosInstance from './config/axios';
 import Swal from 'sweetalert2';
-import { useAuth } from './hooks/useAuth';
 
 export default function RegisterTaller() {
   const navigate = useNavigate();
-  const { checkAuth, userRole } = useAuth();
   const [formData, setFormData] = useState({
     nombre_taller: '',
     direccion_taller: '',
     id_usuario: ''
   });
+  const [mensaje, setMensaje] = useState(null);
+  const [tipoMensaje, setTipoMensaje] = useState('');
   const [isLoading, setIsLoading] = useState(false);
-  const [authStatus, setAuthStatus] = useState('checking'); // 'checking', 'ok', 'not-admin', 'error'
-  const [backendRole, setBackendRole] = useState(null);
-
-  useEffect(() => {
-    const verifyAuth = async () => {
-      try {
-        const response = await axiosInstance.get('/api/auth/check-auth', { withCredentials: true });
-        console.log('Respuesta de /api/auth/check-auth:', response.data);
-        setBackendRole(response.data.rol);
-        if (response.data.rol !== 'administrador') {
-          setAuthStatus('not-admin');
-        } else {
-          setAuthStatus('ok');
-        }
-      } catch (error) {
-        console.error('Error de autenticación:', error);
-        setAuthStatus('error');
-      }
-    };
-    verifyAuth();
-  }, []);
 
   const handleChange = (e) => {
     setFormData({
@@ -45,15 +24,16 @@ export default function RegisterTaller() {
   const handleSubmit = async (e) => {
     e.preventDefault();
     setIsLoading(true);
+    setMensaje(null);
     try {
       await axiosInstance.post('/api/talleres/registrar', {
         ...formData,
         id_usuario: parseInt(formData.id_usuario)
       });
-      Swal.fire({
+      await Swal.fire({
         icon: 'success',
         title: '¡Registro exitoso!',
-        text: 'Taller registrado correctamente',
+        text: 'El taller ha sido registrado correctamente.',
         confirmButtonColor: '#24487f'
       });
       setFormData({
@@ -61,29 +41,22 @@ export default function RegisterTaller() {
         direccion_taller: '',
         id_usuario: ''
       });
+      setTipoMensaje('success');
+      setMensaje('Registro exitoso.');
     } catch (error) {
       console.error('Error:', error);
-      Swal.fire({
+      setTipoMensaje('error');
+      setMensaje(error.response?.data?.error || 'Error al registrar el taller');
+      await Swal.fire({
         icon: 'error',
         title: 'Error',
-        text: error.response?.data?.error || 'Error al registrar el taller',
+        text: error.response?.data?.error || 'Hubo un problema al registrar el taller.',
         confirmButtonColor: '#24487f'
       });
     } finally {
       setIsLoading(false);
     }
   };
-
-  // Render según estado de autenticación
-  if (authStatus === 'checking') {
-    return <div style={{color: '#24487f', textAlign: 'center', marginTop: '100px'}}>Verificando credenciales...</div>;
-  }
-  if (authStatus === 'not-admin') {
-    return <div style={{color: 'red', textAlign: 'center', marginTop: '100px'}}>No tienes permisos de administrador. Rol detectado: <b>{backendRole}</b></div>;
-  }
-  if (authStatus === 'error') {
-    return <div style={{color: 'red', textAlign: 'center', marginTop: '100px'}}>Error de autenticación. Por favor, inicia sesión nuevamente.</div>;
-  }
 
   return (
     <div className="inicio-container">
@@ -108,6 +81,20 @@ export default function RegisterTaller() {
           <div className="welcome">
             <h1>Registro de Taller</h1>
           </div>
+          {mensaje && (
+            <div
+              className={`mensaje ${tipoMensaje}`}
+              style={{
+                color: tipoMensaje === 'error' ? '#ff6b6b' : '#51cf66',
+                marginBottom: '15px',
+                padding: '10px',
+                borderRadius: '5px',
+                backgroundColor: tipoMensaje === 'error' ? 'rgba(255, 107, 107, 0.1)' : 'rgba(81, 207, 102, 0.1)'
+              }}
+            >
+              {mensaje}
+            </div>
+          )}
           <form className="perfil-form" onSubmit={handleSubmit}>
             <label>Nombre del Taller:</label>
             <input
