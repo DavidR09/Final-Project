@@ -1,22 +1,16 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import axios from 'axios';
+import axiosInstance from './config/axios';
 import Swal from 'sweetalert2';
+import { useAuth } from './hooks/useAuth';
 
 // Configurar axios para incluir credenciales en todas las solicitudes
-axios.defaults.withCredentials = true;
-axios.defaults.headers.common['Content-Type'] = 'application/json';
-
-const axiosInstance = axios.create({
-  baseURL: 'https://backend-respuestosgra.up.railway.app',
-  withCredentials: true,
-  headers: {
-    'Content-Type': 'application/json'
-  }
-});
+axiosInstance.defaults.withCredentials = true;
+axiosInstance.defaults.headers.common['Content-Type'] = 'application/json';
 
 export default function RegisterTaller() {
   const navigate = useNavigate();
+  const { checkAuth } = useAuth();
   const [nombre_taller, setNombreTaller] = useState('');
   const [direccion_taller, setDireccionTaller] = useState('');
   const [id_usuario, setIdUsuario] = useState('');
@@ -24,11 +18,11 @@ export default function RegisterTaller() {
 
   // Verificar autenticación al cargar el componente
   useEffect(() => {
-    const checkAuth = async () => {
+    const verifyAuth = async () => {
       try {
-        const response = await axiosInstance.get('/api/auth/check-auth');
-        if (response.data.rol !== 'administrador') {
-          throw new Error('No tienes permisos de administrador');
+        const isAuthenticated = await checkAuth();
+        if (!isAuthenticated) {
+          throw new Error('No autenticado');
         }
       } catch (error) {
         console.error('Error de autenticación:', error);
@@ -43,8 +37,8 @@ export default function RegisterTaller() {
       }
     };
 
-    checkAuth();
-  }, [navigate]);
+    verifyAuth();
+  }, [navigate, checkAuth]);
 
   const handleRegister = async (e) => {
     e.preventDefault();
