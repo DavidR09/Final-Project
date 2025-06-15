@@ -1,59 +1,36 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import axios from 'axios';
+import axiosInstance from './config/axios';
 import Swal from 'sweetalert2';
+import { useAuth } from './hooks/useAuth';
 
-// Configuración de Axios
+// Configurar axios para incluir credenciales en todas las solicitudes
+axios.defaults.withCredentials = true;
+axios.defaults.headers.common['Content-Type'] = 'application/json';
+
 const axiosInstance = axios.create({
   baseURL: 'https://backend-respuestosgra.up.railway.app',
   withCredentials: true,
   headers: {
-    'Content-Type': 'application/json',
-    'Accept': 'application/json'
+    'Content-Type': 'application/json'
   }
 });
 
-// Función para obtener cookies
-function getCookie(name) {
-  const value = `; ${document.cookie}`;
-  const parts = value.split(`; ${name}=`);
-  if (parts.length === 2) return parts.pop().split(';').shift();
-}
-
-// Interceptor para el token
-axiosInstance.interceptors.request.use(
-  (config) => {
-    const token = getCookie('token');
-    if (token) {
-      config.headers.Authorization = `Bearer ${token}`;
-    }
-    return config;
-  },
-  (error) => {
-    return Promise.reject(error);
-  }
-);
-
 export default function RegisterTaller() {
   const navigate = useNavigate();
-  const [formData, setFormData] = useState({
-    nombre_taller: '',
-    direccion_taller: '',
-    id_usuario: ''
-  });
+  const [nombre_taller, setNombreTaller] = useState('');
+  const [direccion_taller, setDireccionTaller] = useState('');
+  const [id_usuario, setIdUsuario] = useState('');
   const [isLoading, setIsLoading] = useState(false);
   const [authChecked, setAuthChecked] = useState(false);
 
   // Verificar autenticación
   useEffect(() => {
-    const checkAuth = async () => {
+    const verifyAuth = async () => {
       try {
-        const token = getCookie('token');
-        if (!token) throw new Error('No hay token de autenticación');
-
         const response = await axiosInstance.get('/api/auth/check-auth');
         if (response.data.rol !== 'administrador') {
-          throw new Error('Acceso restringido a administradores');
+          throw new Error('No tienes permisos de administrador');
         }
         setAuthChecked(true);
       } catch (error) {
@@ -67,8 +44,8 @@ export default function RegisterTaller() {
       }
     };
 
-    checkAuth();
-  }, [navigate]);
+    verifyAuth();
+  }, [navigate, checkAuth]);
 
   const handleChange = (e) => {
     setFormData({
